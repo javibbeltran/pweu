@@ -25,13 +25,19 @@
       <span class="mark">Precious Woods</span>
       <span class="seg" id="seg">Operations</span>
     </a>
+    <nav class="nav" id="nav"></nav>
     <span class="sp"></span>
+    <div class="search">
+      <input id="q" type="search" autocomplete="off" placeholder="Search">
+      <div class="results" id="res"></div>
+    </div>
     <button class="ghost" id="userbtn" aria-expanded="false" aria-haspopup="true">
       <span class="av" id="av">··</span>
       <span id="userlbl"></span>
     </button>
   </div>
 </header>
+<div class="mega" id="mega"></div>
 
 <div class="panel" id="panel" role="menu"></div>
 
@@ -126,7 +132,7 @@ function panel(){
     + '<div class="foot"><button id="pout">'+esc(t('signout'))+'</button></div>';
 
   const sp=$('pspace');
-  if(sp) sp.onchange=()=>{CUR=sp.value;PW.setPref('space',CUR);render();panel()};
+  if(sp) sp.onchange=()=>{CUR=sp.value;PW.setPref('space',CUR);buildNav();closeMega();render();panel()};
   $('plang').onchange=e=>{PW.setPref('lang',e.target.value);document.documentElement.lang=e.target.value;chrome();render();panel()};
   p.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{PW.setPref('theme',b.dataset.theme);panel()});
   p.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{PW.setPref('accent',b.dataset.acc);panel()});
@@ -139,6 +145,83 @@ function togglePanel(open){
   const show = open===undefined ? !p.classList.contains('open') : open;
   p.classList.toggle('open',show);
   b.setAttribute('aria-expanded',String(show));
+}
+
+
+/* ---------- main navigation ---------- */
+const NAVORDER=['operations','commercial','compliance','projects','systems'];
+function navLabel(k){ const v=t('nav'+k); return v==='nav'+k ? k.charAt(0).toUpperCase()+k.slice(1) : v }
+
+function groupsOf(space){
+  const g={};
+  SECTIONS.filter(s=>s.space===space).forEach(s=>{
+    const k=s.nav||'operations';
+    (g[k]=g[k]||[]).push(s);
+  });
+  return Object.keys(g)
+    .sort((a,b)=>{
+      const ia=NAVORDER.indexOf(a),ib=NAVORDER.indexOf(b);
+      return (ia<0?99:ia)-(ib<0?99:ib);
+    })
+    .map(k=>({key:k,label:navLabel(k),sections:g[k].sort((a,b)=>a.sort-b.sort)}));
+}
+
+function buildNav(){
+  const gs=groupsOf(CUR);
+  $('nav').innerHTML=gs.map(g=>
+    '<button data-nav="'+esc(g.key)+'" aria-expanded="false">'+esc(g.label)
+    +'<span class="caret">\u25be</span></button>').join('');
+  $('nav').querySelectorAll('button').forEach(b=>{
+    b.onclick=e=>{e.stopPropagation();openMega(b.dataset.nav,b)};
+    b.onmouseenter=()=>{ if($('mega').classList.contains('open')) openMega(b.dataset.nav,b) };
+  });
+}
+
+function openMega(key,btn){
+  const m=$('mega');
+  if(btn && btn.getAttribute('aria-expanded')==='true'){ closeMega(); return }
+  const g=groupsOf(CUR).find(x=>x.key===key);
+  if(!g){ closeMega(); return }
+  m.innerHTML='<div class="in">'+g.sections.map(sec=>{
+    const list=DOCS.filter(d=>d.section===sec.id).sort((a,b)=>a.sort-b.sort);
+    return '<div class="col"><h5>'+esc(sec.name)+'</h5>'
+      +(list.length?list.slice(0,6).map(d=>{
+          const href=(d.kind==='link'&&d.url)?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug);
+          const tgt=(d.kind==='link'&&d.url)?' target="_blank" rel="noopener"':'';
+          return '<a href="'+href+'"'+tgt+'>'+esc(d.title)
+            +(d.subtitle?'<span class="sub">'+esc(d.subtitle)+'</span>':'')+'</a>';
+        }).join('')
+       :'<p class="none">'+esc(t('nothingHere'))+'</p>')
+      +(list.length>6?'<a class="all" href="#sec-'+esc(sec.id)+'">'+esc(t('openAll'))+'</a>':'')
+      +'</div>';
+  }).join('')+'</div>';
+  m.classList.add('open');
+  $('nav').querySelectorAll('button').forEach(b=>
+    b.setAttribute('aria-expanded',String(b.dataset.nav===key)));
+}
+function closeMega(){
+  $('mega').classList.remove('open');
+  $('nav').querySelectorAll('button').forEach(b=>b.setAttribute('aria-expanded','false'));
+}
+
+/* ---------- search ---------- */
+function search(term){
+  const r=$('res'),q=term.trim().toLowerCase();
+  if(!q){r.classList.remove('open');return}
+  const secName=id=>{const s=SECTIONS.find(x=>x.id===id);return s?s.name:''};
+  const spName=id=>{const s=SPACES.find(x=>x.id===id);return s?s.name:''};
+  const hits=DOCS.filter(d=>
+    (d.title||'').toLowerCase().includes(q) ||
+    (d.subtitle||'').toLowerCase().includes(q) ||
+    secName(d.section).toLowerCase().includes(q)).slice(0,10);
+  r.innerHTML=hits.length
+    ? hits.map(d=>{
+        const href=(d.kind==='link'&&d.url)?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug);
+        return '<a href="'+href+'">'+esc(d.title)
+          +'<span class="where">'+esc(spName(d.space))+' · '+esc(secName(d.section))+'</span></a>';
+      }).join('')
+    : '<p class="none">'+esc(t('noResults'))+'</p>';
+  r.classList.add('open');
 }
 
 /* ---------- content ---------- */
@@ -170,6 +253,8 @@ function chrome(){
   $('userlbl').textContent='';
   $('av').textContent=initials(PW.email||'?');
   document.title='Precious Woods · '+t('portal');
+  $('q').placeholder=t('searchPh');
+  buildNav();
 }
 
 function render(){
@@ -181,7 +266,7 @@ function render(){
   if(!secs.length){$('body').innerHTML='<p class="none">'+esc(t('noSections'))+'</p>';return}
   $('body').innerHTML=secs.map(s=>{
     const list=ds.filter(d=>d.section===s.id).sort((a,b)=>a.sort-b.sort);
-    return '<section class="sec"><h2>'+esc(s.name)+'</h2>'
+    return '<section class="sec" id="sec-'+esc(s.id)+'"><h2>'+esc(s.name)+'</h2>'
       +(list.length?'<div class="grid">'+list.map(card).join('')+'</div>'
                    :'<p class="none">'+esc(t('nothingHere'))+'</p>')
       +'</section>';
@@ -223,10 +308,16 @@ function render(){
 
   ungate(); chrome(); panel(); render();
 
-  $('userbtn').onclick=e=>{e.stopPropagation();togglePanel()};
+  $('q').addEventListener('input',e=>search(e.target.value));
+  $('q').addEventListener('focus',e=>{if(e.target.value)search(e.target.value)});
+  $('res').onclick=e=>e.stopPropagation();
+  $('mega').onclick=e=>e.stopPropagation();
+  $('userbtn').onclick=e=>{e.stopPropagation();togglePanel();closeMega()};
   $('panel').onclick=e=>e.stopPropagation();
-  document.addEventListener('click',()=>togglePanel(false));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')togglePanel(false)});
+  document.addEventListener('click',()=>{togglePanel(false);closeMega();$('res').classList.remove('open')});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){togglePanel(false);closeMega();$('res').classList.remove('open');$('q').blur()}
+  });
 })();
 </script>
 </body></html>

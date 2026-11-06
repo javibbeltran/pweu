@@ -39,7 +39,8 @@ window.PW = (function () {
       back:'Operations', close:'Close', saving:'Saving…', saved:'Saved',
       savedAll:'Saved · visible to the whole team',
       loadFail:'Could not load: {0}', saveFail:'Could not save ({0}). Your changes are still in this browser.',
-      lastChange:'Last change'
+      lastChange:'Last change',
+      navoperations:'Operations', navcommercial:'Commercial', navcompliance:'Compliance', navprojects:'Projects', navsystems:'Systems', home:'Home', search:'Search', searchPh:'Search documents…', noResults:'Nothing matches that.', items:'{0} items', item:'1 item', openAll:'View all', recent:'Recently updated'
     },
     nl: {
       portal:'Operaties', signin:'Inloggen', signout:'Uitloggen',
@@ -61,7 +62,8 @@ window.PW = (function () {
       back:'Operaties', close:'Sluiten', saving:'Opslaan…', saved:'Opgeslagen',
       savedAll:'Opgeslagen · zichtbaar voor het hele team',
       loadFail:'Kon niet laden: {0}', saveFail:'Kon niet opslaan ({0}). Je wijzigingen staan nog in deze browser.',
-      lastChange:'Laatste wijziging'
+      lastChange:'Laatste wijziging',
+      navoperations:'Operaties', navcommercial:'Commercieel', navcompliance:'Compliance', navprojects:'Projecten', navsystems:'Systemen', home:'Start', search:'Zoeken', searchPh:'Documenten zoeken…', noResults:'Niets gevonden.', items:'{0} items', item:'1 item', openAll:'Alles bekijken', recent:'Recent bijgewerkt'
     },
     de: {
       portal:'Operations', signin:'Anmelden', signout:'Abmelden',
@@ -83,7 +85,8 @@ window.PW = (function () {
       back:'Operations', close:'Schließen', saving:'Speichern…', saved:'Gespeichert',
       savedAll:'Gespeichert · für das ganze Team sichtbar',
       loadFail:'Konnte nicht geladen werden: {0}', saveFail:'Konnte nicht gespeichert werden ({0}). Deine Änderungen sind noch in diesem Browser.',
-      lastChange:'Letzte Änderung'
+      lastChange:'Letzte Änderung',
+      navoperations:'Operations', navcommercial:'Vertrieb', navcompliance:'Compliance', navprojects:'Projekte', navsystems:'Systeme', home:'Start', search:'Suche', searchPh:'Dokumente suchen…', noResults:'Keine Treffer.', items:'{0} Einträge', item:'1 Eintrag', openAll:'Alle ansehen', recent:'Zuletzt aktualisiert'
     },
     fr: {
       portal:'Opérations', signin:'Se connecter', signout:'Se déconnecter',
@@ -105,7 +108,8 @@ window.PW = (function () {
       back:'Opérations', close:'Fermer', saving:'Enregistrement…', saved:'Enregistré',
       savedAll:'Enregistré · visible par toute l’équipe',
       loadFail:'Chargement impossible : {0}', saveFail:'Enregistrement impossible ({0}). Tes modifications restent dans ce navigateur.',
-      lastChange:'Dernière modification'
+      lastChange:'Dernière modification',
+      navoperations:'Opérations', navcommercial:'Commercial', navcompliance:'Conformité', navprojects:'Projets', navsystems:'Systèmes', home:'Accueil', search:'Rechercher', searchPh:'Rechercher des documents…', noResults:'Aucun résultat.', items:'{0} éléments', item:'1 élément', openAll:'Tout voir', recent:'Mis à jour récemment'
     },
     'pt-BR': {
       portal:'Operações', signin:'Entrar', signout:'Sair',
@@ -127,7 +131,8 @@ window.PW = (function () {
       back:'Operações', close:'Fechar', saving:'Salvando…', saved:'Salvo',
       savedAll:'Salvo · visível para toda a equipe',
       loadFail:'Não foi possível carregar: {0}', saveFail:'Não foi possível salvar ({0}). Suas alterações continuam neste navegador.',
-      lastChange:'Última alteração'
+      lastChange:'Última alteração',
+      navoperations:'Operações', navcommercial:'Comercial', navcompliance:'Compliance', navprojects:'Projetos', navsystems:'Sistemas', home:'Início', search:'Buscar', searchPh:'Buscar documentos…', noResults:'Nada encontrado.', items:'{0} itens', item:'1 item', openAll:'Ver tudo', recent:'Atualizados recentemente'
     },
     es: {
       portal:'Operaciones', signin:'Entrar', signout:'Salir',
@@ -149,7 +154,8 @@ window.PW = (function () {
       back:'Operaciones', close:'Cerrar', saving:'Guardando…', saved:'Guardado',
       savedAll:'Guardado · visible para todo el equipo',
       loadFail:'No se ha podido cargar: {0}', saveFail:'No se ha podido guardar ({0}). Tus cambios siguen en este navegador.',
-      lastChange:'Último cambio'
+      lastChange:'Último cambio',
+      navoperations:'Operaciones', navcommercial:'Comercial', navcompliance:'Cumplimiento', navprojects:'Proyectos', navsystems:'Sistemas', home:'Inicio', search:'Buscar', searchPh:'Buscar documentos…', noResults:'No hay coincidencias.', items:'{0} elementos', item:'1 elemento', openAll:'Ver todo', recent:'Actualizados hace poco'
     },
     it: {
       portal:'Operazioni', signin:'Accedi', signout:'Esci',
@@ -171,7 +177,8 @@ window.PW = (function () {
       back:'Operazioni', close:'Chiudi', saving:'Salvataggio…', saved:'Salvato',
       savedAll:'Salvato · visibile a tutto il team',
       loadFail:'Impossibile caricare: {0}', saveFail:'Impossibile salvare ({0}). Le modifiche restano in questo browser.',
-      lastChange:'Ultima modifica'
+      lastChange:'Ultima modifica',
+      navoperations:'Operazioni', navcommercial:'Commerciale', navcompliance:'Conformità', navprojects:'Progetti', navsystems:'Sistemi', home:'Home', search:'Cerca', searchPh:'Cerca documenti…', noResults:'Nessun risultato.', items:'{0} elementi', item:'1 elemento', openAll:'Vedi tutto', recent:'Aggiornati di recente'
     }
   };
 
