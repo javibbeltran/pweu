@@ -186,7 +186,7 @@ function openMega(key,btn){
     const list=DOCS.filter(d=>d.section===sec.id).sort((a,b)=>a.sort-b.sort);
     return '<div class="col"><h5>'+esc(sec.name)+'</h5>'
       +(list.length?list.slice(0,6).map(d=>{
-          const href=(d.kind==='link'&&d.url)?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug);
+          const href=d.url?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug);
           const tgt=(d.kind==='link'&&d.url)?' target="_blank" rel="noopener"':'';
           return '<a href="'+href+'"'+tgt+'>'+esc(d.title)
             +(d.subtitle?'<span class="sub">'+esc(d.subtitle)+'</span>':'')+'</a>';
@@ -216,7 +216,7 @@ function search(term){
     secName(d.section).toLowerCase().includes(q)).slice(0,10);
   r.innerHTML=hits.length
     ? hits.map(d=>{
-        const href=(d.kind==='link'&&d.url)?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug);
+        const href=d.url?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug);
         return '<a href="'+href+'">'+esc(d.title)
           +'<span class="where">'+esc(spName(d.space))+' · '+esc(secName(d.section))+'</span></a>';
       }).join('')
@@ -242,6 +242,8 @@ function card(d){
       +(d.kind==='link'?' <span class="tag">'+esc(t('link'))+'</span>':'')+'</p>'
     +(d.subtitle?'<p class="d">'+esc(d.subtitle)+'</p>':'')
     +(meta?'<p class="m">'+meta+'</p>':'');
+  if(d.kind==='form'&&d.url)
+    return '<a class="card" href="'+esc(d.url)+'">'+inner+'</a>';
   if(d.kind==='link'&&d.url)
     return '<a class="card" href="'+esc(d.url)+'" target="_blank" rel="noopener">'+inner+'</a>';
   if(vacio && ROLES[d.space]!=='editor') return '<div class="card empty">'+inner+'</div>';

@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en" data-theme="auto"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121513">
+<title>Request a new customer · Precious Woods</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<link rel="stylesheet" href="../pw.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../shared.js"></script>
+<style>
+.form{max-width:800px}
+.back{
+  display:inline-block;color:var(--mut);text-decoration:none;font-size:12.5px;
+  border:1px solid var(--ln);border-radius:999px;padding:4px 12px;margin:0 0 20px;
+}
+.back:hover{color:var(--fg);border-color:var(--ln2)}
+.kicker{
+  font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 8px;
+}
+.form h1{font-family:var(--serif);font-size:30px;font-weight:600;margin:0 0 10px;line-height:1.15}
+.intro{color:var(--mut);font-size:14px;margin:0 0 26px;max-width:62ch;line-height:1.6}
+
+fieldset{border:0;padding:0;margin:0 0 26px}
+.step{display:flex;align-items:center;gap:11px;margin:0 0 4px}
+.step .n{
+  width:23px;height:23px;border-radius:50%;background:var(--accent);color:#fff;flex:none;
+  display:grid;place-items:center;font-size:11.5px;font-weight:700;
+}
+.step legend,.step .lg{font-size:16.5px;font-weight:600;padding:0}
+.step .by{
+  margin-left:auto;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--mut);border:1px solid var(--ln);border-radius:999px;padding:2px 9px;white-space:nowrap;
+}
+.box{
+  background:var(--surf);border:1px solid var(--ln);border-radius:var(--radius);
+  padding:18px;margin-top:11px;box-shadow:var(--shadow);
+}
+.fields{display:grid;gap:15px;grid-template-columns:repeat(2,1fr)}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f.wide{grid-column:1/-1}
+.f label{font-size:12.5px;font-weight:600}
+.f label .req{color:var(--accent)}
+.f .help{font-size:11.5px;color:var(--mut);line-height:1.45}
+.f input,.f select{
+  background:var(--bg2);border:1px solid var(--ln);color:var(--fg);border-radius:8px;
+  padding:9px 11px;font:inherit;font-size:14px;width:100%;
+}
+.f input:focus,.f select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.f input[aria-invalid="true"],.f select[aria-invalid="true"]{border-color:#b4524a}
+.f .err{font-size:11.5px;color:#d2766c;display:none}
+.f.bad .err{display:block}
+
+.toggle{display:flex;align-items:center;gap:10px}
+.toggle button{
+  border:1px solid var(--accent);background:var(--surf);color:var(--accent);
+  border-radius:999px;padding:6px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;
+}
+.toggle button[aria-pressed="true"]{background:var(--accent);color:#fff}
+
+.inh{display:grid;gap:10px;grid-template-columns:repeat(2,1fr);margin-top:12px}
+.inh div{
+  display:flex;justify-content:space-between;gap:10px;font-size:12.5px;
+  border-bottom:1px dotted var(--ln);padding-bottom:6px;
+}
+.inh span:first-child{color:var(--mut)}
+.inh span:last-child{font-weight:600}
+.linkish{
+  background:none;border:0;color:var(--accent);font:inherit;font-size:12.5px;
+  cursor:pointer;padding:0;text-decoration:underline;
+}
+
+.actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:6px 0 0}
+.primary{
+  background:var(--accent);border:0;color:#fff;border-radius:9px;padding:11px 22px;
+  font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;
+}
+.primary:hover{filter:brightness(1.08)}
+.primary:disabled{opacity:.55;cursor:default}
+.note{font-size:12px;color:var(--mut);max-width:46ch;line-height:1.5}
+
+.done{text-align:center;padding:46px 20px}
+.done .tick{
+  width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-size:22px;margin:0 auto 16px;
+}
+.done h2{font-family:var(--serif);font-size:23px;margin:0 0 8px}
+.done .ref{
+  font-size:13px;color:var(--mut);margin:0 0 18px;
+}
+.done .ref b{color:var(--fg);font-size:16px;letter-spacing:.03em}
+.done p{color:var(--mut);font-size:13.5px;max-width:52ch;margin:0 auto 20px;line-height:1.6}
+
+@media (max-width:680px){
+  .fields,.inh{grid-template-columns:1fr}
+  .form h1{font-size:24px}
+  .step .by{display:none}
+}
+</style></head>
+<body>
+
+<div id="gate"><div class="gcard">
+  <p class="gmark">Precious Woods</p><p class="gseg">Operations</p>
+  <p id="gatemsg">Checking your access…</p>
+</div></div>
+
+<header class="bar"><div class="in">
+  <a class="brand" href="../index.html">
+    <span class="mark">Precious Woods</span><span class="seg">Operations</span>
+  </a>
+  <span class="sp"></span>
+  <button class="ghost" id="userbtn"><span class="av" id="av">··</span></button>
+</div></header>
+
+<main class="page form" id="main" hidden>
+  <a class="back" href="../index.html">← Forms</a>
+
+  <p class="kicker" id="kicker">PWEU · Master data</p>
+  <h1>Request a new customer</h1>
+  <p class="intro">Fill in only what is specific to this customer. Everything else is copied from
+  the template customer, so every card is created the same way. Fields marked
+  <span style="color:var(--accent)">*</span> are required.</p>
+
+  <form id="f" novalidate>
+
+    <fieldset>
+      <div class="step"><span class="n">0</span><span class="lg">Template customer</span></div>
+      <div class="box">
+        <div class="fields">
+          <div class="f wide">
+            <select id="template" name="template"></select>
+            <p class="help">Posting groups, location and shipment settings come from this customer.
+            Pick the template that matches the business segment.</p>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <div class="step"><span class="n">1</span><span class="lg">Who is the customer?</span>
+        <span class="by">Filled by Sales rep</span></div>
+      <div class="box"><div class="fields">
+        <div class="f wide" data-f>
+          <label for="name">Customer name <span class="req">*</span></label>
+          <input id="name" name="name" required autocomplete="off">
+          <p class="help">Search Acadon first: the customer may already exist.</p>
+          <p class="err">Required.</p>
+        </div>
+        <div class="f wide" data-f>
+          <label for="address">Address <span class="req">*</span></label>
+          <input id="address" name="address" required><p class="err">Required.</p>
+        </div>
+        <div class="f" data-f>
+          <label for="postcode">Post code <span class="req">*</span></label>
+          <input id="postcode" name="postcode" required><p class="err">Required.</p>
+        </div>
+        <div class="f" data-f>
+          <label for="city">City <span class="req">*</span></label>
+          <input id="city" name="city" required><p class="err">Required.</p>
+        </div>
+        <div class="f" data-f>
+          <label for="country">Country <span class="req">*</span></label>
+          <select id="country" name="country" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f" data-f>
+          <label for="vat">VAT number <span class="req">*</span></label>
+          <input id="vat" name="vat" required><p class="err">Required.</p>
+        </div>
+        <div class="f">
+          <label for="coc">Chamber of Commerce no.</label>
+          <input id="coc" name="coc">
+        </div>
+      </div></div>
+    </fieldset>
+
+    <fieldset>
+      <div class="step"><span class="n">2</span><span class="lg">Contact and documents</span>
+        <span class="by">Filled by Sales rep</span></div>
+      <div class="box"><div class="fields">
+        <div class="f wide" data-f>
+          <label for="email">E-mail for documents <span class="req">*</span></label>
+          <input id="email" name="email" type="email" required>
+          <p class="help">Contracts and invoices are sent here.</p>
+          <p class="err">A valid e-mail address is required.</p>
+        </div>
+        <div class="f"><label for="phone">Phone</label><input id="phone" name="phone" type="tel"></div>
+        <div class="f" data-f>
+          <label for="doclang">Language of documents <span class="req">*</span></label>
+          <select id="doclang" name="doclang" required></select>
+          <p class="help">Sets the contract and invoice layout.</p>
+          <p class="err">Required.</p>
+        </div>
+        <div class="f">
+          <label for="copies">Invoice copies</label>
+          <input id="copies" name="copies" type="number" min="0" max="9" value="1">
+          <p class="help">Standard value still to be agreed.</p>
+        </div>
+      </div></div>
+    </fieldset>
+
+    <fieldset>
+      <div class="step"><span class="n">3</span><span class="lg">Commercial terms</span>
+        <span class="by">Filled by Sales rep</span></div>
+      <div class="box"><div class="fields">
+        <div class="f" data-f>
+          <label for="segment">Business segment <span class="req">*</span></label>
+          <select id="segment" name="segment" required></select>
+          <p class="help">Drives the reporting. One segment per contract.</p>
+          <p class="err">Required.</p>
+        </div>
+        <div class="f" data-f>
+          <label for="currency">Invoice currency <span class="req">*</span></label>
+          <select id="currency" name="currency" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f wide" data-f>
+          <label for="terms">Standard payment terms <span class="req">*</span></label>
+          <select id="terms" name="terms" required></select>
+          <p class="help">Short standard list only. Any other term needs authorisation first.</p>
+          <p class="err">Required.</p>
+        </div>
+        <div class="f">
+          <label>Prepayment customer?</label>
+          <div class="toggle">
+            <button type="button" id="prepay" aria-pressed="false">No</button>
+          </div>
+        </div>
+        <div class="f" id="prepaywrap" hidden data-f>
+          <label for="prepaypct">Prepayment % <span class="req">*</span></label>
+          <input id="prepaypct" name="prepaypct" type="number" min="1" max="100" value="50">
+          <p class="help">Set here, not as a separate payment term, so the standard list stays short.</p>
+          <p class="err">Required.</p>
+        </div>
+        <div class="f" data-f>
+          <label for="shipment">Shipment method (Incoterm + port) <span class="req">*</span></label>
+          <select id="shipment" name="shipment" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f">
+          <label for="shipto">Default ship-to / port</label>
+          <input id="shipto" name="shipto">
+        </div>
+      </div></div>
+    </fieldset>
+
+    <fieldset>
+      <div class="step"><span class="n">4</span><span class="lg">Copied from the template</span>
+        <span class="by">Nothing to fill in</span></div>
+      <div class="box">
+        <p class="help" style="margin:0">Accounting and shipping defaults are inherited, so they
+        cannot be mistyped. Accounting reviews them when the request is approved.</p>
+        <button type="button" class="linkish" id="togInh" style="margin-top:10px">Hide inherited fields</button>
+        <div class="inh" id="inh"></div>
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit" class="primary" id="send">Submit request</button>
+      <p class="note">Approval is sent from the Request Approval tab in Acadon once the card
+      exists. This form only makes sure nothing is missing.</p>
+    </div>
+  </form>
+
+  <div class="done" id="done" hidden>
+    <div class="tick">✓</div>
+    <h2>Request sent</h2>
+    <p class="ref">Reference <b id="ref">—</b></p>
+    <p>The master data admin creates the card from the template. The approval then goes through
+    the Request Approval tab in Acadon.</p>
+    <button type="button" class="primary" id="again">Start another request</button>
+  </div>
+</main>
+
+<div class="panel" id="panel" role="menu"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const t=(...a)=>PW.t(...a);
+
+const SLUG='customer-request';
+let DOC=null, ROLE=null, OPTS={}, prepay=false, showInh=true;
+
+function gate(h){const g=$('gate');g.innerHTML=h;g.style.display='flex'}
+function ungate(){$('gate').style.display='none'}
+function gateShell(inner){
+  return '<div class="gcard"><p class="gmark">Precious Woods</p><p class="gseg">Operations</p>'+inner+'</div>';
+}
+function loginScreen(msg){
+  gate(gateShell('<p>'+esc(t('loginLead'))+'</p>'
+    +'<form id="gf"><input id="gmail" type="email" required placeholder="'+esc(t('emailLabel'))+'">'
+    +'<button type="submit">'+esc(t('sendLink'))+'</button></form>'
+    +'<p class="gmsg" id="gmsg">'+(msg?esc(msg):'')+'</p>'));
+  $('gf').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const em=$('gmail').value.trim(),m=$('gmsg');
+    m.textContent=t('sending');
+    const {error}=await PW.signIn(em);
+    m.textContent=error?t('sendFail',error.message):t('sent',em);
+  });
+}
+
+function fill(sel,list,placeholder){
+  const el=$(sel);
+  el.innerHTML='<option value="">'+(placeholder||'Select…')+'</option>'
+    +(OPTS[list]||[]).map(o=>'<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>').join('');
+}
+
+function inherited(){
+  const tpl=(OPTS.template||[]).find(o=>o.value===$('template').value);
+  const x=(tpl&&tpl.extra)||{};
+  const rows=[['Gen. Bus. Posting Group',x.gen],['VAT Bus. Posting Group',x.vat],
+    ['Customer Posting Group',x.post],['Location Code',x.loc],
+    ['Combine Sales Shipments',x.combine],['Shipping Advice',x.advice],
+    ['Reminder Terms Code',x.reminder],['Fin. Charge Terms Code',x.fin]];
+  $('inh').innerHTML=rows.filter(r=>r[1]).map(r=>
+    '<div><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>').join('');
+  $('inh').hidden=!showInh;
+  $('togInh').textContent=showInh?'Hide inherited fields':'Show inherited fields';
+}
+
+function validate(){
+  let ok=true,first=null;
+  document.querySelectorAll('[data-f]').forEach(w=>{
+    if(w.hidden){w.classList.remove('bad');return}
+    const el=w.querySelector('input,select');
+    if(!el)return;
+    let bad=!el.value.trim();
+    if(!bad && el.type==='email') bad=!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value.trim());
+    w.classList.toggle('bad',bad);
+    el.setAttribute('aria-invalid',String(bad));
+    if(bad){ ok=false; if(!first) first=el }
+  });
+  if(first) first.focus();
+  return ok;
+}
+
+async function submit(e){
+  e.preventDefault();
+  if(!validate())return;
+  const b=$('send'); b.disabled=true; b.textContent='Sending…';
+  const fd=new FormData($('f')); const data={};
+  fd.forEach((v,k)=>{data[k]=v});
+  data.prepay=prepay;
+  if(!prepay) delete data.prepaypct;
+  const tpl=(OPTS.template||[]).find(o=>o.value===data.template);
+  data.inherited=(tpl&&tpl.extra)||{};
+  const {data:row,error}=await PW.sb.from('form_submissions')
+    .insert({form:SLUG,space:DOC.space,section:DOC.section,data})
+    .select('ref').single();
+  if(error){
+    b.disabled=false; b.textContent='Submit request';
+    alert('Could not send the request: '+error.message);
+    return;
+  }
+  $('ref').textContent=row.ref||'—';
+  $('f').hidden=true; $('done').hidden=false;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function initials(em){
+  const n=em.split('@')[0].replace(/[._-]+/g,' ').trim().split(' ').filter(Boolean);
+  return ((n[0]||'?')[0]+((n[1]||'')[0]||'')).toUpperCase();
+}
+
+(async()=>{
+  $('gatemsg').textContent=t('checking');
+  const c=await PW.connect();
+  if(!c.ok){
+    gate(gateShell('<h2>'+esc(t('offlineT'))+'</h2><p>'+esc(t('offlineB'))+'</p>'
+      +'<button onclick="location.reload()">'+esc(t('retry'))+'</button>'));
+    return;
+  }
+  if(!c.session){ loginScreen(); return }
+  await PW.loadPrefs();
+
+  const [d,o]=await Promise.all([
+    PW.sb.from('docs').select('slug,space,section,title').eq('slug',SLUG).maybeSingle(),
+    PW.sb.from('options').select('list,value,label,sort,extra').order('sort')
+  ]);
+  if(!d.data){
+    gate(gateShell('<h2>'+esc(t('noAccessT'))+'</h2><p>'+esc(t('noAccessB',PW.email))+'</p>'
+      +'<p>'+esc(t('noAccessH'))+'</p>'));
+    return;
+  }
+  DOC=d.data;
+  (o.data||[]).forEach(r=>{(OPTS[r.list]=OPTS[r.list]||[]).push(r)});
+
+  fill('template','template','Select a template…');
+  fill('country','country'); fill('doclang','language');
+  fill('segment','segment'); fill('currency','currency');
+  fill('terms','terms');     fill('shipment','shipment');
+  if((OPTS.template||[]).length===1) $('template').selectedIndex=1;
+  inherited();
+
+  $('av').textContent=initials(PW.email);
+  $('kicker').textContent=(DOC.space||'').toUpperCase()+' · Master data';
+  ungate(); $('main').hidden=false;
+
+  $('template').onchange=inherited;
+  $('togInh').onclick=()=>{showInh=!showInh;inherited()};
+  $('prepay').onclick=()=>{
+    prepay=!prepay;
+    $('prepay').setAttribute('aria-pressed',String(prepay));
+    $('prepay').textContent=prepay?'Yes':'No';
+    $('prepaywrap').hidden=!prepay;
+  };
+  $('f').addEventListener('submit',submit);
+  $('again').onclick=()=>location.reload();
+  $('userbtn').onclick=()=>{location.href='../index.html'};
+})();
+</script>
+</body></html>
