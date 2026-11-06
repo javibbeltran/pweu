@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en" data-theme="auto"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121513">
+<title>Administration · Precious Woods</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<link rel="stylesheet" href="pw.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="shared.js"></script>
+</head>
+<body>
+
+<div id="gate"><div class="gcard">
+  <p class="gmark">Precious Woods</p><p class="gseg">Operations</p>
+  <p id="gatemsg">Checking your access…</p>
+</div></div>
+
+<header class="bar"><div class="in">
+  <a class="brand" href="index.html">
+    <span class="mark">Precious Woods</span><span class="seg">Administration</span>
+  </a>
+  <span class="sp"></span>
+  <a class="ghost" href="index.html">← Portal</a>
+  <button class="ghost" id="userbtn"><span class="av" id="av">··</span></button>
+</div></header>
+
+<main class="page" id="main" hidden>
+  <div class="lede"><h1>Administration</h1></div>
+
+  <div class="tabs" id="tabs">
+    <button data-tab="people"  aria-selected="true">People &amp; access</button>
+    <button data-tab="content" aria-selected="false">Content</button>
+    <button data-tab="requests" aria-selected="false">Requests</button>
+  </div>
+
+  <section id="tab-people">
+    <div class="split">
+      <div>
+        <div class="list" id="people"></div>
+        <div class="addrow">
+          <input id="newmail" type="email" placeholder="name@company.com">
+          <button id="addp">Add</button>
+        </div>
+        <p class="msg" id="pmsg"></p>
+      </div>
+      <div class="pane" id="detail"><p class="sub">Select a person on the left.</p></div>
+    </div>
+  </section>
+
+  <section id="tab-content" hidden>
+    <div class="split">
+      <div><div class="list" id="seclist"></div></div>
+      <div class="pane" id="docpane"><p class="sub">Select a section on the left.</p></div>
+    </div>
+  </section>
+
+  <section id="tab-requests" hidden>
+    <div class="pane">
+      <h3>Customer requests</h3>
+      <p class="sub" id="rqsub">—</p>
+      <div style="overflow:auto"><table class="rows" id="rqtable"></table></div>
+    </div>
+  </section>
+</main>
+
+<div class="panel" id="panel" role="menu"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const t=(...a)=>PW.t(...a);
+
+let USERS=[],SPACES=[],SECTIONS=[],MEMB=[],SACC=[],DOCS=[],SUBS=[];
+let SEL=null, SELSEC=null;
+
+function gate(h){const g=$('gate');g.innerHTML=h;g.style.display='flex'}
+function gateShell(i){return '<div class="gcard"><p class="gmark">Precious Woods</p><p class="gseg">Operations</p>'+i+'</div>'}
+
+function loginScreen(msg){
+  gate(gateShell('<p>'+esc(t('loginLead'))+'</p>'
+    +'<form id="gf"><input id="gmail" type="email" required placeholder="'+esc(t('emailLabel'))+'">'
+    +'<button type="submit">'+esc(t('sendLink'))+'</button></form>'
+    +'<p class="gmsg" id="gmsg">'+(msg?esc(msg):'')+'</p>'));
+  $('gf').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const em=$('gmail').value.trim(),m=$('gmsg');
+    m.textContent=t('sending');
+    const {error}=await PW.signIn(em);
+    m.textContent=error?t('sendFail',error.message):t('sent',em);
+  });
+}
+
+const say=(el,txt)=>{$(el).textContent=txt;setTimeout(()=>{if($(el).textContent===txt)$(el).textContent=''},3500)};
+
+/* ---------------- people ---------------- */
+function renderPeople(){
+  $('people').innerHTML=USERS.map(u=>
+    '<button data-u="'+esc(u.email)+'" aria-current="'+(u.email===SEL)+'">'
+    +esc(u.email)+'<small>'+(u.role==='admin'?'Portal admin':'Member')+'</small></button>').join('')
+    || '<button disabled>No one yet</button>';
+  $('people').querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{SEL=b.dataset.u;renderPeople();renderDetail()});
+}
+
+function membOf(email,space){
+  const m=MEMB.find(x=>x.email.toLowerCase()===email.toLowerCase()&&x.space===space);
+  return m?m.role:null;
+}
+function saccOf(email,section){
+  const s=SACC.find(x=>x.email.toLowerCase()===email.toLowerCase()&&x.section===section);
+  return s?s.role:null;
+}
+
+function renderDetail(){
+  if(!SEL){$('detail').innerHTML='<p class="sub">Select a person on the left.</p>';return}
+  const u=USERS.find(x=>x.email===SEL); if(!u)return;
+  const isAdm=u.role==='admin';
+  let h='<h3>'+esc(u.email)+'</h3>'
+    +'<p class="sub">Portal role decides whether this person can reach this screen.</p>'
+    +'<div class="permrow"><div class="nm">Portal role</div><div class="pick">'
+      +['user','admin'].map(r=>'<button data-prole="'+r+'" aria-pressed="'+(u.role===r)+'">'
+        +(r==='admin'?'Admin':'Member')+'</button>').join('')
+    +'</div></div>';
+
+  if(isAdm){
+    h+='<p class="msg">A portal admin can see and edit everything, so there is nothing to set per company.</p>';
+  }else{
+    SPACES.forEach(sp=>{
+      const cur=membOf(u.email,sp.id);
+      h+='<div class="permrow"><div class="nm"><b>'+esc(sp.name)+'</b><small>whole company</small></div>'
+        +'<div class="pick">'
+        +[['','No access'],['viewer','Read'],['editor','Edit']].map(([v,l])=>
+          '<button data-sp="'+esc(sp.id)+'" data-v="'+v+'" aria-pressed="'+((cur||'')===v)+'">'+l+'</button>').join('')
+        +'</div></div>';
+      SECTIONS.filter(s=>s.space===sp.id).forEach(sec=>{
+        const ex=saccOf(u.email,sec.id);
+        h+='<div class="permrow ind"><div class="nm">'+esc(sec.name)
+          +'<small>'+(ex?'exception':'inherits from company')+'</small></div>'
+          +'<div class="pick">'
+          +[['','Inherit'],['none','Blocked'],['viewer','Read'],['editor','Edit']].map(([v,l])=>
+            '<button data-sec="'+esc(sec.id)+'" data-v="'+v+'" aria-pressed="'+((ex||'')===v)+'">'+l+'</button>').join('')
+          +'</div></div>';
+      });
+    });
+  }
+  h+='<div class="addrow"><button class="danger" id="delp" style="background:none;border:1px solid #5a3733;color:#d2766c">Remove this person</button></div>'
+   +'<p class="msg" id="dmsg"></p>';
+  $('detail').innerHTML=h;
+
+  $('detail').querySelectorAll('[data-prole]').forEach(b=>b.onclick=async()=>{
+    const {error}=await PW.sb.from('app_users').update({role:b.dataset.prole}).eq('email',u.email);
+    if(error)return say('dmsg','Could not save: '+error.message);
+    u.role=b.dataset.prole; renderPeople(); renderDetail(); say('dmsg','Saved.');
+  });
+  $('detail').querySelectorAll('[data-sp]').forEach(b=>b.onclick=async()=>{
+    const sp=b.dataset.sp,v=b.dataset.v;
+    let r;
+    if(!v) r=await PW.sb.from('memberships').delete().eq('email',u.email).eq('space',sp);
+    else   r=await PW.sb.from('memberships').upsert({email:u.email,space:sp,role:v});
+    if(r.error)return say('dmsg','Could not save: '+r.error.message);
+    MEMB=MEMB.filter(x=>!(x.email.toLowerCase()===u.email.toLowerCase()&&x.space===sp));
+    if(v)MEMB.push({email:u.email,space:sp,role:v});
+    renderDetail(); say('dmsg','Saved.');
+  });
+  $('detail').querySelectorAll('[data-sec]').forEach(b=>b.onclick=async()=>{
+    const sec=b.dataset.sec,v=b.dataset.v;
+    let r;
+    if(!v) r=await PW.sb.from('section_access').delete().eq('email',u.email).eq('section',sec);
+    else   r=await PW.sb.from('section_access').upsert({email:u.email,section:sec,role:v});
+    if(r.error)return say('dmsg','Could not save: '+r.error.message);
+    SACC=SACC.filter(x=>!(x.email.toLowerCase()===u.email.toLowerCase()&&x.section===sec));
+    if(v)SACC.push({email:u.email,section:sec,role:v});
+    renderDetail(); say('dmsg','Saved.');
+  });
+  $('delp').onclick=async()=>{
+    if(u.email.toLowerCase()===(PW.email||'').toLowerCase())
+      return say('dmsg','You cannot remove your own account.');
+    if(!confirm('Remove '+u.email+' and all their permissions?'))return;
+    await PW.sb.from('memberships').delete().eq('email',u.email);
+    await PW.sb.from('section_access').delete().eq('email',u.email);
+    const {error}=await PW.sb.from('app_users').delete().eq('email',u.email);
+    if(error)return say('dmsg','Could not remove: '+error.message);
+    USERS=USERS.filter(x=>x.email!==u.email); SEL=null; renderPeople(); renderDetail();
+  };
+}
+
+/* ---------------- content ---------------- */
+function renderSections(){
+  $('seclist').innerHTML=SPACES.map(sp=>
+    SECTIONS.filter(s=>s.space===sp.id).map(s=>
+      '<button data-s="'+esc(s.id)+'" aria-current="'+(s.id===SELSEC)+'">'+esc(s.name)
+      +'<small>'+esc(sp.name)+' · '+DOCS.filter(d=>d.section===s.id).length+' items</small></button>'
+    ).join('')).join('');
+  $('seclist').querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{SELSEC=b.dataset.s;renderSections();renderDocs()});
+}
+
+function renderDocs(){
+  if(!SELSEC){$('docpane').innerHTML='<p class="sub">Select a section on the left.</p>';return}
+  const sec=SECTIONS.find(s=>s.id===SELSEC);
+  const list=DOCS.filter(d=>d.section===SELSEC).sort((a,b)=>a.sort-b.sort);
+  $('docpane').innerHTML='<h3>'+esc(sec.name)+'</h3>'
+    +'<p class="sub">Documents in this section.</p>'
+    +(list.length?list.map(d=>
+        '<div class="permrow"><div class="nm">'+esc(d.title)
+        +'<small>'+esc(d.kind)+(d.url?' · '+esc(d.url):' · '+esc(d.slug))+'</small></div>'
+        +'<a class="ghost" href="'+(d.url?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug))+'">Open</a>'
+        +'</div>').join('')
+      :'<p class="msg">Nothing here yet.</p>')
+    +'<div class="addrow">'
+      +'<input id="ndt" placeholder="New document title">'
+      +'<select id="ndk"><option value="diagram">Diagram</option><option value="link">Link</option></select>'
+      +'<input id="ndu" placeholder="URL (links only)">'
+      +'<button id="ndadd">Create</button>'
+    +'</div><p class="msg" id="cmsg"></p>';
+  $('ndadd').onclick=async()=>{
+    const title=$('ndt').value.trim(); if(!title)return;
+    const kind=$('ndk').value, url=$('ndu').value.trim()||null;
+    const slug=(sec.space+'-'+title.toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/-+$/,'').slice(0,60);
+    const {error}=await PW.sb.from('docs').insert({
+      slug,space:sec.space,section:sec.id,title,kind,url,
+      sort:(list.length+1)*10});
+    if(error)return say('cmsg','Could not create: '+error.message);
+    DOCS.push({slug,space:sec.space,section:sec.id,title,kind,url,sort:(list.length+1)*10});
+    renderSections(); renderDocs(); say('cmsg','Created.');
+  };
+}
+
+/* ---------------- requests ---------------- */
+function renderRequests(){
+  $('rqsub').textContent=SUBS.length?SUBS.length+' received':'Nothing received yet.';
+  if(!SUBS.length){$('rqtable').innerHTML='';return}
+  $('rqtable').innerHTML='<thead><tr><th>Ref</th><th>Customer</th><th>Sent</th><th>By</th><th>Status</th></tr></thead><tbody>'
+    +SUBS.map(s=>{
+      const d=s.data||{};
+      return '<tr><td class="ref">'+esc(s.ref||'—')+'</td>'
+        +'<td>'+esc(d.name||'—')
+          +'<details class="det"><summary>Details</summary><pre>'
+          +esc(JSON.stringify(d,null,2))+'</pre></details></td>'
+        +'<td>'+new Date(s.created_at).toLocaleDateString([],{day:'2-digit',month:'short'})+'</td>'
+        +'<td>'+esc((s.created_by||'').split('@')[0])+'</td>'
+        +'<td><div class="pick">'
+          +[['new','New'],['approved','Done'],['rejected','No']].map(([v,l])=>
+            '<button data-rid="'+s.id+'" data-st="'+v+'" aria-pressed="'+(s.status===v)+'">'+l+'</button>').join('')
+        +'</div></td></tr>';
+    }).join('')+'</tbody>';
+  $('rqtable').querySelectorAll('[data-rid]').forEach(b=>b.onclick=async()=>{
+    const {error}=await PW.sb.from('form_submissions')
+      .update({status:b.dataset.st}).eq('id',Number(b.dataset.rid));
+    if(error)return alert('Could not update: '+error.message);
+    const row=SUBS.find(x=>String(x.id)===b.dataset.rid); if(row)row.status=b.dataset.st;
+    renderRequests();
+  });
+}
+
+function initials(em){
+  const n=em.split('@')[0].replace(/[._-]+/g,' ').trim().split(' ').filter(Boolean);
+  return ((n[0]||'?')[0]+((n[1]||'')[0]||'')).toUpperCase();
+}
+
+(async()=>{
+  $('gatemsg').textContent=t('checking');
+  const c=await PW.connect();
+  if(!c.ok){gate(gateShell('<h2>'+esc(t('offlineT'))+'</h2><p>'+esc(t('offlineB'))+'</p>'
+    +'<button onclick="location.reload()">'+esc(t('retry'))+'</button>'));return}
+  if(!c.session){loginScreen();return}
+  await PW.loadPrefs();
+
+  const me=await PW.sb.from('app_users').select('role').eq('email',PW.email).maybeSingle();
+  if(!me.data || me.data.role!=='admin'){
+    gate(gateShell('<h2>Administrators only</h2>'
+      +'<p>This screen manages people and permissions, so it is limited to portal administrators.</p>'
+      +'<button onclick="location.href=\'index.html\'">Back to the portal</button>'));
+    return;
+  }
+
+  const [u,sp,se,mb,sa,dc,su]=await Promise.all([
+    PW.sb.from('app_users').select('email,role').order('email'),
+    PW.sb.from('spaces').select('id,name,sort').order('sort'),
+    PW.sb.from('sections').select('id,space,name,sort').order('sort'),
+    PW.sb.from('memberships').select('email,space,role'),
+    PW.sb.from('section_access').select('email,section,role'),
+    PW.sb.from('docs').select('slug,space,section,title,kind,url,sort'),
+    PW.sb.from('form_submissions').select('id,ref,form,data,status,created_at,created_by')
+      .order('created_at',{ascending:false}).limit(200)
+  ]);
+  USERS=u.data||[];SPACES=sp.data||[];SECTIONS=se.data||[];
+  MEMB=mb.data||[];SACC=sa.data||[];DOCS=dc.data||[];SUBS=su.data||[];
+
+  $('av').textContent=initials(PW.email);
+  $('gate').style.display='none'; $('main').hidden=false;
+  renderPeople(); renderDetail(); renderSections(); renderDocs(); renderRequests();
+
+  $('tabs').onclick=e=>{
+    const b=e.target.closest('[data-tab]'); if(!b)return;
+    $('tabs').querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
+    ['people','content','requests'].forEach(k=>{$('tab-'+k).hidden=(k!==b.dataset.tab)});
+  };
+
+  $('addp').onclick=async()=>{
+    const em=$('newmail').value.trim().toLowerCase();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return say('pmsg','That does not look like an e-mail address.');
+    const {error}=await PW.sb.from('app_users').insert({email:em,role:'user'});
+    if(error)return say('pmsg','Could not add: '+error.message);
+    USERS.push({email:em,role:'user'});USERS.sort((a,b)=>a.email.localeCompare(b.email));
+    $('newmail').value='';SEL=em;renderPeople();renderDetail();
+    say('pmsg','Added. Now give them access to a company below.');
+  };
+
+  $('userbtn').onclick=()=>{location.href='index.html'};
+})();
+</script>
+</body></html>

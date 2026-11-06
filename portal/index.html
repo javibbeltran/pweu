@@ -54,7 +54,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const t=(...a)=>PW.t(...a);
 
-let SPACES=[],SECTIONS=[],DOCS=[],ROLES={},CUR=null;
+let SPACES=[],SECTIONS=[],DOCS=[],ROLES={},CUR=null,IS_ADMIN=false;
 
 const ACCENTS=['#2f7d55','#3c6e4f','#6b7f3a','#8a6a3b','#3a6b7d','#7d4f3a'];
 
@@ -129,7 +129,9 @@ function panel(){
           +(PW.prefs.accent.toLowerCase()===c)+'" title="'+c+'"></button>').join('')
       + '<input type="color" id="pacc" value="'+esc(PW.prefs.accent)+'">'
       + '</div>'
-    + '<div class="foot"><button id="pout">'+esc(t('signout'))+'</button></div>';
+    + '<div class="foot">'
+      + (IS_ADMIN?'<button id="padmin">Administration</button>':'')
+      + '<button id="pout">'+esc(t('signout'))+'</button></div>';
 
   const sp=$('pspace');
   if(sp) sp.onchange=()=>{CUR=sp.value;PW.setPref('space',CUR);buildNav();closeMega();render();panel()};
@@ -137,6 +139,7 @@ function panel(){
   p.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{PW.setPref('theme',b.dataset.theme);panel()});
   p.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{PW.setPref('accent',b.dataset.acc);panel()});
   $('pacc').oninput=e=>{PW.setPref('accent',e.target.value)};
+  const pa=$('padmin'); if(pa) pa.onclick=()=>{location.href='admin.html'};
   $('pout').onclick=async()=>{await PW.signOut();location.reload()};
 }
 
@@ -300,6 +303,9 @@ function render(){
   if(sp.error){ loginScreen(t('loadFail',sp.error.message)); return; }
   SPACES=sp.data||[]; SECTIONS=se.data||[]; DOCS=dc.data||[];
   if(!SPACES.length){ noAccessScreen(); return; }
+
+  const am=await PW.sb.from('app_users').select('role').eq('email',PW.email).maybeSingle();
+  IS_ADMIN = !!(am.data && am.data.role==='admin');
 
   const rs=await Promise.all(SPACES.map(s=>PW.sb.rpc('role_in',{p_space:s.id})));
   SPACES.forEach((s,i)=>{ROLES[s.id]=(rs[i]&&rs[i].data)||'viewer'});
