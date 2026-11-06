@@ -197,7 +197,9 @@ a.card:hover{border-color:var(--ln2);transform:translateY(-1px)}
 
 @media (max-width:640px){
   .bar .in{padding:0 14px;height:54px;gap:10px}
-  .mega{top:54px}
+  .navbar .in{padding:0 14px;height:42px}
+  .nav button{padding:0 12px;font-size:13px}
+  .mega{top:96px}
   .brand .seg{display:none}
   .page{padding:22px 14px 70px}
   .lede h1{font-size:22px}
@@ -206,10 +208,18 @@ a.card:hover{border-color:var(--ln2);transform:translateY(-1px)}
 }
 
 /* ---------- main navigation ---------- */
+/* segunda fila: la navegacion, a todo lo ancho */
+.navbar{border-top:1px solid var(--ln);background:var(--bg)}
+.navbar .in{
+  max-width:var(--maxw);margin:0 auto;padding:0 22px;height:44px;
+  display:flex;align-items:stretch;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.navbar .in::-webkit-scrollbar{display:none}
 .nav{display:flex;align-items:stretch;gap:2px;height:100%}
 .nav button{
   background:none;border:0;border-bottom:2px solid transparent;color:var(--fg2);
-  font:inherit;font-size:13.5px;padding:0 13px;cursor:pointer;display:flex;align-items:center;
+  font:inherit;font-size:13.5px;padding:0 15px;cursor:pointer;display:flex;align-items:center;
   gap:6px;white-space:nowrap;
 }
 .nav button:hover{color:var(--fg)}
@@ -217,7 +227,7 @@ a.card:hover{border-color:var(--ln2);transform:translateY(-1px)}
 .nav button .caret{font-size:8px;opacity:.55;transform:translateY(1px)}
 
 .mega{
-  position:fixed;left:0;right:0;top:58px;z-index:45;display:none;
+  position:fixed;left:0;right:0;top:103px;z-index:45;display:none;
   background:var(--surf);border-bottom:1px solid var(--ln);
   box-shadow:0 16px 36px rgba(0,0,0,.26);
 }
@@ -261,7 +271,6 @@ a.card:hover{border-color:var(--ln2);transform:translateY(-1px)}
 .results .none{border:0;padding:10px;font-size:12.5px}
 
 @media (max-width:900px){
-  .nav{display:none}
   .search input{width:130px}
   .search input:focus{width:170px}
 }
