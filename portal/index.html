@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="es" data-theme="dark"><head><meta charset="utf-8">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=6, user-scalable=yes, viewport-fit=cover">
-<title>PWEU process — PARA COMPARTIR (solo lectura)</title>
+<title>PWEU · Operaciones</title>
 <style id="pg">@page{size:A4 portrait;margin:0}</style>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f1f1ed;--fg:#14171b;--mut:#4b535e;--ln:#cfcfc8;--ln2:#6b7280;--card:#fff;--l:87%;--s:60%;--bl:46%;--oc:29%;--qb:#fff4c2;--qd:#c99600;--sh:0 1px 2px rgba(16,20,26,.09)}
@@ -122,6 +123,21 @@ body:not(.ed) .st,body:not(.ed) .ph,body:not(.ed) .q,body:not(.ed) .lb{cursor:de
   padding:0;cursor:pointer;border-radius:0}
 #zc button+button{border-left:1px solid var(--ln)}
 #zc button:active{background:var(--ln)}
+#gate{position:fixed;inset:0;z-index:999;background:#17181a;display:none;align-items:center;justify-content:center;padding:24px}
+#gate .gcard{max-width:420px;width:100%;background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:26px 24px;text-align:center}
+#gate h2{margin:0 0 10px;font-size:19px}
+#gate p{margin:0 0 14px;font-size:13.5px;color:var(--mut);line-height:1.5}
+#gate form{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#gate input{flex:1;min-width:190px;background:#000;border:1px solid var(--ln);color:var(--fg);border-radius:8px;padding:9px 11px;font:inherit;font-size:14px}
+#gate button{background:#2f7d55;border:0;color:#fff;border-radius:8px;padding:9px 16px;font:inherit;font-size:14px;cursor:pointer}
+#gate .gmsg{margin:14px 0 0;min-height:18px;font-size:12.5px}
+#who{position:fixed;left:10px;bottom:10px;z-index:28;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:4px 6px 4px 12px;font-size:11.5px;color:var(--mut)}
+#who button{background:none;border:0;color:var(--mut);cursor:pointer;font:inherit;padding:3px 8px;border-radius:999px}
+#who button:hover{background:var(--ln);color:var(--fg)}
+@media (max-width:760px){#who{left:auto;right:10px;bottom:58px;font-size:11px}}
+@media print{#gate,#who{display:none!important}}
+#pick{background:var(--card);border:1px solid var(--ln);color:var(--fg);border-radius:8px;padding:5px 9px;font:inherit;font-size:12.5px;margin:0 0 12px}
+@media print{#pick{display:none!important}}
 @media (max-width:760px){
   :root{--ln2:#9aa1a9}
   .fill{border-left:0;width:2px;background:var(--ln2)}
@@ -174,7 +190,9 @@ body:not(.ed) .st,body:not(.ed) .ph,body:not(.ed) .q,body:not(.ed) .lb{cursor:de
 </style></head><body>
 <button id="flip" title="Cambiar entre vertical y horizontal">⇄</button>
 <div id="zc" aria-label="Zoom"><button data-z="-" title="Reducir">−</button><button data-z="f" title="Ajustar al ancho">⤢</button><button data-z="+" title="Ampliar">+</button></div>
+<button id="gear" title="Ajustes de edición">⚙</button>
 <div id="run" aria-hidden="true"></div>
+<div id="gate" style="display:flex"><div class="gcard"><h2>PWEU · Operaciones</h2><p>Comprobando tu acceso…</p></div></div>
 <h1 id="ti">Current PWEU operational process</h1>
 <p class="sub" id="de">One simple diagram: shared steps appear once. Each step shows its owner; the small line says who does it and how.</p>
 <div id="bar"><div class="lg" id="lg"></div>
@@ -183,31 +201,26 @@ body:not(.ed) .st,body:not(.ed) .ph,body:not(.ed) .q,body:not(.ed) .lb{cursor:de
 <div class="wrap"><div class="board" id="bd"><div class="tl top" id="tlt"></div><div class="rt" id="g"></div><div class="tl bot" id="tlb"></div></div></div>
 <div id="foots"><p class="foot" id="ft"></p>
 <p class="foot fth" id="fth"></p></div>
+<p class="hint" id="hint">Haz clic en cualquier paso, fase, pregunta u opción para editarla, moverla o añadir debajo. Los cambios se guardan solo en este navegador. Los owners son una propuesta por rol, a confirmar. <button data-rs style="font-size:12px">Restablecer</button> <button data-rc style="font-size:12px">Recuperar copia anterior</button> <button data-ex style="font-size:12px">Exportar datos</button> <button data-im style="font-size:12px">Importar datos</button></p>
+<div id="io"></div>
 <script>
 // ===== DATOS (editables) =====
 // Nodos: S=paso (texto, owner, detalle) · P=fase · B=bifurcación (pregunta + opciones con su propia secuencia)
 const S=(t,o,n,w,x)=>({k:'s',t,o,n:n||'',w:w||'',x:x||''}),P=(t,h,b)=>({k:'p',t,h,b:b||0}),B=(q,c)=>({k:'b',q,c:c.map(([l,s])=>({l,s}))});
-const D0={"ver":"r6","p":["q1","q2","q3","q4","q5","q4","q5"],"O":[{"id":"a","n":"PWEU admin","h":45},{"id":"l","n":"Inland Transport","h":215,"k":0.12},{"id":"h","n":"Origin","h":140},{"id":"f","n":"Forwarder","h":229,"os":36,"lo":-11},{"id":"p","n":"PWH","h":190}],"s":[{"k":"p","t":"Sales order is confirmed","h":142,"b":0},{"k":"b","q":"","c":[{"l":"From stock","s":[{"k":"s","t":"Make a reservation in stock","o":"a","n":"","w":"","x":"Diana · Excel file, manual entry"}],"d":"≈ 2 weeks"},{"l":"To be produced","s":[{"k":"s","t":"Make a purchase contract for origin","o":"a","n":"Purchase Order issued and confirmed with origin (PWA / PWG)","w":"","x":"Ruud · Word template, manual edit"},{"k":"s","t":"Record purchase contract","o":"a","n":"","w":"","x":"Diana · Excel file, manual entry"},{"k":"b","q":"","c":[{"l":"PWA","s":[{"k":"s","t":"Origin sends concept packing list","o":"h","n":"","w":"","x":""}]},{"l":"PWG","s":[{"k":"s","t":"Origin sends proforma invoice, transport order and packing list","o":"h","n":"","w":"","x":""}]}]},{"k":"s","t":"Check and confirm","o":"a","n":"Review volumes and dimensions; check they match the purchase order","w":"","x":"Ruud · Via email"},{"k":"b","q":"","c":[{"l":"PWA","s":[{"k":"s","t":"Origin sends booking with invoice, final packing list, export/import docs (DOF/DANFE) and draft B/L","o":"h","n":"","w":"","x":""}]},{"l":"PWG","s":[{"k":"s","t":"Origin sends final invoice, final packing list and draft B/L","o":"h","n":"","w":"","x":""}]}]},{"k":"s","t":"Check and record","o":"a","n":"","w":"","x":"Diana · Excel file, manual entry"},{"k":"s","t":"Send file to forwarder","o":"a","n":"","w":"","x":"Diana · Via email"},{"k":"b","q":"","c":[{"l":"PWA / PWG container","s":[]},{"l":"PWG breakbulk","s":[{"k":"s","t":"Send our invoice","o":"a","n":"","w":"","x":""},{"k":"s","t":"Record invoice and payment","o":"a","n":"","w":"","x":""}]}]},{"k":"b","q":"","c":[{"l":"PWA","s":[{"k":"s","t":"Origin sends original B/L to us","o":"h","n":"Digital (Express B/L)","w":"","x":""},{"k":"s","t":"Enter the material in stock","o":"a","n":"","w":"","x":"Diana · Excel file, manual entry"},{"k":"s","t":"Send B/L to the forwarder","o":"a","n":"","w":"","x":"Diana · Excel file, manual entry"}]},{"l":"PWG","s":[{"k":"s","t":"Origin sends original B/L to PWH","o":"h","n":"Physical: original documents sent by post","w":"","x":""},{"k":"s","t":"PWH sends the documents to the forwarder","o":"p","n":"","w":"","x":""},{"k":"s","t":"Enter the material in stock","o":"a","n":"","w":"","x":"Diana · Excel file, manual entry"}]}]},{"k":"s","t":"Update ETA in overview (weekly)","o":"a","n":"","w":"","x":"Ruud/Diana · Excel file, manual entry"},{"k":"s","t":"Receive sea freight invoice: check, record, add to cost price","o":"a","n":"","w":"","x":"Diana · Excel file, manual entry"},{"k":"b","q":"","c":[{"l":"PWA / PWG container","s":[{"k":"s","t":"Receive container handling invoice: check, record, add to cost price, change warehouse in PWEU stock","o":"a","n":"Containers arrive in Rotterdam.\nStock: Transit to Physical Stock, warehouse Zeeland","w":"","x":"Ruud/Diana · Excel file, manual entry"},{"k":"s","t":"Remove container from overview","o":"a","n":"","w":"","x":"Diana · Excel file, manual record"}]},{"l":"PWG breakbulk","s":[{"k":"s","t":"Forwarder notifies: material unloaded and free to collect","o":"f","n":"Breakbulk arrives in Antwerp","w":"","x":""},{"k":"s","t":"Receive breakbulk handling invoice: check, record, add to cost price, change warehouse in PWEU stock","o":"a","n":"Stock: Transit to Physical Stock, warehouse Zeeland\nIn Ruud’s file this invoice and the overview clean-up come after the pickup/transport order and the customer notice.","w":"After delivery is instructed","x":""},{"k":"s","t":"Remove breakbulk from overview","o":"a","n":"","w":"After delivery is instructed","x":"Diana · Excel file, manual record"}]}]}],"d":"≈ 5–6 months"}]},{"k":"p","t":"Delivery","h":28,"b":1},{"k":"b","q":"","c":[{"l":"Customer order","s":[{"k":"s","t":"Instruction for logistics: pickup or transport order","o":"a","n":"","w":"","x":"Ruud · Via phone or email"},{"k":"s","t":"Notify customer","o":"a","n":"","w":"","x":"Ruud · E-mail/phone"},{"k":"s","t":"Inland transport notifies: picked up / transported","o":"l","n":"","w":"Not for PWG breakbulk","x":"Via invoice"},{"k":"s","t":"Send our invoice","o":"a","n":"Can be a different procedure with pro forma","w":"Not for PWG breakbulk (invoiced earlier)","x":"Diana · Excel file, manual record"},{"k":"s","t":"Record invoice and payment","o":"a","n":"","w":"Not for PWG breakbulk","x":"Diana · Excel file, manual record"}]},{"l":"Own import (PWA or PWG)","s":[{"k":"s","t":"Material stays in PWEU stock","o":"","n":"","w":"","x":""}]}]}],"de":"One simple diagram: shared steps appear once. Each step shows its owner; the small grey line says who does it and how.","dir":"v","ti":"PWEU_Current_Operation Oct26","ft":"First draft, based on the operations workflow file. Owners and details are still to be confirmed — please send corrections.","fth":"The day and month scales in this view are indicative only: they show the difference in lead time between selling from stock and importing, not the exact timing of each step."};
-const NN={
-'Make a purchase contract for origin':'Purchase Order issued and confirmed with origin (PWA / PWG)',
-'Check and confirm':'Review volumes and dimensions; validate the order is met',
-'Origin sends original B/L to us':'Digital (Express BL)',
-'Origin sends original B/L to PWH':'Physical: original documents sent by post',
-'Forwarder notifies: material unloaded and free to collect':'Breakbulk arrives in Antwerp',
-'Receive container handling invoice: check, record, add to cost price, change warehouse in PWEU stock':'Containers arrive in Rotterdam.\nStock: Transit to Physical Stock, warehouse Zeeland',
-'Receive break bulk handling invoice: check, record, add to cost price, change warehouse in PWEU stock':'Stock: Transit to Physical Stock, warehouse Zeeland'};
+const D0={"ver":"r6","p":[],"O":[],"s":[],"de":"","dir":"v","ti":"","ft":"","fth":""};
+const NN={};
 const fixN=s=>s.forEach(n=>{if(n.k==='s'&&NN[n.t]&&!n.n)n.n=NN[n.t];if(n.k==='b')n.c.forEach(c=>fixN(c.s))});
-fixN(D0.s);D0.p.push('q4');
-const XX={'Make a reservation in the stock':'Diana · Excel file, manual entry','Make a purchase contract for origin':'Ruud · Word template, manual edit'};
-const PP={v:'Ruud',c:'Diana or Ruud'};
+fixN(D0.s);
+const XX={};
+const PP={};
 const fixX=(O,s)=>{O.forEach(o=>{if(PP[o.id]&&o.pp===undefined)o.pp=PP[o.id]});const w=a=>a.forEach(n=>{if(n.k==='s'&&XX[n.t]&&!n.x)n.x=XX[n.t];if(n.k==='b')n.c.forEach(c=>w(c.s))});w(s)};
 fixX(D0.O,D0.s);D0.p.push('q5');
 D0.fth='The day and month scales in this view are indicative only: they show the difference in lead time between selling from stock and importing, not the exact timing of each step.';
 D0.ft='How to read this: the flow runs from top to bottom. The grey pills mark the branches (from stock or import, PWA or PWG, container or breakbulk). Each box shows the role that owns the step, and the small line underneath says who does it and with which tool.\n\nFirst draft \u2014 owners and details still to be confirmed.';
 // ===== LÓGICA =====
-const KEY='pweu-operativa-readonly';
+const KEY='pweu-portal-sop';
 let D,sel=null,arm='';
-D=null;
+try{let r=localStorage.getItem(KEY);if(!r){for(const v of ['v9','v8','v7','v6','v5','v4','v3','v2']){r=localStorage.getItem('pweu-operativa-'+v);if(r){window.__mig=1;break}}}D=JSON.parse(r||'null')}catch(e){D=null}
 if(!D||!D.s)D=JSON.parse(JSON.stringify(D0));
 else if(D.ver!==D0.ver){try{const H=JSON.parse(localStorage.getItem('pweu-operativa-hist')||'[]');H.push({t:Date.now(),d:JSON.stringify(D)});localStorage.setItem('pweu-operativa-hist',JSON.stringify(H.slice(-40)))}catch(e){}D=JSON.parse(JSON.stringify(D0));window.__mig=1}
 if(D&&D.s&&!(D.p||[]).includes('q1')){D.s.forEach(n=>{if(n.k==='b'&&n.q==='From stock or import?')n.q=''});(D.p=D.p||[]).push('q1');window.__mig=1}
@@ -454,7 +467,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{if(e.target.id==='fo'&&sel){node(sel.p).o=e.target.value;save();RD()}});
 let EDIT=false;
-EDIT=false;
+try{EDIT=localStorage.getItem(KEY+'-edit')==='1'}catch(e){}
 function applyEdit(){
   document.body.classList.toggle('ed',EDIT);
   const t=$('ti'),d=$('de');
@@ -491,7 +504,135 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('focusout',()=>{setTimeout(()=>{if(pend2){const d=pend2;pend2=null;applyRemote(d)}},150)});
 RT();applyEdit();RL();RD();
-document.addEventListener('click',ev=>{if(!ev.target.closest('#flip,#zc')){ev.stopPropagation();ev.preventDefault()}},true);
-document.addEventListener('keydown',ev=>{ev.stopPropagation()},true);
+/* ================= Portal PWEU · Supabase ================= */
+const SB_URL='https://idbammhbxqpkggpldwvr.supabase.co';
+const SB_KEY='sb_publishable_idFGGSO4ZSwwMwcEzLsapQ_MrDtt0OO';
+let SLUG=new URLSearchParams(location.search).get('doc')||'sop-pweu';
+let DOCS=[],SPACE=null;
+let sb=null,ME=null,ROLE=null;
+
+function gate(html){
+  let g=document.getElementById('gate');
+  if(!g){g=document.createElement('div');g.id='gate';document.body.appendChild(g)}
+  g.innerHTML=html;g.style.display='flex';
+}
+function ungate(){const g=document.getElementById('gate');if(g)g.style.display='none'}
+
+function loginScreen(msg){
+  gate('<div class="gcard"><h2>PWEU · Operaciones</h2>'
+    +'<p>Introduce tu correo y te enviamos un enlace de acceso. No hay contraseña que recordar.</p>'
+    +'<form id="gf"><input id="gmail" type="email" required placeholder="tu@correo.com" autocomplete="email">'
+    +'<button type="submit">Enviar enlace</button></form>'
+    +'<p class="gmsg" id="gmsg">'+(msg||'')+'</p></div>');
+  const f=document.getElementById('gf');
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const em=document.getElementById('gmail').value.trim();
+    const m=document.getElementById('gmsg');
+    m.textContent='Enviando…';
+    const {error}=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.href.split('#')[0]}});
+    m.textContent=error?('No se ha podido enviar: '+error.message)
+      :'Listo. Abre el enlace que acabas de recibir en '+em+'. Puedes cerrar esta pestaña.';
+  });
+}
+
+function lockViewer(){
+  EDIT=false;applyEdit();
+  const g=document.getElementById('gear');if(g)g.remove();
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('#flip,#zc,#who'))
+      {e.stopPropagation();e.preventDefault()}
+  },true);
+  document.querySelectorAll('[contenteditable]').forEach(n=>n.setAttribute('contenteditable','false'));
+}
+
+function docPicker(){
+  if(DOCS.length<2)return;
+  let n=document.getElementById('pick');
+  if(!n){n=document.createElement('select');n.id='pick';
+    const h=document.querySelector('h1');h.parentNode.insertBefore(n,h.nextSibling)}
+  n.innerHTML=DOCS.map(d=>'<option value="'+d.slug+'"'+(d.slug===SLUG?' selected':'')+'>'
+    +(d.spaces?d.spaces.name+' \u00b7 ':'')+d.title+'</option>').join('');
+  n.onchange=()=>{location.search='?doc='+n.value};
+}
+
+function whoBadge(){
+  let w=document.getElementById('who');
+  if(!w){w=document.createElement('div');w.id='who';document.body.appendChild(w)}
+  const rot={viewer:'solo lectura',editor:'puede editar'}[ROLE]||ROLE;
+  w.innerHTML='<span>'+ME+' · '+rot+'</span><button id="out">Salir</button>';
+  document.getElementById('out').onclick=async()=>{await sb.auth.signOut();location.reload()};
+}
+
+push = async function(){
+  if(!sb||ROLE!=='editor'||busy||dirty===null)return;
+  const c=dirty;dirty=null;busy=1;sv('<i>Guardando…</i>');
+  try{
+    const {error}=await sb.from('docs').update({data:JSON.parse(c)}).eq('slug',SLUG);
+    if(error)throw error;
+    sv('<b>✓ Guardado</b> · queda visible para todo el equipo');
+  }catch(e){
+    sv('No se ha podido guardar ('+((e&&e.message)||'error')+'). Tus cambios siguen en este navegador.');
+    dirty=dirty||c;
+  }
+  busy=0;if(dirty!==null)setTimeout(push,400);
+};
+
+async function loadDoc(){
+  const {data,error}=await sb.from('docs').select('data,updated_at,updated_by').eq('slug',SLUG).maybeSingle();
+  if(error){sv('No se ha podido cargar: '+error.message);return}
+  if(!data){sv('Este documento no existe o no tienes acceso.');return}
+  const o=data.data;
+  if(o&&o.s&&o.O){
+    applyRemote({json:JSON.stringify(o),t:Date.now()});
+    const q=data.updated_at?new Date(data.updated_at).toLocaleString([],{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):null;
+    sv(q?('Último cambio: '+q+(data.updated_by?' · '+data.updated_by:'')):'');
+  }else if(ROLE==='editor'){
+    sv('<i>Primera carga…</i>');dirty=JSON.stringify(D);push();
+  }
+  sb.channel('doc-'+SLUG)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'docs',filter:'slug=eq.'+SLUG},p=>{
+      const n=p&&p.new&&p.new.data;
+      if(n&&n.s&&n.O)applyRemote({json:JSON.stringify(n),t:Date.now()});
+    }).subscribe();
+}
+
+function addScript(src){return new Promise(r=>{const t=document.createElement('script');t.src=src;t.onload=()=>r(1);t.onerror=()=>r(0);document.head.appendChild(t)})}
+async function waitLib(){
+  for(let i=0;i<40;i++){ if(window.supabase&&window.supabase.createClient)return 1; await new Promise(r=>setTimeout(r,150)) }
+  await addScript('https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js');
+  return !!(window.supabase&&window.supabase.createClient);
+}
+(async()=>{
+  if(!(await waitLib())){
+    gate('<div class="gcard"><h2>No se ha podido conectar</h2>'
+      +'<p>No ha cargado la librería de acceso. Suele ser la conexión, o un bloqueador del navegador.</p>'
+      +'<button onclick="location.reload()">Reintentar</button></div>');
+    return;
+  }
+  sb=window.supabase.createClient(SB_URL,SB_KEY);
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){loginScreen();return}
+  ME=session.user.email;
+  const {data:ds,error}=await sb.from('docs').select('slug,title,space,sort,spaces(name,sort)').order('sort');
+  if(error){loginScreen('Error comprobando tu acceso: '+error.message);return}
+  DOCS=ds||[];
+  const me=DOCS.length?1:null;
+  if(!me){
+    gate('<div class="gcard"><h2>Sin acceso todavía</h2>'
+      +'<p>Tu correo <b>'+ME+'</b> no está en la lista de personas autorizadas.</p>'
+      +'<p>Pídele a Javi que te añada y vuelve a entrar.</p>'
+      +'<button id="out2">Salir</button></div>');
+    document.getElementById('out2').onclick=async()=>{await sb.auth.signOut();location.reload()};
+    return;
+  }
+  let cur=DOCS.find(d=>d.slug===SLUG)||DOCS[0];
+  SLUG=cur.slug;SPACE=cur.space;
+  const {data:r}=await sb.rpc('role_in',{p_space:SPACE});
+  ROLE=r||'viewer';
+  ungate();whoBadge();docPicker();
+  if(ROLE!=='editor')lockViewer();
+  await loadDoc();
+})();
 
 </script></body></html>
