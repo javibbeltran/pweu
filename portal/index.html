@@ -1,212 +1,232 @@
 <!doctype html>
-<html lang="es" data-theme="dark"><head><meta charset="utf-8">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<html lang="en" data-theme="auto"><head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>PWEU · Operaciones</title>
-<style>
-:root{
-  --bg:#17181a; --fg:#e8eaed; --mut:#9aa1a9; --ln:#2e3135; --ln2:#9aa1a9;
-  --card:#1f2124; --acc:#2f7d55;
-}
-*{box-sizing:border-box}
-html{background:var(--bg)}
-body{margin:0;padding:28px 20px 60px;background:var(--bg);color:var(--fg);
-  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased}
-.wrap{max-width:900px;margin:0 auto}
-
-header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 22px}
-h1{font-size:21px;margin:0;letter-spacing:-.2px}
-header .sub{color:var(--mut);font-size:13px;margin:0}
-
-/* pestañas de empresa */
-.spaces{display:flex;gap:6px;margin:0 0 26px;flex-wrap:wrap;border-bottom:1px solid var(--ln);padding-bottom:0}
-.spaces button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);
-  font:inherit;font-size:14px;padding:8px 14px;cursor:pointer;margin-bottom:-1px;border-radius:6px 6px 0 0}
-.spaces button:hover{color:var(--fg);background:#232629}
-.spaces button[aria-current="true"]{color:var(--fg);border-bottom-color:var(--acc);font-weight:600}
-
-section.sec{margin:0 0 30px}
-section.sec h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--mut);
-  margin:0 0 11px;font-weight:600;display:flex;align-items:center;gap:8px}
-section.sec h2 .ic{font-size:13px;opacity:.75}
-
-.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
-a.card,div.card{display:block;text-decoration:none;color:inherit;background:var(--card);
-  border:1px solid var(--ln);border-radius:11px;padding:14px 15px;transition:border-color .12s,background .12s}
-a.card:hover{border-color:#44484d;background:#232629}
-.card .t{font-size:14.5px;font-weight:600;margin:0 0 3px;display:flex;align-items:center;gap:7px}
-.card .d{font-size:12.5px;color:var(--mut);margin:0;line-height:1.45}
-.card .m{font-size:11px;color:var(--mut);margin:9px 0 0;opacity:.8}
-.tag{font-size:10px;text-transform:uppercase;letter-spacing:.06em;border:1px solid var(--ln);
-  border-radius:999px;padding:2px 7px;color:var(--mut);font-weight:600}
-.empty{border-style:dashed;opacity:.62}
-
-.none{color:var(--mut);font-size:13px;border:1px dashed var(--ln);border-radius:11px;padding:16px;margin:0}
-
-/* acceso */
-#gate{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;
-  justify-content:center;padding:24px}
-#gate .gcard{max-width:420px;width:100%;background:var(--card);border:1px solid var(--ln);
-  border-radius:14px;padding:26px 24px;text-align:center}
-#gate h2{margin:0 0 10px;font-size:19px}
-#gate p{margin:0 0 14px;font-size:13.5px;color:var(--mut);line-height:1.5}
-#gate form{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-#gate input{flex:1;min-width:190px;background:#000;border:1px solid var(--ln);color:var(--fg);
-  border-radius:8px;padding:9px 11px;font:inherit;font-size:14px}
-#gate button{background:var(--acc);border:0;color:#fff;border-radius:8px;padding:9px 16px;
-  font:inherit;font-size:14px;cursor:pointer}
-#gate .gmsg{margin:14px 0 0;min-height:18px;font-size:12.5px}
-
-#who{position:fixed;left:14px;bottom:14px;z-index:28;display:flex;align-items:center;gap:8px;
-  background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:4px 6px 4px 13px;
-  font-size:11.5px;color:var(--mut)}
-#who button{background:none;border:0;color:var(--mut);cursor:pointer;font:inherit;padding:3px 9px;border-radius:999px}
-#who button:hover{background:var(--ln);color:var(--fg)}
-
-@media (max-width:620px){
-  body{padding:20px 14px 70px}
-  h1{font-size:19px}
-  .grid{grid-template-columns:1fr}
-  #who{left:auto;right:14px}
-}
-</style></head>
+<meta name="theme-color" content="#121513">
+<title>Precious Woods · Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<link rel="stylesheet" href="pw.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="shared.js"></script>
+</head>
 <body>
-<div id="gate"><div class="gcard"><h2>PWEU · Operaciones</h2><p>Comprobando tu acceso…</p></div></div>
 
-<div class="wrap">
-  <header>
-    <h1 id="h1">Operaciones</h1>
-    <p class="sub" id="hsub"></p>
-  </header>
-  <div class="spaces" id="tabs"></div>
+<div id="gate"><div class="gcard">
+  <p class="gmark">Precious Woods</p>
+  <p class="gseg">Operations</p>
+  <p id="gatemsg">Checking your access…</p>
+</div></div>
+
+<header class="bar">
+  <div class="in">
+    <a class="brand" href="index.html">
+      <span class="mark">Precious Woods</span>
+      <span class="seg" id="seg">Operations</span>
+    </a>
+    <span class="sp"></span>
+    <button class="ghost" id="userbtn" aria-expanded="false" aria-haspopup="true">
+      <span class="av" id="av">··</span>
+      <span id="userlbl"></span>
+    </button>
+  </div>
+</header>
+
+<div class="panel" id="panel" role="menu"></div>
+
+<main class="page">
+  <div class="lede">
+    <h1 id="h1"></h1>
+    <span class="pill" id="pill"></span>
+  </div>
   <div id="body"></div>
-</div>
+</main>
 
 <script>
-const SB_URL='https://idbammhbxqpkggpldwvr.supabase.co';
-const SB_KEY='sb_publishable_idFGGSO4ZSwwMwcEzLsapQ_MrDtt0OO';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let sb=null,ME=null,SPACES=[],SECTIONS=[],DOCS=[],ROLES={},CUR=null;
+const t=(...a)=>PW.t(...a);
 
+let SPACES=[],SECTIONS=[],DOCS=[],ROLES={},CUR=null;
+
+const ACCENTS=['#2f7d55','#3c6e4f','#6b7f3a','#8a6a3b','#3a6b7d','#7d4f3a'];
+
+/* ---------- access screen ---------- */
 function gate(html){const g=$('gate');g.innerHTML=html;g.style.display='flex'}
 function ungate(){$('gate').style.display='none'}
 
+function gateShell(inner){
+  return '<div class="gcard"><p class="gmark">Precious Woods</p><p class="gseg">Operations</p>'
+    +inner
+    +'<div class="glang"><select id="glang">'
+    + PW.LANGS.map(([c,n])=>'<option value="'+c+'"'+(c===PW.prefs.lang?' selected':'')+'>'+n+'</option>').join('')
+    +'</select></div></div>';
+}
+function wireGateLang(redraw){
+  const s=$('glang');
+  if(s) s.onchange=()=>{PW.setPref('lang',s.value);document.documentElement.lang=s.value;redraw()};
+}
+
 function loginScreen(msg){
-  gate('<div class="gcard"><h2>PWEU · Operaciones</h2>'
-    +'<p>Introduce tu correo y te enviamos un enlace de acceso. No hay contraseña que recordar.</p>'
-    +'<form id="gf"><input id="gmail" type="email" required placeholder="tu@correo.com" autocomplete="email">'
-    +'<button type="submit">Enviar enlace</button></form>'
-    +'<p class="gmsg" id="gmsg">'+(msg||'')+'</p></div>');
+  gate(gateShell(
+     '<p>'+esc(t('loginLead'))+'</p>'
+    +'<form id="gf"><input id="gmail" type="email" required placeholder="'+esc(t('emailLabel'))+'" autocomplete="email">'
+    +'<button type="submit">'+esc(t('sendLink'))+'</button></form>'
+    +'<p class="gmsg" id="gmsg">'+(msg?esc(msg):'')+'</p>'));
+  wireGateLang(()=>loginScreen(msg));
   $('gf').addEventListener('submit',async e=>{
     e.preventDefault();
     const em=$('gmail').value.trim(),m=$('gmsg');
-    m.textContent='Enviando…';
-    const {error}=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.href.split('#')[0].split('?')[0]}});
-    m.textContent=error?('No se ha podido enviar: '+error.message)
-      :'Listo. Abre el enlace que acabas de recibir en '+em+'.';
+    m.textContent=t('sending');
+    const {error}=await PW.signIn(em);
+    m.textContent=error?t('sendFail',error.message):t('sent',em);
   });
 }
 
-function whoBadge(){
-  let w=$('who');
-  if(!w){w=document.createElement('div');w.id='who';document.body.appendChild(w)}
-  w.innerHTML='<span>'+esc(ME)+'</span><button id="out">Salir</button>';
-  $('out').onclick=async()=>{await sb.auth.signOut();location.reload()};
+function noAccessScreen(){
+  gate(gateShell(
+     '<h2>'+esc(t('noAccessT'))+'</h2>'
+    +'<p>'+esc(t('noAccessB',PW.email))+'</p>'
+    +'<p>'+esc(t('noAccessH'))+'</p>'
+    +'<button id="out2">'+esc(t('signout'))+'</button>'));
+  wireGateLang(noAccessScreen);
+  $('out2').onclick=async()=>{await PW.signOut();location.reload()};
 }
 
-function tabs(){
-  const t=$('tabs');
-  if(SPACES.length<2){t.style.display='none';return}
-  t.innerHTML=SPACES.map(s=>'<button data-s="'+esc(s.id)+'" aria-current="'+(s.id===CUR)+'">'+esc(s.name)+'</button>').join('');
-  t.onclick=e=>{const b=e.target.closest('button');if(!b)return;
-    CUR=b.dataset.s;history.replaceState(null,'','?space='+CUR);tabs();render()};
+/* ---------- preferences panel ---------- */
+function initials(em){
+  const n=em.split('@')[0].replace(/[._-]+/g,' ').trim().split(' ').filter(Boolean);
+  return ((n[0]||'?')[0]+((n[1]||'')[0]||'')).toUpperCase();
 }
 
-function fecha(s){
-  if(!s)return'';
-  return new Date(s).toLocaleDateString([], {day:'2-digit',month:'short',year:'numeric'});
+function panel(){
+  const p=$('panel');
+  const spaceRow = SPACES.length>1
+    ? '<h4>'+esc(t('company'))+'</h4><select id="pspace">'
+      + SPACES.map(s=>'<option value="'+esc(s.id)+'"'+(s.id===CUR?' selected':'')+'>'+esc(s.name)+'</option>').join('')
+      + '</select>'
+    : '';
+  p.innerHTML =
+     '<div class="who"><b>'+esc(PW.email)+'</b><span>'
+      +esc(ROLES[CUR]==='editor'?t('canEdit'):t('readOnly'))+'</span></div>'
+    + spaceRow
+    + '<h4>'+esc(t('language'))+'</h4><select id="plang">'
+      + PW.LANGS.map(([c,n])=>'<option value="'+c+'"'+(c===PW.prefs.lang?' selected':'')+'>'+n+'</option>').join('')
+      + '</select>'
+    + '<h4>'+esc(t('appearance'))+'</h4><div class="seg3">'
+      + [['system',t('system')],['light',t('light')],['dark',t('dark')]]
+        .map(([v,l])=>'<button data-theme="'+v+'" aria-pressed="'+(PW.prefs.theme===v)+'">'+esc(l)+'</button>').join('')
+      + '</div>'
+    + '<h4>'+esc(t('accent'))+'</h4><div class="swatches">'
+      + ACCENTS.map(c=>'<button data-acc="'+c+'" style="background:'+c+'" aria-pressed="'
+          +(PW.prefs.accent.toLowerCase()===c)+'" title="'+c+'"></button>').join('')
+      + '<input type="color" id="pacc" value="'+esc(PW.prefs.accent)+'">'
+      + '</div>'
+    + '<div class="foot"><button id="pout">'+esc(t('signout'))+'</button></div>';
+
+  const sp=$('pspace');
+  if(sp) sp.onchange=()=>{CUR=sp.value;PW.setPref('space',CUR);render();panel()};
+  $('plang').onchange=e=>{PW.setPref('lang',e.target.value);document.documentElement.lang=e.target.value;chrome();render();panel()};
+  p.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{PW.setPref('theme',b.dataset.theme);panel()});
+  p.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{PW.setPref('accent',b.dataset.acc);panel()});
+  $('pacc').oninput=e=>{PW.setPref('accent',e.target.value)};
+  $('pout').onclick=async()=>{await PW.signOut();location.reload()};
+}
+
+function togglePanel(open){
+  const p=$('panel'),b=$('userbtn');
+  const show = open===undefined ? !p.classList.contains('open') : open;
+  p.classList.toggle('open',show);
+  b.setAttribute('aria-expanded',String(show));
+}
+
+/* ---------- content ---------- */
+function fmtDate(s){
+  if(!s) return '';
+  try{ return new Date(s).toLocaleDateString(PW.prefs.lang,{day:'2-digit',month:'short',year:'numeric'}); }
+  catch(e){ return new Date(s).toLocaleDateString(); }
 }
 
 function card(d){
-  const role=ROLES[d.space]||'viewer';
-  const puede=role==='editor';
-  const vacio=!d.has_content && d.kind==='diagram';
-  const meta=vacio ? 'Sin contenido todavía'
-    : (d.updated_at ? 'Actualizado '+fecha(d.updated_at)+(d.updated_by?' · '+esc(d.updated_by.split('@')[0]):'') : '');
-  const inner='<p class="t">'+esc(d.title)
-      +(vacio?' <span class="tag">vacío</span>':'')
-      +(d.kind==='link'?' <span class="tag">enlace</span>':'')+'</p>'
+  const vacio = !d.has_content && d.kind==='diagram';
+  const meta = vacio ? t('noContent')
+    : (d.updated_at ? t('updated')+' '+fmtDate(d.updated_at)
+        + (d.updated_by?' · '+esc(d.updated_by.split('@')[0]):'') : '');
+  const inner =
+     '<p class="t">'+esc(d.title)
+      +(vacio?' <span class="tag">'+esc(t('empty'))+'</span>':'')
+      +(d.kind==='link'?' <span class="tag">'+esc(t('link'))+'</span>':'')+'</p>'
     +(d.subtitle?'<p class="d">'+esc(d.subtitle)+'</p>':'')
     +(meta?'<p class="m">'+meta+'</p>':'');
   if(d.kind==='link'&&d.url)
     return '<a class="card" href="'+esc(d.url)+'" target="_blank" rel="noopener">'+inner+'</a>';
-  if(vacio&&!puede) return '<div class="card empty">'+inner+'</div>';
+  if(vacio && ROLES[d.space]!=='editor') return '<div class="card empty">'+inner+'</div>';
   return '<a class="card'+(vacio?' empty':'')+'" href="doc.html?doc='+encodeURIComponent(d.slug)+'">'+inner+'</a>';
 }
 
+function chrome(){
+  $('seg').textContent=t('portal');
+  $('userlbl').textContent='';
+  $('av').textContent=initials(PW.email||'?');
+  document.title='Precious Woods · '+t('portal');
+}
+
 function render(){
+  const sp=SPACES.find(s=>s.id===CUR);
+  $('h1').textContent=sp?sp.name:'';
+  $('pill').textContent=ROLES[CUR]==='editor'?t('canEdit'):t('readOnly');
   const secs=SECTIONS.filter(s=>s.space===CUR);
   const ds=DOCS.filter(d=>d.space===CUR);
-  const sp=SPACES.find(s=>s.id===CUR);
-  $('h1').textContent=(sp?sp.name:'')+' · Operaciones';
-  $('hsub').textContent=ROLES[CUR]==='editor'?'Puedes editar':'Solo lectura';
-  if(!secs.length){$('body').innerHTML='<p class="none">Esta empresa todavía no tiene secciones.</p>';return}
+  if(!secs.length){$('body').innerHTML='<p class="none">'+esc(t('noSections'))+'</p>';return}
   $('body').innerHTML=secs.map(s=>{
     const list=ds.filter(d=>d.section===s.id).sort((a,b)=>a.sort-b.sort);
-    return '<section class="sec"><h2>'+(s.icon?'<span class="ic">'+esc(s.icon)+'</span>':'')+esc(s.name)+'</h2>'
+    return '<section class="sec"><h2>'+esc(s.name)+'</h2>'
       +(list.length?'<div class="grid">'+list.map(card).join('')+'</div>'
-                   :'<p class="none">Nada aquí todavía.</p>')
+                   :'<p class="none">'+esc(t('nothingHere'))+'</p>')
       +'</section>';
   }).join('');
 }
 
-function addScript(src){return new Promise(r=>{const t=document.createElement('script');
-  t.src=src;t.onload=()=>r(1);t.onerror=()=>r(0);document.head.appendChild(t)})}
-async function waitLib(){
-  for(let i=0;i<40;i++){if(window.supabase&&window.supabase.createClient)return 1;
-    await new Promise(r=>setTimeout(r,150))}
-  await addScript('https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js');
-  return !!(window.supabase&&window.supabase.createClient);
-}
-
+/* ---------- start ---------- */
 (async()=>{
-  if(!(await waitLib())){
-    gate('<div class="gcard"><h2>No se ha podido conectar</h2>'
-      +'<p>No ha cargado la librería de acceso. Suele ser la conexión, o un bloqueador del navegador.</p>'
-      +'<button onclick="location.reload()">Reintentar</button></div>');
+  document.documentElement.lang=PW.prefs.lang;
+  $('gatemsg').textContent=t('checking');
+
+  const c=await PW.connect();
+  if(!c.ok){
+    gate(gateShell('<h2>'+esc(t('offlineT'))+'</h2><p>'+esc(t('offlineB'))+'</p>'
+      +'<button onclick="location.reload()">'+esc(t('retry'))+'</button>'));
+    wireGateLang(()=>location.reload());
     return;
   }
-  sb=window.supabase.createClient(SB_URL,SB_KEY);
-  const {data:{session}}=await sb.auth.getSession();
-  if(!session){loginScreen();return}
-  ME=session.user.email;
+  if(!c.session){ loginScreen(); return; }
+
+  await PW.loadPrefs();
+  document.documentElement.lang=PW.prefs.lang;
 
   const [sp,se,dc]=await Promise.all([
-    sb.from('spaces').select('id,name,sort').order('sort'),
-    sb.from('sections').select('id,space,name,icon,sort').order('sort'),
-    sb.from('doc_index').select('*')
+    PW.sb.from('spaces').select('id,name,sort').order('sort'),
+    PW.sb.from('sections').select('id,space,name,icon,sort').order('sort'),
+    PW.sb.from('doc_index').select('*')
   ]);
-  if(sp.error){loginScreen('Error comprobando tu acceso: '+sp.error.message);return}
-  SPACES=sp.data||[];SECTIONS=se.data||[];DOCS=dc.data||[];
+  if(sp.error){ loginScreen(t('loadFail',sp.error.message)); return; }
+  SPACES=sp.data||[]; SECTIONS=se.data||[]; DOCS=dc.data||[];
+  if(!SPACES.length){ noAccessScreen(); return; }
 
-  if(!SPACES.length){
-    gate('<div class="gcard"><h2>Sin acceso todavía</h2>'
-      +'<p>Tu correo <b>'+esc(ME)+'</b> no tiene acceso a ninguna empresa.</p>'
-      +'<p>Pídele a Javi que te dé de alta y vuelve a entrar.</p>'
-      +'<button id="out2">Salir</button></div>');
-    $('out2').onclick=async()=>{await sb.auth.signOut();location.reload()};
-    return;
-  }
-
-  const rs=await Promise.all(SPACES.map(s=>sb.rpc('role_in',{p_space:s.id})));
+  const rs=await Promise.all(SPACES.map(s=>PW.sb.rpc('role_in',{p_space:s.id})));
   SPACES.forEach((s,i)=>{ROLES[s.id]=(rs[i]&&rs[i].data)||'viewer'});
 
-  const want=new URLSearchParams(location.search).get('space');
+  const want=new URLSearchParams(location.search).get('space')||PW.prefs.space;
   CUR=(SPACES.find(s=>s.id===want)||SPACES[0]).id;
+  if(PW.prefs.space!==CUR) PW.setPref('space',CUR);
 
-  ungate();whoBadge();tabs();render();
+  ungate(); chrome(); panel(); render();
+
+  $('userbtn').onclick=e=>{e.stopPropagation();togglePanel()};
+  $('panel').onclick=e=>e.stopPropagation();
+  document.addEventListener('click',()=>togglePanel(false));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')togglePanel(false)});
 })();
 </script>
 </body></html>
