@@ -67,7 +67,8 @@ a{color:inherit}
 }
 .brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;min-width:0}
 .brand .mark{
-  font-family:var(--serif);font-size:16.5px;font-weight:800;letter-spacing:-.01em;
+  font-family:Tinos,Georgia,serif;font-size:16px;font-weight:700;
+  letter-spacing:.055em;text-transform:uppercase;
   white-space:nowrap;
 }
 .brand .seg{
@@ -178,7 +179,8 @@ a.card:hover{border-color:var(--ln2);transform:translateY(-1px)}
   border-radius:14px;padding:30px 26px;text-align:center;box-shadow:var(--shadow);
 }
 #gate .gmark{
-  font-family:var(--serif);font-size:19px;font-weight:600;margin:0 0 4px;
+  font-family:Tinos,Georgia,serif;font-size:17px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;margin:0 0 5px;
 }
 #gate .gseg{
   font-size:10.5px;text-transform:uppercase;letter-spacing:.15em;color:var(--mut);margin:0 0 18px;
