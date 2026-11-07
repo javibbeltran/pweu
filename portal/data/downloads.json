@@ -1,0 +1,5 @@
+{
+  "_readme": "Material salespeople can download. groups: [{name, items:[{title, desc, updated, url}]}]. An item without url shows as 'Link to add'. Do not put confidential price lists in this public file: use a private storage with access rules.",
+  "sample": false,
+  "groups": []
+}

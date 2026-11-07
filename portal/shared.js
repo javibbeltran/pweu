@@ -215,7 +215,7 @@ window.PW = (function () {
     stQuote:'Quote sent', stSubmitted:'Submitted', stOpen:'Open contract', stTransit:'In transit', stDelivered:'Delivered',
     allCustomers:'All my customers', allSpecies:'All species', allStatuses:'All statuses', statusWord:'Status', dateFrom:'From', dateTo:'To',
     ordersCount:'{0} orders', noOrders:'No orders match these filters.', specOfCust:'Species ordered by this customer', custOfSpec:'Customers who ordered this species',
-    noCustName:'No customer', quoteTitle:'Quote', date:'Date', clear:'Clear', calendar:'Calendar', openInvoices:'Open invoices', downloads:'Downloads', stPartial:'Partially delivered', stCompleted:'Completed', todayWord:'Today', noEvents:'No orders or shipments this month.'
+    noCustName:'No customer', quoteTitle:'Quote', date:'Date', clear:'Clear', calendar:'Calendar', openInvoices:'Open invoices', downloads:'Downloads & Uploads', uploadsH:'Upload', downloadsH:'Download', docType:'Document type', upCustForm:'New customer form (PDF)', upContract:'New contract', upOrder:'Order', upPacking:'Packing list (partial shipment)', upOther:'Other', optCustomer:'Customer (optional)', optOrder:'Order (optional)', chooseFiles:'Choose files', addQueue:'Add to upload queue', queuedWord:'Queued · waits for the Acadon connection', noUploads:'Nothing in the queue.', linkToAdd:'Link to add', noDownloads:'Nothing to download yet.', anyNone:'None', fileTooMany:'Choose at least one file.', stPartial:'Partially delivered', stCompleted:'Completed', todayWord:'Today', noEvents:'No orders or shipments this month.'
   });
 
   /* ---------- preferences ---------- */

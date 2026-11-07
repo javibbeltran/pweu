@@ -573,6 +573,64 @@ window.PWLite = (function () {
     document.querySelectorAll('[data-cst]').forEach(b => b.onclick = () => { CAL.st = CAL.st.includes(b.dataset.cst) ? CAL.st.filter(x => x !== b.dataset.cst) : CAL.st.concat(b.dataset.cst); renderCalendar(); });
   }
 
+
+  /* ---- Downloads and uploads ---- */
+  const UP_TYPES = { custform: 'upCustForm', contract: 'upContract', order: 'upOrder', packing: 'upPacking', other: 'upOther' };
+  let DL = null, UPQ = null, UPSEL = [];
+  async function renderDownloads(){
+    $('content').innerHTML = '<p class="none">' + esc(t('checking')) + '</p>';
+    await loadOrdersData();
+    if(DL === null){
+      DL = [];
+      try{ const r = await fetch('../data/downloads.json', { cache: 'no-cache' }); if(r.ok) DL = (await r.json()).groups || []; }catch(e){}
+    }
+    if(UPQ === null) UPQ = LS.get('pw-sales-uploads', []);
+    if(TAB !== 'downloads') return;
+    const opts = (list, lab) => '<option value="">' + esc(t('anyNone')) + '</option>' + list.map(x => '<option value="' + esc(x[0]) + '">' + esc(x[1]) + '</option>').join('');
+    const dl = DL.length ? DL.map(g => '<h3 class="sub">' + esc(g.name) + '</h3><div class="grid">' + (g.items || []).map(i =>
+        (i.url ? '<a class="card" href="' + esc(i.url) + '" target="_blank" rel="noopener">' : '<div class="card empty">')
+        + '<p class="t">' + esc(i.title) + (i.url ? '' : ' <span class="tag">' + esc(t('linkToAdd')) + '</span>') + '</p>'
+        + (i.desc ? '<p class="d">' + esc(i.desc) + '</p>' : '') + (i.updated ? '<p class="d">' + esc(i.updated) + '</p>' : '')
+        + (i.url ? '</a>' : '</div>')).join('') + '</div>').join('') : none('noDownloads');
+    $('content').innerHTML = '<section class="sec"><h2>' + esc(t('uploadsH')) + '</h2>'
+      + '<div class="form-g"><label class="fld">' + esc(t('docType')) + '<select id="upt">' + Object.keys(UP_TYPES).map(k => '<option value="' + k + '">' + esc(t(UP_TYPES[k])) + '</option>').join('') + '</select></label>'
+      + '<label class="fld">' + esc(t('optCustomer')) + '<select id="upc">' + opts(custs().map(c => [c.name, c.name])) + '</select></label>'
+      + '<label class="fld">' + esc(t('optOrder')) + '<select id="upo">' + opts(orders().map(o => [o.ref, o.ref + (o.custName ? ' · ' + o.custName : '')])) + '</select></label></div>'
+      + '<div class="drop" id="drop"><p>' + esc(t('chooseFiles')) + ' · PDF, Excel, Word</p><input type="file" id="upf" multiple accept=".pdf,.xls,.xlsx,.doc,.docx,.csv"><p class="drop-n" id="upn"></p></div>'
+      + '<div class="act-g"><button class="primary" id="upadd">' + esc(t('addQueue')) + '</button></div>'
+      + '<div class="uq" id="uq"></div>'
+      + todo('Uploads: where the files go', [
+          'Files are only listed here for now (the browser does not keep them). They should be sent to Acadon through its API once it is available, or to Supabase storage in the meantime.',
+          'What Acadon expects per type: new customer form, new contract, order, packing list of partial shipments (format, naming, required order number).',
+          'Who approves an uploaded customer form or contract before it becomes master data.'
+        ]) + '</section>'
+      + '<section class="sec"><h2>' + esc(t('downloadsH')) + '</h2>' + dl
+      + todo('Downloads: material to publish', [
+          'Catalogues and brochures, and the updated price list (with its date).',
+          'Commercial tools: quote templates, contract templates, product data sheets, certificates (FSC / PEFC).',
+          'Where the files live today (Drive, SharePoint) so they can be linked in portal/data/downloads.json.'
+        ]) + '</section>';
+    const drawQ = () => {
+      $('uq').innerHTML = UPQ.length ? UPQ.map((u, i) => '<div class="uq-i"><div><b>' + esc(u.name) + '</b><small>' + esc(t(UP_TYPES[u.type] || 'upOther'))
+        + (u.cust ? ' · ' + esc(u.cust) : '') + (u.ref ? ' · ' + esc(u.ref) : '') + ' · ' + esc(Math.max(1, Math.round(u.size / 1024))) + ' KB · ' + esc(u.date) + '</small></div>'
+        + '<span class="st st-quote">' + esc(t('queuedWord')) + '</span><button class="rm" data-uq="' + i + '" aria-label="Remove">✕</button></div>').join('') : none('noUploads');
+      document.querySelectorAll('[data-uq]').forEach(b => b.onclick = () => { UPQ.splice(+b.dataset.uq, 1); LS.set('pw-sales-uploads', UPQ); drawQ(); });
+    };
+    drawQ();
+    const f = $('upf');
+    const names = fl => { UPSEL = [...fl]; $('upn').textContent = UPSEL.map(x => x.name).join(', '); };
+    f.onchange = () => names(f.files);
+    const d = $('drop');
+    d.ondragover = e => { e.preventDefault(); d.classList.add('over'); };
+    d.ondragleave = () => d.classList.remove('over');
+    d.ondrop = e => { e.preventDefault(); d.classList.remove('over'); names(e.dataTransfer.files); };
+    $('upadd').onclick = () => {
+      if(!UPSEL.length){ flash(t('fileTooMany')); return; }
+      UPSEL.forEach(x => UPQ.push({ name: x.name, size: x.size, type: $('upt').value, cust: $('upc').value, ref: $('upo').value, date: new Date().toISOString().slice(0, 10) }));
+      LS.set('pw-sales-uploads', UPQ); UPSEL = []; f.value = ''; $('upn').textContent = ''; drawQ();
+    };
+  }
+
   /* ---------- the other tabs ---------- */
   /* ---- quick search + shortcuts (home) ---- */
   function openCatalogue(opts){
@@ -630,11 +688,6 @@ window.PWLite = (function () {
         'Fields to show: invoice number, customer, date, due date, amount, status, link to the PDF.',
         'Reminders or alerts for overdue invoices, if wanted.'
       ]),
-      downloads: () => todo('Downloads', [
-        'Which documents a salesperson needs to download: invoices, packing lists, B/L, certificates (FSC / PEFC), product data sheets, signed quotes.',
-        'Where the files live today (Drive, Acadon, SharePoint) and how each one is linked to an order or customer.',
-        'Order documents should appear here per order once My orders is connected to the real data.'
-      ]),
       customers: () => (custs().length ? '<div class="grid">' + custs().map(c => '<div class="card"><p class="t">' + esc(c.name) + '</p><p class="d">' + esc((c.country || '') + ' · ' + t(c.status === 'requested' ? 'stRequested' : 'stApproved')) + '</p></div>').join('') + '</div>' : '')
         + '<div class="grid"><a class="card" href="../forms/customer-request.html"><p class="t">' + esc(t('newCustomer')) + '</p>'
           + '<p class="d">Master data request, sent to the master data admin.</p></a></div>'
@@ -686,6 +739,7 @@ window.PWLite = (function () {
     if(TAB === 'neworder') return renderNewOrder();
     if(TAB === 'myorders') return renderMyOrders();
     if(TAB === 'calendar') return renderCalendar();
+    if(TAB === 'downloads' && ID === 'sales') return renderDownloads();
     if(TAB === 'flow') return renderFlow();
     if(TAB === 'library') return renderLibrary();
     return renderSimple(TAB);

@@ -277,3 +277,13 @@ h3.sub{font-size:13px;font-weight:600;color:var(--fg2);margin:20px 0 10px}
 .cal-ev{font-size:11px;line-height:1.25;border:1px solid var(--ln2);border-radius:6px;padding:2px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--bg)}
 .cal-ev.st-transit{background:var(--accent);border-color:var(--accent);color:#fff}
 @media (max-width:640px){.cal-d,.cal-e{min-height:64px;padding:3px}.cal-ev{font-size:10px;padding:1px 4px}}
+
+/* ---------- uploads ---------- */
+.drop{margin:14px 0;border:2px dashed var(--ln2);border-radius:var(--radius);padding:20px;text-align:center;background:var(--bg2);color:var(--fg2);font-size:14px}
+.drop.over{border-color:var(--accent);background:var(--surf)}
+.drop p{margin:0 0 10px}
+.drop-n{margin:10px 0 0;font-size:13px;color:var(--fg)}
+.uq{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.uq-i{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surf);border:1px solid var(--ln);border-radius:var(--radius);padding:10px 14px}
+.uq-i > div{flex:1;min-width:200px}
+.uq-i small{display:block;color:var(--mut);font-size:12px}
