@@ -209,7 +209,7 @@ window.PW = (function () {
     shipment:'Shipment / delivery period', certification:'Certification', quality:'Quality / grade', remarks:'Remarks',
     printPdf:'Print / PDF', exportExcel:'Excel', exportWord:'Word', exportCsv:'CSV', saveQuote:'Save quote as sent', submitOrder:'Submit order request',
     needLines:'Add at least one species first.', savedQuote:'Quote saved in My orders.', submittedOrder:'Order request submitted.',
-    newCustTitle:'New customer', name:'Name', country:'Country', contactPerson:'Contact person', email:'E-mail', phone:'Phone', notes:'Notes',
+    newCustTitle:'New customer', address:'Address', zip:'ZIP code', shipPort:'Shipping port', name:'Name', country:'Country', contactPerson:'Contact person', email:'E-mail', phone:'Phone', notes:'Notes',
     submitReq:'Submit request', saveApprove:'Save and approve for Sales', cancel:'Cancel', nameNeeded:'The name is required.',
     stRequested:'Requested', stApproved:'Approved',
     stQuote:'Quote sent', stSubmitted:'Submitted', stOpen:'Open contract', stTransit:'In transit', stDelivered:'Delivered',

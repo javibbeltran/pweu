@@ -315,7 +315,7 @@ window.PWLite = (function () {
     const bg = document.createElement('div'); bg.className = 'modal-bg';
     const f = (id, k, type) => '<label>' + esc(t(k)) + '<input id="' + id + '" type="' + (type || 'text') + '"></label>';
     bg.innerHTML = '<div class="modal" role="dialog" aria-modal="true"><h2>' + esc(t('newCustTitle')) + '</h2>'
-      + f('nc-name', 'name') + f('nc-country', 'country') + f('nc-contact', 'contactPerson') + f('nc-mail', 'email', 'email') + f('nc-phone', 'phone')
+      + f('nc-name', 'name') + f('nc-address', 'address') + f('nc-zip', 'zip') + f('nc-country', 'country') + f('nc-contact', 'contactPerson') + f('nc-mail', 'email', 'email') + f('nc-phone', 'phone') + f('nc-pay', 'payment') + f('nc-port', 'shipPort')
       + '<label>' + esc(t('notes')) + '<textarea id="nc-notes" rows="2"></textarea></label>'
       + '<p class="modal-err" id="nc-err"></p>'
       + '<div class="modal-act"><button class="ghost2" id="nc-x">' + esc(t('cancel')) + '</button>'
@@ -326,10 +326,11 @@ window.PWLite = (function () {
     const done = status => {
       const name = $('nc-name').value.trim();
       if(!name){ $('nc-err').textContent = t('nameNeeded'); return; }
-      const c = { id: 'c' + Date.now(), name, country: $('nc-country').value.trim(), contact: $('nc-contact').value.trim(),
+      const c = { id: 'c' + Date.now(), name, address: $('nc-address').value.trim(), zip: $('nc-zip').value.trim(), country: $('nc-country').value.trim(), payment: $('nc-pay').value.trim(), port: $('nc-port').value.trim(), contact: $('nc-contact').value.trim(),
                   email: $('nc-mail').value.trim(), phone: $('nc-phone').value.trim(), notes: $('nc-notes').value.trim(), status };
       LOCAL_C.push(c); LS.set('pw-sales-custs', LOCAL_C);
-      DRAFT.cust = c.id; saveDraft(); bg.remove(); renderNewOrder();
+      DRAFT.cust = c.id; if(c.payment) DRAFT.terms.payment = c.payment; if(c.port) DRAFT.terms.port = c.port;
+      saveDraft(); bg.remove(); renderNewOrder();
     };
     $('nc-x').onclick = () => bg.remove();
     $('nc-ok').onclick = () => done('approved');
@@ -446,7 +447,7 @@ window.PWLite = (function () {
       res.innerHTML = hits.map(x => '<button data-cid="' + esc(x.id) + '"><b>' + esc(x.name) + '</b> <i>' + esc(x.country || '') + '</i><span>' + esc(t(x.status === 'requested' ? 'stRequested' : 'stApproved')) + '</span></button>').join('')
         || '<p class="none">' + esc(t('noMatch')) + '</p>';
       res.hidden = false;
-      res.querySelectorAll('[data-cid]').forEach(b => b.onclick = () => { DRAFT.cust = b.dataset.cid; saveDraft(); renderNewOrder(); });
+      res.querySelectorAll('[data-cid]').forEach(b => b.onclick = () => { DRAFT.cust = b.dataset.cid; const k = custById(b.dataset.cid) || {}; if(k.payment) DRAFT.terms.payment = k.payment; if(k.port) DRAFT.terms.port = k.port; saveDraft(); renderNewOrder(); });
     };
     q.onfocus = q.oninput;
     $('ocnew').onclick = openCustModal;
