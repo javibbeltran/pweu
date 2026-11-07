@@ -183,7 +183,7 @@ window.PW = (function () {
   };
 
   /* ---------- preferences ---------- */
-  const DEF = { lang:'en', theme:'system', accent:'#2f7d55', space:null };
+  const DEF = { lang:'en', theme:'system', accent:'#00A65C', space:null };
   let prefs = Object.assign({}, DEF);
 
   function readLocal(){

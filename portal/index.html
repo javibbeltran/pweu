@@ -6,7 +6,7 @@
 <title>Precious Woods · Operations</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="pw.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="shared.js"></script>
@@ -14,6 +14,7 @@
 <body>
 
 <div id="gate"><div class="gcard">
+  <img class="gmk" src="img/pw-mark.png" alt="">
   <p class="gmark">Precious Woods</p><p class="gseg">Operations</p>
   <p id="gatemsg">Checking your access…</p>
 </div></div>
@@ -21,8 +22,8 @@
 <header class="bar">
   <div class="in">
     <a class="brand" href="index.html">
-      <img id="logo" class="logo" alt="Precious Woods" hidden>
-      <span class="mark" id="wordmark">Precious Woods</span>
+      <img class="mk" src="img/pw-mark.png" alt="" width="24" height="24">
+      <span class="mark">Precious Woods</span>
       <span class="seg" id="seg">Operations</span>
     </a>
     <span class="sp"></span>
@@ -78,11 +79,9 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const t=(...a)=>PW.t(...a);
 
-const LOGO='https://www.preciouswoods.com/domains/preciouswoods_com/data/free_docs/'
-  +'c52d3c1-4_4b7ef83-d_24PREC%20Logo%20Precious_Woods%20NEG_RGB.png';
 
 let SPACES=[],SECTIONS=[],DOCS=[],ROLES={},CUR=null,IS_ADMIN=false,PENDING=0;
-const ACCENTS=['#2f7d55','#3c6e4f','#6b7f3a','#8a6a3b','#3a6b7d','#7d4f3a'];
+const ACCENTS=['#00a65c','#2f7d55','#6b7f3a','#8a6a3b','#3a6b7d','#54595f'];
 const NAVORDER=['operations','commercial','compliance','projects','systems'];
 const GLYPH={operations:'◇',commercial:'↗',compliance:'✓',projects:'◈',systems:'⚙'};
 
@@ -90,7 +89,7 @@ const GLYPH={operations:'◇',commercial:'↗',compliance:'✓',projects:'◈',s
 function gate(h){const g=$('gate');g.innerHTML=h;g.style.display='flex'}
 function ungate(){$('gate').style.display='none'}
 function gateShell(inner){
-  return '<div class="gcard"><p class="gmark">Precious Woods</p><p class="gseg">Operations</p>'+inner
+  return '<div class="gcard"><img class="gmk" src="img/pw-mark.png" alt=""><p class="gmark">Precious Woods</p><p class="gseg">Operations</p>'+inner
     +'<div class="glang"><select id="glang">'
     + PW.LANGS.map(([c,n])=>'<option value="'+c+'"'+(c===PW.prefs.lang?' selected':'')+'>'+n+'</option>').join('')
     +'</select></div></div>';
@@ -331,10 +330,6 @@ function redrawAll(){ chrome(); buildNav(); closeMega(); renderQuick(); renderMo
   document.documentElement.lang=PW.prefs.lang;
   $('gatemsg').textContent=t('checking');
 
-  const img=$('logo');
-  img.onload=()=>{img.hidden=false;$('wordmark').hidden=true};
-  img.onerror=()=>{img.remove()};
-  img.src=LOGO;
 
   const c=await PW.connect();
   if(!c.ok){
