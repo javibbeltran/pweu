@@ -1,5 +1,225 @@
 {
-  "_readme": "Optional commercial data per species, keyed by species code. Fill it in as it becomes available. price: {value, unit, currency}. availability: 'stock' | 'produce' | 'na'. applications: free-text list added to the use-class based applications. description: free text, searchable. Note: this file is public. Prices and stock that must stay private belong in a Supabase table with access rules instead.",
-  "sample": false,
-  "species": {}
+ "_readme": "Optional commercial data per species, keyed by species code. Fill it in as it becomes available. price: {value, unit, currency}. availability: 'stock' | 'produce' | 'na'. applications: free-text list added to the use-class based applications. description: free text, searchable. Note: this file is public. Prices and stock that must stay private belong in a Supabase table with access rules instead. Availability was set from the species Excel: red rows = available to be produced, CDRI and ANPE = in stock, all others N/A.",
+ "sample": false,
+ "species": {
+  "ABUI": {
+   "availability": "na"
+  },
+  "ACAR": {
+   "availability": "na"
+  },
+  "AMAP": {
+   "availability": "na"
+  },
+  "AMDO": {
+   "availability": "na"
+  },
+  "ANCA": {
+   "availability": "produce"
+  },
+  "ANFA": {
+   "availability": "na"
+  },
+  "ANPE": {
+   "availability": "stock"
+  },
+  "ANRA": {
+   "availability": "na"
+  },
+  "ANVE": {
+   "availability": "produce"
+  },
+  "ARVE": {
+   "availability": "produce"
+  },
+  "BRBR": {
+   "availability": "na"
+  },
+  "BRVE": {
+   "availability": "na"
+  },
+  "CAJU": {
+   "availability": "na"
+  },
+  "CASA": {
+   "availability": "na"
+  },
+  "CAST": {
+   "availability": "na"
+  },
+  "CDRI": {
+   "availability": "stock"
+  },
+  "CUMA": {
+   "availability": "na"
+  },
+  "CUVE": {
+   "availability": "na"
+  },
+  "CUPI": {
+   "availability": "produce"
+  },
+  "FAAM": {
+   "availability": "na"
+  },
+  "GUAR": {
+   "availability": "produce"
+  },
+  "IPE": {
+   "availability": "na"
+  },
+  "JACA": {
+   "availability": "na"
+  },
+  "JARA": {
+   "availability": "na"
+  },
+  "JATO": {
+   "availability": "produce"
+  },
+  "JUPO": {
+   "availability": "produce"
+  },
+  "LOAM": {
+   "availability": "na"
+  },
+  "LOAR": {
+   "availability": "na"
+  },
+  "LOFA": {
+   "availability": "na"
+  },
+  "LOGA": {
+   "availability": "produce"
+  },
+  "LOIT": {
+   "availability": "produce"
+  },
+  "LOPR": {
+   "availability": "produce"
+  },
+  "MASS": {
+   "availability": "produce"
+  },
+  "MANQ": {
+   "availability": "produce"
+  },
+  "MAJU": {
+   "availability": "na"
+  },
+  "MUIR": {
+   "availability": "produce"
+  },
+  "MUPI": {
+   "availability": "na"
+  },
+  "PEQU": {
+   "availability": "produce"
+  },
+  "PEMA": {
+   "availability": "produce"
+  },
+  "PARA": {
+   "availability": "produce"
+  },
+  "SUAM": {
+   "availability": "produce"
+  },
+  "SUPR": {
+   "availability": "produce"
+  },
+  "SUVE": {
+   "availability": "produce"
+  },
+  "TANI": {
+   "availability": "produce"
+  },
+  "TAUB": {
+   "availability": "na"
+  },
+  "TAUC": {
+   "availability": "na"
+  },
+  "TAUV": {
+   "availability": "produce"
+  },
+  "TAXV": {
+   "availability": "na"
+  },
+  "TIMB": {
+   "availability": "na"
+  },
+  "UCHT": {
+   "availability": "na"
+  },
+  "VIOL": {
+   "availability": "produce"
+  },
+  "AZOB": {
+   "availability": "produce"
+  },
+  "BELI": {
+   "availability": "na"
+  },
+  "BILI": {
+   "availability": "produce"
+  },
+  "DABE": {
+   "availability": "na"
+  },
+  "DIAN": {
+   "availability": "na"
+  },
+  "DIBE": {
+   "availability": "produce"
+  },
+  "EBIA": {
+   "availability": "na"
+  },
+  "EVEU": {
+   "availability": "na"
+  },
+  "GOMB": {
+   "availability": "na"
+  },
+  "ILOM": {
+   "availability": "na"
+  },
+  "IROK": {
+   "availability": "na"
+  },
+  "IZOM": {
+   "availability": "produce"
+  },
+  "LIMB": {
+   "availability": "na"
+  },
+  "MOVI": {
+   "availability": "produce"
+  },
+  "NIOV": {
+   "availability": "na"
+  },
+  "OKAN": {
+   "availability": "produce"
+  },
+  "OKOU": {
+   "availability": "produce"
+  },
+  "OMVO": {
+   "availability": "na"
+  },
+  "OZIG": {
+   "availability": "na"
+  },
+  "PADO": {
+   "availability": "produce"
+  },
+  "SORR": {
+   "availability": "na"
+  },
+  "TALI": {
+   "availability": "na"
+  }
+ }
 }
