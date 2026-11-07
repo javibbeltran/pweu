@@ -1,0 +1,5 @@
+{
+  "_readme": "Optional commercial data per species, keyed by species code. Fill it in as it becomes available. price: {value, unit, currency}. availability: 'stock' | 'produce' | 'na'. applications: free-text list added to the use-class based applications. description: free text, searchable. Note: this file is public. Prices and stock that must stay private belong in a Supabase table with access rules instead.",
+  "sample": false,
+  "species": {}
+}

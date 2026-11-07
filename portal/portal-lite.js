@@ -15,8 +15,10 @@ window.PWLite = (function () {
 
   /* ---------- what each portal contains ---------- */
   const CFG = {
-    sales:    { title: 'pSales',    tabs: ['home', 'catalogue', 'pricing', 'pipeline', 'customers', 'flow', 'library'] },
-    customer: { title: 'pCustomer', tabs: ['home', 'catalogue', 'orders', 'documents', 'contact'] }
+    sales:    { title: 'pSales',    side: true,  price: true,  avail: true,
+                tabs: ['home', 'catalogue', 'pricing', 'pipeline', 'customers', 'flow', 'library'] },
+    customer: { title: 'pCustomer', side: false, price: false, avail: false,
+                tabs: ['home', 'catalogue', 'orders', 'documents', 'contact'] }
   };
   const LABEL  = { home:'home', catalogue:'catalogue', pricing:'priceLists', pipeline:'pipeline', customers:'customersTab',
                    flow:'flow', library:'documents', orders:'orders', documents:'documents', contact:'contact' };
@@ -25,9 +27,10 @@ window.PWLite = (function () {
 
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
-  let SP = null, SPERR = false, Q = '', REG = 'all';
+  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = 'all', SORT = 'az';
 
   const title = () => t(CFG[ID].title);
+  const tabLabel = x => (x === 'catalogue' && ID === 'sales') ? t('fullCatalogue') : t(LABEL[x]);
 
   /* ---------- access screens ---------- */
   function gate(h){ const g = $('gate'); g.innerHTML = h; g.style.display = 'flex'; }
@@ -88,13 +91,38 @@ window.PWLite = (function () {
   }
 
   /* ---------- species catalogue (public technical data, no volumes) ---------- */
+  /* use classes (EN 335) -> the five application groups app1..app5 */
+  function appsOf(uc){
+    if(!uc) return [];
+    let x = String(uc).replace(/(\d)\.\d/g, '$1');
+    const set = new Set();
+    x.replace(/(\d)\s*-\s*(\d)/g, (m, a, b) => { for(let i = +a; i <= +b; i++) set.add(i); return ''; });
+    (x.match(/\d/g) || []).forEach(d => set.add(+d));
+    return [...set].filter(n => n >= 1 && n <= 5).sort();
+  }
+
   async function loadSpecies(){
     if(SP || SPERR) return;
     try{
       const r = await fetch('../data/species.json', { cache: 'no-cache' });
       if(!r.ok) throw new Error(r.status);
       SP = (await r.json()).species || [];
-    }catch(e){ SPERR = true; }
+    }catch(e){ SPERR = true; return; }
+    let X = {};
+    try{
+      const r2 = await fetch('../data/species-extra.json', { cache: 'no-cache' });
+      if(r2.ok){ const j = await r2.json(); X = j.species || {}; SAMPLE = !!j.sample; }
+    }catch(e){}
+    SP.forEach(s => {
+      const x = X[s.code] || {};
+      s.price = (CFG[ID].price && x.price && typeof x.price.value === 'number') ? x.price : null;
+      s.av = CFG[ID].avail ? (['stock', 'produce'].includes(x.availability) ? x.availability : 'na') : 'na';
+      s.desc = x.description || '';
+      s.appN = appsOf(s.useClass);
+      s.appX = Array.isArray(x.applications) ? x.applications : [];
+      s._hay = [s.name, s.botanical, s.cirad, s.code, s.colour, s.durability, s.useClass, s.strength, s.remark, s.desc,
+                s.region === 'PWA' ? 'amazon' : 'gabon', s.appX.join(' ')].join(' ').toLowerCase();
+    });
   }
 
   /* an indicative swatch from the colour description in the data, never a photo */
@@ -116,16 +144,30 @@ window.PWLite = (function () {
     return 'hsl(' + h + ' ' + sa + '% ' + l + '%)';
   }
 
+  const AVKEY = { stock: 'avStock', produce: 'avProduce', na: 'avNA' };
+  function money(p){
+    let v;
+    try{ v = new Intl.NumberFormat(PW.prefs.lang, { style: 'currency', currency: p.currency || 'EUR', maximumFractionDigits: 0 }).format(p.value); }
+    catch(e){ v = p.value + ' ' + (p.currency || ''); }
+    return v + (p.unit ? ' / ' + p.unit : '');
+  }
+
   function speciesCard(s){
     const row = (k, v, extra) => v ? '<div><dt>' + esc(t(k)) + '</dt><dd>' + esc(v) + (extra ? '<small>' + esc(extra) + '</small>' : '') + '</dd></div>' : '';
     const sw = swatch(s.colour);
+    const apps = s.appN.map(n => t('app' + n)).concat(s.appX);
+    const commercial = CFG[ID].price || CFG[ID].avail;
     return '<article class="spc">'
-      + '<div class="sp-ph">' + (s.image ? '<img loading="lazy" src="' + esc(s.image) + '" alt="' + esc(s.name) + '">' : '<span>' + esc(t('photoTodo')) + '</span>') + '</div>'
+      + '<div class="sp-ph">' + (s.image ? '<img loading="lazy" src="' + esc(s.image) + '" alt="' + esc(s.name) + '">' : '<span>' + esc(t('photoTodo')) + '</span>')
+      + (CFG[ID].avail ? '<span class="av-b av-' + s.av + '">' + esc(t(AVKEY[s.av])) + '</span>' : '') + '</div>'
       + '<div class="sp-b">'
       + '<p class="sp-rg">' + esc(t(s.region === 'PWA' ? 'amazon' : 'gabon') + ' · ' + s.region + ' · ' + s.code) + '</p>'
       + '<h3>' + esc(s.name) + '</h3>'
       + (s.botanical ? '<p class="sp-bot">' + esc(s.botanical) + '</p>' : '')
       + (s.cirad ? '<p class="sp-ci">' + esc(s.cirad) + '</p>' : '')
+      + (CFG[ID].price ? '<p class="sp-price' + (s.price ? '' : ' none') + '"><span>' + esc(t('price')) + '</span> ' + esc(s.price ? money(s.price) : t('priceNone')) + '</p>' : '')
+      + (s.desc ? '<p class="sp-desc">' + esc(s.desc) + '</p>' : '')
+      + (apps.length ? '<div class="sp-apps">' + apps.map(a => '<span>' + esc(a) + '</span>').join('') + '</div>' : '')
       + '<dl>'
       + (s.colour ? '<div><dt>' + esc(t('colour')) + '</dt><dd>' + (sw ? '<i class="sw" style="background:' + sw + '"></i>' : '') + esc(s.colour) + '</dd></div>' : '')
       + row('sg', s.sg)
@@ -139,15 +181,31 @@ window.PWLite = (function () {
   }
 
   function filtered(){
-    const q = Q.trim().toLowerCase();
-    return (SP || []).filter(s => (REG === 'all' || s.region === REG)
-      && (!q || [s.name, s.botanical, s.cirad, s.code].some(x => (x || '').toLowerCase().includes(q))));
+    const toks = Q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const list = (SP || []).filter(s => (REG === 'all' || s.region === REG)
+      && toks.every(w => s._hay.includes(w) || s.appN.some(n => t('app' + n).toLowerCase().includes(w)))
+      && (!APPS.length || APPS.some(n => s.appN.includes(n)))
+      && (AV === 'all' || s.av === AV));
+    const byName = (a, b) => a.name.localeCompare(b.name);
+    const byPrice = d => (a, b) => {
+      const pa = a.price ? a.price.value : null, pb = b.price ? b.price.value : null;
+      if(pa == null && pb == null) return byName(a, b);
+      if(pa == null) return 1;
+      if(pb == null) return -1;
+      return (pa - pb) * d || byName(a, b);
+    };
+    list.sort(SORT === 'za' ? (a, b) => byName(b, a) : SORT === 'low' ? byPrice(1) : SORT === 'high' ? byPrice(-1) : byName);
+    return list;
   }
   function drawGrid(){
     const g = $('spgrid'); if(!g) return;
     const list = filtered();
     g.innerHTML = list.length ? list.map(speciesCard).join('') : none('noMatch');
-    $('spcount').textContent = t('speciesCount', list.length);
+    $('spcount').textContent = t('results', list.length, SP.length);
+    const n = APPS.length;
+    const sm = $('appsum'); if(sm) sm.textContent = n ? t('applications') + ' (' + n + ')' : t('allApplications');
+    const dirty = Q || REG !== 'all' || n || AV !== 'all';
+    $('spclear').hidden = !dirty;
   }
 
   async function renderCatalogue(){
@@ -156,43 +214,72 @@ window.PWLite = (function () {
     if(TAB !== 'catalogue') return;
     if(SPERR){ $('content').innerHTML = none('loadSpeciesFail'); return; }
     const chips = [['all', t('all')], ['PWA', t('amazon') + ' · PWA'], ['PWG', t('gabon') + ' · PWG']];
+    const sorts = [['az', 'sortAZ'], ['za', 'sortZA']].concat(CFG[ID].price ? [['low', 'sortPriceLow'], ['high', 'sortPriceHigh']] : []);
+    if(!CFG[ID].price && (SORT === 'low' || SORT === 'high')) SORT = 'az';
     const missing = ID === 'sales'
       ? todo('Species catalogue: information still to add', [
+          'Prices per species: fill portal/data/species-extra.json (or a Supabase table with access rules if prices must stay private).',
+          'Availability per species: in stock / available to be produced / N/A (same file).',
           'Log volumes per species (internal commercial data: keep it behind the login, in a Supabase table with access rules, not in a public file).',
           'Photos per species (the lesser-known species project) and the field "image" in portal/data/species.json.',
-          'Which species belong to the lesser-known species project (field "lesser"), then a filter for them.',
-          'A short description and typical uses per species.'
+          'A short description and extra applications per species (same file).'
         ])
       : todo('Species catalogue: information still to add', [
           'Photos per species and a short description with typical uses.',
           'Availability or lead time per species, if customers should see it.',
           'Certification (FSC / PEFC) per species, if it can differ.'
         ]);
-    $('content').innerHTML = section(t('catalogue'),
+    $('content').innerHTML = section(tabLabel('catalogue') + (SAMPLE ? ' · ' + t('sample') : ''),
       '<div class="sp-tools">'
-      + '<input id="spq" type="search" autocomplete="off" placeholder="' + esc(t('searchSpecies')) + '" value="' + esc(Q) + '">'
-      + '<div class="sp-chips">' + chips.map(([v, l]) => '<button data-reg="' + v + '" aria-pressed="' + (REG === v) + '">' + esc(l) + '</button>').join('') + '</div>'
+      + '<input id="spq" type="search" autocomplete="off" placeholder="' + esc(t('searchSpecies')) + '" aria-label="' + esc(t('searchSpecies')) + '" value="' + esc(Q) + '">'
+      + '<details class="sp-dd" id="appdd"><summary id="appsum"></summary><div class="sp-dd-b">'
+        + [1, 2, 3, 4, 5].map(n => '<label><input type="checkbox" data-app="' + n + '"' + (APPS.includes(n) ? ' checked' : '') + '> ' + esc(t('app' + n)) + '</label>').join('')
+      + '</div></details>'
+      + (CFG[ID].avail ? '<select id="spav" aria-label="' + esc(t('availability')) + '"><option value="all">' + esc(t('allAvailability')) + '</option>'
+          + ['stock', 'produce', 'na'].map(v => '<option value="' + v + '"' + (AV === v ? ' selected' : '') + '>' + esc(t(AVKEY[v])) + '</option>').join('') + '</select>' : '')
+      + '<select id="spsort" aria-label="' + esc(t('sortBy')) + '">'
+        + sorts.map(([v, k]) => '<option value="' + v + '"' + (SORT === v ? ' selected' : '') + '>' + esc(t('sortBy') + ': ' + t(k)) + '</option>').join('') + '</select>'
+      + '</div>'
+      + '<div class="sp-tools"><div class="sp-chips">' + chips.map(([v, l]) => '<button data-reg="' + v + '" aria-pressed="' + (REG === v) + '">' + esc(l) + '</button>').join('') + '</div>'
+      + '<button class="sp-clear" id="spclear" hidden>' + esc(t('clearFilters')) + '</button>'
       + '<span class="sp-count" id="spcount"></span></div>'
       + '<div class="sp-grid" id="spgrid"></div>')
       + missing;
     $('spq').oninput = e => { Q = e.target.value; drawGrid(); };
+    $('spsort').onchange = e => { SORT = e.target.value; drawGrid(); };
+    if($('spav')) $('spav').onchange = e => { AV = e.target.value; drawGrid(); };
+    document.querySelectorAll('[data-app]').forEach(c => c.onchange = () => {
+      APPS = [...document.querySelectorAll('[data-app]:checked')].map(x => +x.dataset.app); drawGrid();
+    });
     document.querySelectorAll('[data-reg]').forEach(b => b.onclick = () => {
       REG = b.dataset.reg;
       document.querySelectorAll('[data-reg]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
       drawGrid();
     });
+    $('spclear').onclick = () => { Q = ''; REG = 'all'; APPS = []; AV = 'all'; renderCatalogue(); };
     drawGrid();
   }
 
   /* ---------- the other tabs ---------- */
-  function renderHome(){
+  /* ---- quick search + shortcuts (home) ---- */
+  function openCatalogue(opts){
+    Q = (opts && opts.q) || ''; AV = (opts && opts.av) || 'all'; APPS = []; REG = 'all';
+    go('catalogue');
+  }
+  async function renderHome(){
     const tabs = CFG[ID].tabs.filter(x => x !== 'home');
-    $('content').innerHTML = section(t('home'),
-      '<div class="tiles">' + tabs.map(x => {
-        const st = STATUS[x];
-        return '<button class="tile" data-go="' + x + '"><span class="tile-n">' + esc(t(LABEL[x])) + '</span>'
-          + '<span class="tile-s ' + (st === 'ready' ? 'ready' : 'pending') + '">' + esc(t(st === 'ready' ? 'ready' : 'toComplete')) + '</span></button>';
-      }).join('') + '</div>')
+    const sc = [{ k: 'catalogue', n: tabLabel('catalogue'), st: 'ready', f: () => openCatalogue() }];
+    if(CFG[ID].avail){
+      sc.push({ k: 'stock', n: t('scStock'), st: 'ready', f: () => openCatalogue({ av: 'stock' }) });
+      sc.push({ k: 'produce', n: t('scProduce'), st: 'ready', f: () => openCatalogue({ av: 'produce' }) });
+    }
+    tabs.filter(x => x !== 'catalogue').forEach(x => sc.push({ k: x, n: tabLabel(x), st: STATUS[x], f: () => go(x) }));
+    $('content').innerHTML = '<section class="sec qs"><h2>' + esc(t('quickSearch')) + '</h2>'
+      + '<div class="qs-box"><input id="qsq" type="search" autocomplete="off" placeholder="' + esc(t('quickSearchPh')) + '" aria-label="' + esc(t('quickSearch')) + '">'
+      + '<div class="qs-res" id="qsres" hidden></div></div></section>'
+      + section(t('shortcuts'), '<div class="tiles">' + sc.map((x, i) =>
+          '<button class="tile" data-sc="' + i + '"><span class="tile-n">' + esc(x.n) + '</span>'
+          + '<span class="tile-s ' + (x.st === 'ready' ? 'ready' : 'pending') + '">' + esc(t(x.st === 'ready' ? 'ready' : 'toComplete')) + '</span></button>').join('') + '</div>')
       + (ID === 'customer'
           ? todo('Customer home: welcome message', [
               'Short welcome text and what customers can do here.',
@@ -203,7 +290,22 @@ window.PWLite = (function () {
               'Which numbers a salesperson wants on the first screen (open quotes, orders to confirm, stock by species).',
               'Where those numbers come from (Acadon export, Excel, Supabase).'
             ]));
-    $('content').querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+    $('content').querySelectorAll('[data-sc]').forEach(b => b.onclick = () => sc[+b.dataset.sc].f());
+    await loadSpecies();
+    const inp = $('qsq'), res = $('qsres');
+    if(!inp || SPERR) return;
+    const draw = () => {
+      const v = inp.value.trim().toLowerCase();
+      if(!v){ res.hidden = true; return; }
+      const toks = v.split(/\s+/);
+      const hits = SP.filter(s => toks.every(w => s._hay.includes(w)));
+      res.innerHTML = hits.slice(0, 6).map(s => '<button data-q="' + esc(s.name) + '"><b>' + esc(s.name) + '</b> <i>' + esc(s.botanical || '') + '</i><span>' + esc(s.code) + '</span></button>').join('')
+        + (hits.length ? '<button class="qs-all" data-q="' + esc(inp.value.trim()) + '">' + esc(t('showResults')) + ' (' + hits.length + ')</button>' : '<p class="none">' + esc(t('noMatch')) + '</p>');
+      res.hidden = false;
+      res.querySelectorAll('[data-q]').forEach(b => b.onclick = () => openCatalogue({ q: b.dataset.q }));
+    };
+    inp.oninput = draw;
+    inp.onkeydown = e => { if(e.key === 'Enter' && inp.value.trim()) openCatalogue({ q: inp.value.trim() }); };
   }
 
   function renderSimple(tab){
@@ -274,13 +376,23 @@ window.PWLite = (function () {
   /* ---------- navigation and chrome ---------- */
   function buildNav(){
     $('nav').innerHTML = CFG[ID].tabs.map(x =>
-      '<button data-tab="' + x + '" aria-expanded="' + (x === TAB) + '">' + esc(t(LABEL[x])) + '</button>').join('');
+      '<button data-tab="' + x + '" aria-expanded="' + (x === TAB) + '">' + esc(tabLabel(x)) + '</button>').join('');
     $('nav').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.tab));
+    const sb = $('sidemenu');
+    if(sb && CFG[ID].side){
+      const sub = (v, k) => '<button class="sub' + (TAB === 'catalogue' && AV === v ? ' on' : '') + '" data-av="' + v + '">' + esc(t(k)) + '</button>';
+      sb.innerHTML = '<p class="side-h">' + esc(t('menu')) + '</p>' + CFG[ID].tabs.map(x =>
+        '<button class="' + (x === TAB && !(x === 'catalogue' && AV !== 'all') ? 'on' : '') + '" data-tab="' + x + '">' + esc(tabLabel(x)) + '</button>'
+        + (x === 'catalogue' && CFG[ID].avail ? sub('stock', 'avStock') + sub('produce', 'avProduce') : '')).join('');
+      sb.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(b.dataset.tab));
+      sb.querySelectorAll('[data-av]').forEach(b => b.onclick = () => openCatalogue({ av: b.dataset.av }));
+    }
   }
   function go(tab){ TAB = tab; buildNav(); render(); window.scrollTo(0, 0); }
 
   function chrome(){
     $('seg').textContent = title();
+    $('main').classList.toggle('nosidebar', !CFG[ID].side);
     $('h1').textContent = title();
     $('av').textContent = PW.initials(PW.email || '?');
     document.title = 'Precious Woods · ' + title();
