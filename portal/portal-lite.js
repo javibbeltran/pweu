@@ -592,7 +592,14 @@ window.PWLite = (function () {
         + '<p class="t">' + esc(i.title) + (i.url ? '' : ' <span class="tag">' + esc(t('linkToAdd')) + '</span>') + '</p>'
         + (i.desc ? '<p class="d">' + esc(i.desc) + '</p>' : '') + (i.updated ? '<p class="d">' + esc(i.updated) + '</p>' : '')
         + (i.url ? '</a>' : '</div>')).join('') + '</div>').join('') : none('noDownloads');
-    $('content').innerHTML = '<section class="sec"><h2>' + esc(t('uploadsH')) + '</h2>'
+    $('content').innerHTML = '<div class="two-col">'
+      + '<section class="sec"><h2>' + esc(t('downloadsH')) + '</h2>' + dl
+      + todo('Downloads: material to publish', [
+          'Catalogues and brochures, and the updated price list (with its date).',
+          'Commercial tools: quote templates, contract templates, product data sheets, certificates (FSC / PEFC).',
+          'Where the files live today (Drive, SharePoint) so they can be linked in portal/data/downloads.json.'
+        ]) + '</section>'
+      + '<section class="sec"><h2>' + esc(t('uploadsH')) + '</h2>'
       + '<div class="form-g"><label class="fld">' + esc(t('docType')) + '<select id="upt">' + Object.keys(UP_TYPES).map(k => '<option value="' + k + '">' + esc(t(UP_TYPES[k])) + '</option>').join('') + '</select></label>'
       + '<label class="fld">' + esc(t('optCustomer')) + '<select id="upc">' + opts(custs().map(c => [c.name, c.name])) + '</select></label>'
       + '<label class="fld">' + esc(t('optOrder')) + '<select id="upo">' + opts(orders().map(o => [o.ref, o.ref + (o.custName ? ' · ' + o.custName : '')])) + '</select></label></div>'
@@ -604,12 +611,7 @@ window.PWLite = (function () {
           'What Acadon expects per type: new customer form, new contract, order, packing list of partial shipments (format, naming, required order number).',
           'Who approves an uploaded customer form or contract before it becomes master data.'
         ]) + '</section>'
-      + '<section class="sec"><h2>' + esc(t('downloadsH')) + '</h2>' + dl
-      + todo('Downloads: material to publish', [
-          'Catalogues and brochures, and the updated price list (with its date).',
-          'Commercial tools: quote templates, contract templates, product data sheets, certificates (FSC / PEFC).',
-          'Where the files live today (Drive, SharePoint) so they can be linked in portal/data/downloads.json.'
-        ]) + '</section>';
+      + '</div>';
     const drawQ = () => {
       $('uq').innerHTML = UPQ.length ? UPQ.map((u, i) => '<div class="uq-i"><div><b>' + esc(u.name) + '</b><small>' + esc(t(UP_TYPES[u.type] || 'upOther'))
         + (u.cust ? ' · ' + esc(u.cust) : '') + (u.ref ? ' · ' + esc(u.ref) : '') + ' · ' + esc(Math.max(1, Math.round(u.size / 1024))) + ' KB · ' + esc(u.date) + '</small></div>'
