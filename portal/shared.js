@@ -199,6 +199,9 @@ window.PW = (function () {
     it:      { portals:'Portali', pOperations:'Operazioni', pSales:'Vendite', pCustomer:'Cliente', settings:'Impostazioni', orders:'I miei ordini', ordersEmpty:'I tuoi ordini appariranno qui.', documents:'Documenti', docsEmpty:'I documenti condivisi con te appariranno qui.', flow:'Flusso di processo' }
   };
   Object.keys(T2).forEach(l => Object.assign(T[l], T2[l]));
+  Object.assign(T.en, { portalSales:'Sales Portal', portalCustomer:'Customer Portal' });
+  Object.assign(T.nl, { portalSales:'Verkoopportaal', portalCustomer:'Klantenportaal' });
+  Object.assign(T.es, { portalSales:'Portal de Ventas', portalCustomer:'Portal de Clientes' });
   /* strings for New Order and My orders (English; other languages fall back to English until translated) */
   Object.assign(T.en, {
     newOrder:'New Order', myOrders:'My orders', addToOrder:'Add to order', inOrderRemove:'In order · remove',

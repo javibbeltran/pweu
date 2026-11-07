@@ -29,7 +29,7 @@ window.PWLite = (function () {
   let SPACES = [], SECTIONS = [], DOCS = [];
   let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az';
 
-  const title = () => t(CFG[ID].title);
+  const title = () => t(ID === 'sales' ? 'portalSales' : 'portalCustomer');
   const tabLabel = x => t(LABEL[x]);
 
   /* ---------- access screens ---------- */
