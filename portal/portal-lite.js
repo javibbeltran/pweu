@@ -16,14 +16,14 @@ window.PWLite = (function () {
   /* ---------- what each portal contains ---------- */
   const CFG = {
     sales:    { title: 'pSales',    side: true,  price: true,  avail: true,  order: true,
-                tabs: ['home', 'catalogue', 'neworder', 'myorders', 'calendar', 'invoices', 'downloads'] },
+                tabs: ['home', 'catalogue', 'neworder', 'myorders', 'calendar', 'invoices', 'downloads', 'showroom'] },
     customer: { title: 'pCustomer', side: false, price: false, avail: false, order: false,
                 tabs: ['home', 'catalogue', 'orders', 'documents', 'contact'] }
   };
   const LABEL  = { home:'home', catalogue:'catalogue', pricing:'priceLists', pipeline:'pipeline', customers:'customersTab',
-                   flow:'flow', library:'documents', orders:'orders', documents:'documents', contact:'contact', neworder:'newOrder', myorders:'myOrders', calendar:'calendar', invoices:'openInvoices', downloads:'downloads' };
+                   flow:'flow', library:'documents', orders:'orders', documents:'documents', contact:'contact', neworder:'newOrder', myorders:'myOrders', calendar:'calendar', invoices:'openInvoices', downloads:'downloads', showroom:'showroom' };
   const STATUS = { home:null, catalogue:'ready', pricing:'todo', pipeline:'todo', customers:'todo', flow:'ready',
-                   library:'ready', orders:'todo', documents:'todo', contact:'todo', neworder:'ready', myorders:'ready', calendar:'ready', invoices:'todo', downloads:'todo' };
+                   library:'ready', orders:'todo', documents:'todo', contact:'todo', neworder:'ready', myorders:'ready', calendar:'ready', invoices:'todo', downloads:'todo', showroom:'ready' };
 
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
@@ -634,6 +634,156 @@ window.PWLite = (function () {
     };
   }
 
+
+  /* ============ 3D Showroom (first prototype: manual surface + generated wood texture) ============ */
+  const SR_APPS = [['floor', 'ap0'], ['deck', 'ap6'], ['clad', 'ap4'], ['panel', 'srPanel']];
+  function toRgb(css){
+    const c = document.createElement('canvas'); c.width = c.height = 1; const x = c.getContext('2d');
+    x.fillStyle = css; x.fillRect(0, 0, 1, 1); return [...x.getImageData(0, 0, 1, 1).data].slice(0, 3);
+  }
+  const shade = (rgb, k) => 'rgb(' + rgb.map(v => Math.max(0, Math.min(255, Math.round(v * (1 + k))))).join(',') + ')';
+  function paintWood(c, W, H, rgb, app, plank, angle){
+    let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const D = Math.hypot(W, H);
+    c.save(); c.translate(W / 2, H / 2); c.rotate((angle + (app === 'clad' ? 90 : 0)) * Math.PI / 180); c.translate(-D / 2, -D / 2);
+    const rowH = app === 'panel' ? D : plank * (app === 'deck' ? 1.15 : 1), gap = app === 'deck' ? 4 : (app === 'clad' ? 2 : 1.2);
+    const pieceL = app === 'panel' ? D : plank * (app === 'clad' ? 60 : 7);
+    for(let y = 0; y < D; y += rowH){
+      let x = -rnd() * pieceL;
+      while(x < D){
+        const len = app === 'panel' ? D : pieceL * (0.6 + rnd() * 0.6);
+        c.fillStyle = shade(rgb, (rnd() - .5) * 0.18); c.fillRect(x, y, len, rowH);
+        const n = Math.min(80, Math.max(3, Math.floor(rowH / 4)));
+        for(let i = 0; i < n; i++){
+          const gy = y + rnd() * rowH;
+          c.strokeStyle = rnd() > .5 ? 'rgba(0,0,0,' + (.05 + rnd() * .1) + ')' : 'rgba(255,255,255,' + (.04 + rnd() * .06) + ')';
+          c.lineWidth = .5 + rnd() * 1.2; c.beginPath(); c.moveTo(x, gy);
+          const amp = Math.min(rowH * .05, 6) * rnd();
+          for(let gx = x; gx <= x + len; gx += 24) c.lineTo(gx, gy + Math.sin(gx * .02 + i) * amp);
+          c.stroke();
+        }
+        c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x, y, 1.2, rowH);
+        x += len;
+      }
+      c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(-D, y + rowH - gap, 3 * D, gap);
+    }
+    c.restore();
+  }
+
+  async function renderShowroom(){
+    $('content').innerHTML = '<p class="none">' + esc(t('checking')) + '</p>';
+    await loadSpecies();
+    if(TAB !== 'showroom') return;
+    if(SPERR){ $('content').innerHTML = none('loadSpeciesFail'); return; }
+    $('content').innerHTML = '<section class="sec"><div class="sr-hero"><h2>' + esc(t('showroom')) + '</h2><p>' + esc(t('srIntro')) + '</p>'
+      + '<button class="primary" id="sropen">' + esc(t('srOpen')) + '</button></div>'
+      + todo('3D Showroom: next steps', [
+          'Today: you mark the surface by hand and the tool paints a generated wood texture in the colour of the species. It is a quick visual, not a photo-real render.',
+          'Real species textures or photos (needed per species) and board sizes per application.',
+          'Automatic detection of floors, walls and decks, and perspective and light matching, with an image generation service (needs a server and its cost agreed).',
+          'Saving the pictures to a customer or a quote.'
+        ]) + '</section>';
+    $('sropen').onclick = openShowroom;
+  }
+
+  function openShowroom(){
+    const bg = document.createElement('div'); bg.className = 'modal-bg sr-bg';
+    const S = { img: null, W: 0, H: 0, surfaces: [], cur: [], mark: false,
+                sp: SP[0].code, app: 'floor', plank: 60, angle: 0, op: 90 };
+    bg.innerHTML = '<div class="sr" role="dialog" aria-modal="true"><div class="sr-h"><b>' + esc(t('showroom')) + '</b><button class="rm" id="srx" aria-label="' + esc(t('srClose')) + '">✕</button></div>'
+      + '<div class="sr-b"><div class="sr-stage" id="srstage"><canvas id="src" hidden></canvas>'
+      + '<div class="sr-drop" id="srdrop"><p><b>' + esc(t('srDrop')) + '</b></p><p>' + esc(t('srOr')) + '</p>'
+      + '<label class="ghost2 sr-file">' + esc(t('srChoose')) + '<input type="file" id="srf" accept="image/*" hidden></label>'
+      + '<button class="ghost2" id="srs">' + esc(t('srSample')) + '</button></div></div>'
+      + '<div class="sr-c"><label class="fld">' + esc(t('species')) + '<select id="srsp">' + SP.slice().sort((a, b) => a.name.localeCompare(b.name)).map(s => '<option value="' + esc(s.code) + '"' + (s.code === S.sp ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></label>'
+      + '<label class="fld">' + esc(t('applications')) + '<select id="sra">' + SR_APPS.map(([k, l]) => '<option value="' + k + '">' + esc(t(l)) + '</option>').join('') + '</select></label>'
+      + '<label class="fld">' + esc(t('srPlank')) + '<input type="range" id="srp" min="20" max="200" value="60"></label>'
+      + '<label class="fld">' + esc(t('srAngle')) + '<input type="range" id="srr" min="-90" max="90" value="0"></label>'
+      + '<label class="fld">' + esc(t('srOpacity')) + '<input type="range" id="sro" min="30" max="100" value="90"></label>'
+      + '<p class="sr-step" id="srstep">' + esc(t('srStep')) + '</p>'
+      + '<div class="act-g"><button class="primary" id="srm">' + esc(t('srMark')) + '</button><button class="ghost2" id="srfin">' + esc(t('srFinish')) + '</button></div>'
+      + '<div class="act-g"><button class="ghost2" id="sru">' + esc(t('srUndo')) + '</button><button class="ghost2" id="src2">' + esc(t('srClear')) + '</button></div>'
+      + '<button class="ghost2" id="srd">' + esc(t('srDownload')) + '</button></div></div></div>';
+    document.body.appendChild(bg);
+    const cv = bg.querySelector('#src'), g = cv.getContext('2d'), q = id => bg.querySelector('#' + id);
+    const spRgb = code => { const s = SP.find(x => x.code === code); return toRgb(swatch(s && s.colour) || '#a0703c'); };
+    const redraw = () => {
+      if(!S.img) return;
+      g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.drawImage(S.img, 0, 0, S.W, S.H);
+      S.surfaces.forEach(f => {
+        const key = [f.sp, f.app, f.plank, f.angle].join('|');
+        if(f.key !== key){ const tc = document.createElement('canvas'); tc.width = S.W; tc.height = S.H; paintWood(tc.getContext('2d'), S.W, S.H, spRgb(f.sp), f.app, f.plank, f.angle); f.tex = tc; f.key = key; }
+        g.save(); g.beginPath(); f.pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.clip();
+        g.globalAlpha = f.op * .55; g.drawImage(f.tex, 0, 0);
+        g.globalCompositeOperation = 'multiply'; g.globalAlpha = f.op; g.drawImage(f.tex, 0, 0);
+        g.restore();
+      });
+      if(S.cur.length){
+        g.save(); g.lineWidth = 2; g.strokeStyle = '#00b050'; g.fillStyle = '#fff';
+        g.beginPath(); S.cur.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke();
+        S.cur.forEach(p => { g.beginPath(); g.arc(p[0], p[1], 5, 0, 7); g.fill(); g.stroke(); }); g.restore();
+      }
+    };
+    const setImg = im => {
+      const sc = Math.min(1, 1000 / im.width); S.W = Math.round(im.width * sc); S.H = Math.round(im.height * sc);
+      cv.width = S.W; cv.height = S.H; S.img = im; S.surfaces = []; S.cur = []; S.mark = true;
+      cv.hidden = false; q('srdrop').hidden = true; q('srstage').classList.add('has'); redraw();
+    };
+    const loadFile = f => {
+      if(!f || !/^image\//.test(f.type)) return;
+      const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => setImg(im); im.src = r.result; }; r.readAsDataURL(f);
+    };
+    const sample = () => {
+      const c = document.createElement('canvas'); c.width = 900; c.height = 560; const x = c.getContext('2d');
+      let gr = x.createLinearGradient(0, 0, 0, 560); gr.addColorStop(0, '#e9e4da'); gr.addColorStop(1, '#cfc8bb'); x.fillStyle = gr; x.fillRect(0, 0, 900, 560);
+      x.fillStyle = '#bfd8e8'; x.fillRect(560, 70, 230, 190); x.strokeStyle = '#f5f5f5'; x.lineWidth = 8; x.strokeRect(560, 70, 230, 190); x.beginPath(); x.moveTo(675, 70); x.lineTo(675, 260); x.moveTo(560, 165); x.lineTo(790, 165); x.stroke();
+      x.fillStyle = '#d9d6cf'; x.beginPath(); x.moveTo(0, 360); x.lineTo(900, 360); x.lineTo(900, 560); x.lineTo(0, 560); x.fill();
+      gr = x.createLinearGradient(0, 360, 0, 560); gr.addColorStop(0, '#bdb9b0'); gr.addColorStop(1, '#a8a49b'); x.fillStyle = gr;
+      x.beginPath(); x.moveTo(120, 360); x.lineTo(780, 360); x.lineTo(900, 560); x.lineTo(0, 560); x.closePath(); x.fill();
+      x.fillStyle = '#a49f94'; x.fillRect(0, 352, 900, 10);
+      x.fillStyle = '#6b7a8c'; x.fillRect(90, 270, 220, 90); x.fillRect(90, 240, 220, 36);
+      const im = new Image(); im.onload = () => setImg(im); im.src = c.toDataURL();
+    };
+    const sync = () => {
+      const f = S.surfaces[S.surfaces.length - 1];
+      if(f && !S.cur.length && !S.mark){ f.sp = S.sp; f.app = S.app; f.plank = S.plank; f.angle = S.angle; f.op = S.op / 100; redraw(); }
+    };
+    const finish = () => {
+      if(S.cur.length < 3) return;
+      S.surfaces.push({ pts: S.cur.slice(), sp: S.sp, app: S.app, plank: S.plank, angle: S.angle, op: S.op / 100 });
+      S.cur = []; S.mark = false; q('srstep').classList.remove('on'); redraw();
+    };
+    q('srx').onclick = () => bg.remove();
+    q('srf').onchange = e => loadFile(e.target.files[0]);
+    q('srs').onclick = sample;
+    const st = q('srstage');
+    st.ondragover = e => { e.preventDefault(); st.classList.add('over'); };
+    st.ondragleave = () => st.classList.remove('over');
+    st.ondrop = e => { e.preventDefault(); st.classList.remove('over'); loadFile(e.dataTransfer.files[0]); };
+    cv.onclick = e => {
+      if(!S.mark) return;
+      const r = cv.getBoundingClientRect(), p = [(e.clientX - r.left) * S.W / r.width, (e.clientY - r.top) * S.H / r.height];
+      if(S.cur.length >= 3 && Math.hypot(p[0] - S.cur[0][0], p[1] - S.cur[0][1]) < 14 * S.W / r.width){ finish(); return; }
+      S.cur.push(p); redraw();
+    };
+    q('srm').onclick = () => { if(!S.img){ flash(t('srNeedImg')); return; } S.mark = true; S.cur = []; q('srstep').classList.add('on'); redraw(); };
+    q('srfin').onclick = finish;
+    q('sru').onclick = () => { if(S.cur.length) S.cur.pop(); else S.surfaces.pop(); redraw(); };
+    q('src2').onclick = () => { S.surfaces = []; S.cur = []; redraw(); };
+    q('srsp').onchange = e => { S.sp = e.target.value; sync(); };
+    q('sra').onchange = e => { S.app = e.target.value; sync(); };
+    q('srp').oninput = e => { S.plank = +e.target.value; sync(); };
+    q('srr').oninput = e => { S.angle = +e.target.value; sync(); };
+    q('sro').oninput = e => { S.op = +e.target.value; sync(); };
+    q('srd').onclick = () => {
+      if(!S.img){ flash(t('srNeedImg')); return; }
+      const keep = S.cur; S.cur = []; redraw();
+      cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'showroom-' + S.sp + '.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); });
+      S.cur = keep; redraw();
+    };
+    bg.onclick = e => { if(e.target === bg) bg.remove(); };
+  }
+
   /* ---------- the other tabs ---------- */
   /* ---- quick search + shortcuts (home) ---- */
   function openCatalogue(opts){
@@ -742,6 +892,7 @@ window.PWLite = (function () {
     if(TAB === 'neworder') return renderNewOrder();
     if(TAB === 'myorders') return renderMyOrders();
     if(TAB === 'calendar') return renderCalendar();
+    if(TAB === 'showroom') return renderShowroom();
     if(TAB === 'downloads' && ID === 'sales') return renderDownloads();
     if(TAB === 'flow') return renderFlow();
     if(TAB === 'library') return renderLibrary();

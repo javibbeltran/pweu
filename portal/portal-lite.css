@@ -292,3 +292,24 @@ h3.sub{font-size:13px;font-weight:600;color:var(--fg2);margin:20px 0 10px}
 .two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
 .two-col .grid{grid-template-columns:1fr}
 @media (max-width:980px){.two-col{grid-template-columns:1fr}}
+
+/* ---------- 3D showroom ---------- */
+.sr-hero{background:var(--surf);border:1px solid var(--ln);border-radius:var(--radius);padding:28px;max-width:640px}
+.sr-hero h2{margin:0 0 8px;font-size:22px}
+.sr-hero p{margin:0 0 18px;color:var(--fg2);font-size:14.5px;line-height:1.5}
+.sr-bg{padding:12px}
+.sr{background:var(--surf);color:var(--fg);border:1px solid var(--ln);border-radius:var(--radius);width:100%;max-width:1240px;max-height:96vh;display:flex;flex-direction:column;overflow:hidden}
+.sr-h{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--ln);font-size:15px}
+.sr-b{display:grid;grid-template-columns:minmax(0,1fr) 290px;min-height:0;flex:1;overflow:auto}
+.sr-stage{background:var(--bg2);display:flex;align-items:center;justify-content:center;min-height:360px;padding:12px;border-right:1px solid var(--ln)}
+.sr-stage.over{outline:3px dashed var(--accent);outline-offset:-8px}
+.sr-stage canvas{max-width:100%;max-height:calc(96vh - 90px);height:auto;cursor:crosshair;border-radius:8px;box-shadow:var(--shadow)}
+.sr-stage canvas[hidden],.sr-drop[hidden]{display:none}
+.sr-drop{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--fg2)}
+.sr-drop p{margin:0}
+.sr-file{display:inline-flex;align-items:center;cursor:pointer}
+.sr-c{padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.sr-c input[type=range]{padding:0;min-height:30px;accent-color:var(--accent)}
+.sr-step{margin:0;font-size:12.5px;color:var(--mut);line-height:1.4}
+.sr-step.on{color:var(--ink);font-weight:600}
+@media (max-width:860px){.sr-b{grid-template-columns:1fr}.sr-stage{border-right:0;border-bottom:1px solid var(--ln)}}

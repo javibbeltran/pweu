@@ -199,6 +199,12 @@ window.PW = (function () {
     it:      { portals:'Portali', pOperations:'Operazioni', pSales:'Vendite', pCustomer:'Cliente', settings:'Impostazioni', orders:'I miei ordini', ordersEmpty:'I tuoi ordini appariranno qui.', documents:'Documenti', docsEmpty:'I documenti condivisi con te appariranno qui.', flow:'Flusso di processo' }
   };
   Object.keys(T2).forEach(l => Object.assign(T[l], T2[l]));
+  Object.assign(T.en, {
+    showroom:'3D Showroom', srIntro:'Drop a photo of a room, a terrace or a facade, choose a species and an application, and see it applied on the picture.',
+    srOpen:'Open 3D Showroom', srDrop:'Drop your picture here', srOr:'or', srChoose:'Choose a picture', srSample:'Use a sample room',
+    srStep:'Click the corners of the surface, then close the shape (click the first point or press Finish).', srMark:'Mark a surface', srFinish:'Finish', srUndo:'Undo', srClear:'Clear all',
+    srPlank:'Board width', srAngle:'Angle', srOpacity:'Intensity', srDownload:'Download image', srPanel:'Panel / furniture', srNeedImg:'Add a picture first.', srClose:'Close'
+  });
   Object.assign(T.en, { portalSales:'Sales Portal', portalCustomer:'Customer Portal' });
   Object.assign(T.nl, { portalSales:'Verkoopportaal', portalCustomer:'Klantenportaal' });
   Object.assign(T.es, { portalSales:'Portal de Ventas', portalCustomer:'Portal de Clientes' });
