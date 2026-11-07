@@ -14,15 +14,15 @@
 <body>
 
 <div id="gate"><div class="gcard">
-  <p class="gmark">Precious Woods</p>
-  <p class="gseg">Operations</p>
+  <p class="gmark">Precious Woods</p><p class="gseg">Operations</p>
   <p id="gatemsg">Checking your access…</p>
 </div></div>
 
 <header class="bar">
   <div class="in">
     <a class="brand" href="index.html">
-      <span class="mark">Precious Woods</span>
+      <img id="logo" class="logo" alt="Precious Woods" hidden>
+      <span class="mark" id="wordmark">Precious Woods</span>
       <span class="seg" id="seg">Operations</span>
     </a>
     <span class="sp"></span>
@@ -32,39 +32,65 @@
     </div>
     <button class="ghost" id="userbtn" aria-expanded="false" aria-haspopup="true">
       <span class="av" id="av">··</span>
-      <span id="userlbl"></span>
     </button>
   </div>
   <div class="navbar"><div class="in"><nav class="nav" id="nav"></nav></div></div>
 </header>
 <div class="mega" id="mega"></div>
 
-<div class="panel" id="panel" role="menu"></div>
+<main id="main" hidden>
+  <div class="hero"><div class="in">
+    <p class="co" id="co">PWEU</p>
+    <h1 id="h1">Operations</h1>
+    <p class="claim">Value the nature to better protect it.</p>
+    <div class="facts">
+      <div><b>1.1m ha</b>Certified forest</div>
+      <div><b>330m t</b>CO₂ stored</div>
+      <div><b>1,400</b>Jobs in rural areas</div>
+      <div><b>FSC · PEFC</b>Dual certified</div>
+    </div>
+  </div></div>
 
-<main class="page">
-  <div class="lede">
-    <h1 id="h1"></h1>
-    <span class="pill" id="pill"></span>
+  <div class="page">
+    <div class="quick" id="quick"></div>
+    <div class="layout">
+      <div>
+        <h3 class="band" id="bandmods">Workspace</h3>
+        <div class="mods" id="mods"></div>
+      </div>
+      <aside class="side" id="side"></aside>
+    </div>
   </div>
-  <div id="body"></div>
 </main>
+
+<div class="panel" id="panel" role="menu"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <header>
+    <div><h3 id="dtitle">—</h3><p id="dsub"></p></div>
+    <button id="dclose" aria-label="Close">✕</button>
+  </header>
+  <div class="body" id="dbody"></div>
+</aside>
 
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const t=(...a)=>PW.t(...a);
 
-let SPACES=[],SECTIONS=[],DOCS=[],ROLES={},CUR=null,IS_ADMIN=false;
+const LOGO='https://www.preciouswoods.com/domains/preciouswoods_com/data/free_docs/'
+  +'c52d3c1-4_4b7ef83-d_24PREC%20Logo%20Precious_Woods%20NEG_RGB.png';
 
+let SPACES=[],SECTIONS=[],DOCS=[],ROLES={},CUR=null,IS_ADMIN=false,PENDING=0;
 const ACCENTS=['#2f7d55','#3c6e4f','#6b7f3a','#8a6a3b','#3a6b7d','#7d4f3a'];
+const NAVORDER=['operations','commercial','compliance','projects','systems'];
+const GLYPH={operations:'◇',commercial:'↗',compliance:'✓',projects:'◈',systems:'⚙'};
 
-/* ---------- access screen ---------- */
-function gate(html){const g=$('gate');g.innerHTML=html;g.style.display='flex'}
+/* ---------- access ---------- */
+function gate(h){const g=$('gate');g.innerHTML=h;g.style.display='flex'}
 function ungate(){$('gate').style.display='none'}
-
 function gateShell(inner){
-  return '<div class="gcard"><p class="gmark">Precious Woods</p><p class="gseg">Operations</p>'
-    +inner
+  return '<div class="gcard"><p class="gmark">Precious Woods</p><p class="gseg">Operations</p>'+inner
     +'<div class="glang"><select id="glang">'
     + PW.LANGS.map(([c,n])=>'<option value="'+c+'"'+(c===PW.prefs.lang?' selected':'')+'>'+n+'</option>').join('')
     +'</select></div></div>';
@@ -73,10 +99,8 @@ function wireGateLang(redraw){
   const s=$('glang');
   if(s) s.onchange=()=>{PW.setPref('lang',s.value);document.documentElement.lang=s.value;redraw()};
 }
-
 function loginScreen(msg){
-  gate(gateShell(
-     '<p>'+esc(t('loginLead'))+'</p>'
+  gate(gateShell('<p>'+esc(t('loginLead'))+'</p>'
     +'<form id="gf"><input id="gmail" type="email" required placeholder="'+esc(t('emailLabel'))+'" autocomplete="email">'
     +'<button type="submit">'+esc(t('sendLink'))+'</button></form>'
     +'<p class="gmsg" id="gmsg">'+(msg?esc(msg):'')+'</p>'));
@@ -89,32 +113,25 @@ function loginScreen(msg){
     m.textContent=error?t('sendFail',error.message):t('sent',em);
   });
 }
-
 function noAccessScreen(){
-  gate(gateShell(
-     '<h2>'+esc(t('noAccessT'))+'</h2>'
-    +'<p>'+esc(t('noAccessB',PW.email))+'</p>'
-    +'<p>'+esc(t('noAccessH'))+'</p>'
-    +'<button id="out2">'+esc(t('signout'))+'</button>'));
+  gate(gateShell('<h2>'+esc(t('noAccessT'))+'</h2><p>'+esc(t('noAccessB',PW.email))+'</p>'
+    +'<p>'+esc(t('noAccessH'))+'</p><button id="out2">'+esc(t('signout'))+'</button>'));
   wireGateLang(noAccessScreen);
   $('out2').onclick=async()=>{await PW.signOut();location.reload()};
 }
 
-/* ---------- preferences panel ---------- */
+/* ---------- preferences ---------- */
 function initials(em){
   const n=em.split('@')[0].replace(/[._-]+/g,' ').trim().split(' ').filter(Boolean);
   return ((n[0]||'?')[0]+((n[1]||'')[0]||'')).toUpperCase();
 }
-
 function panel(){
   const p=$('panel');
   const spaceRow = SPACES.length>1
     ? '<h4>'+esc(t('company'))+'</h4><select id="pspace">'
       + SPACES.map(s=>'<option value="'+esc(s.id)+'"'+(s.id===CUR?' selected':'')+'>'+esc(s.name)+'</option>').join('')
-      + '</select>'
-    : '';
-  p.innerHTML =
-     '<div class="who"><b>'+esc(PW.email)+'</b><span>'
+      + '</select>' : '';
+  p.innerHTML='<div class="who"><b>'+esc(PW.email)+'</b><span>'
       +esc(ROLES[CUR]==='editor'?t('canEdit'):t('readOnly'))+'</span></div>'
     + spaceRow
     + '<h4>'+esc(t('language'))+'</h4><select id="plang">'
@@ -126,81 +143,70 @@ function panel(){
       + '</div>'
     + '<h4>'+esc(t('accent'))+'</h4><div class="swatches">'
       + ACCENTS.map(c=>'<button data-acc="'+c+'" style="background:'+c+'" aria-pressed="'
-          +(PW.prefs.accent.toLowerCase()===c)+'" title="'+c+'"></button>').join('')
-      + '<input type="color" id="pacc" value="'+esc(PW.prefs.accent)+'">'
-      + '</div>'
-    + '<div class="foot">'
-      + (IS_ADMIN?'<button id="padmin">Administration</button>':'')
+          +(PW.prefs.accent.toLowerCase()===c)+'"></button>').join('')
+      + '<input type="color" id="pacc" value="'+esc(PW.prefs.accent)+'"></div>'
+    + '<div class="foot">'+(IS_ADMIN?'<button id="padmin">Administration</button>':'')
       + '<button id="pout">'+esc(t('signout'))+'</button></div>';
-
   const sp=$('pspace');
-  if(sp) sp.onchange=()=>{CUR=sp.value;PW.setPref('space',CUR);buildNav();closeMega();render();panel()};
-  $('plang').onchange=e=>{PW.setPref('lang',e.target.value);document.documentElement.lang=e.target.value;chrome();render();panel()};
+  if(sp) sp.onchange=()=>{CUR=sp.value;PW.setPref('space',CUR);redrawAll();panel()};
+  $('plang').onchange=e=>{PW.setPref('lang',e.target.value);document.documentElement.lang=e.target.value;redrawAll();panel()};
   p.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{PW.setPref('theme',b.dataset.theme);panel()});
   p.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{PW.setPref('accent',b.dataset.acc);panel()});
-  $('pacc').oninput=e=>{PW.setPref('accent',e.target.value)};
-  const pa=$('padmin'); if(pa) pa.onclick=()=>{location.href='admin.html'};
+  $('pacc').oninput=e=>PW.setPref('accent',e.target.value);
+  const pa=$('padmin'); if(pa) pa.onclick=()=>location.href='admin.html';
   $('pout').onclick=async()=>{await PW.signOut();location.reload()};
 }
-
 function togglePanel(open){
   const p=$('panel'),b=$('userbtn');
-  const show = open===undefined ? !p.classList.contains('open') : open;
+  const show=open===undefined?!p.classList.contains('open'):open;
   p.classList.toggle('open',show);
   b.setAttribute('aria-expanded',String(show));
 }
 
-
-/* ---------- main navigation ---------- */
-const NAVORDER=['operations','commercial','compliance','projects','systems'];
-function navLabel(k){ const v=t('nav'+k); return v==='nav'+k ? k.charAt(0).toUpperCase()+k.slice(1) : v }
-
+/* ---------- helpers ---------- */
+function navLabel(k){const v=t('nav'+k);return v==='nav'+k?k.charAt(0).toUpperCase()+k.slice(1):v}
 function groupsOf(space){
   const g={};
-  SECTIONS.filter(s=>s.space===space).forEach(s=>{
-    const k=s.nav||'operations';
-    (g[k]=g[k]||[]).push(s);
-  });
+  SECTIONS.filter(s=>s.space===space).forEach(s=>{(g[s.nav||'operations']=g[s.nav||'operations']||[]).push(s)});
   return Object.keys(g)
-    .sort((a,b)=>{
-      const ia=NAVORDER.indexOf(a),ib=NAVORDER.indexOf(b);
-      return (ia<0?99:ia)-(ib<0?99:ib);
-    })
+    .sort((a,b)=>(NAVORDER.indexOf(a)<0?99:NAVORDER.indexOf(a))-(NAVORDER.indexOf(b)<0?99:NAVORDER.indexOf(b)))
     .map(k=>({key:k,label:navLabel(k),sections:g[k].sort((a,b)=>a.sort-b.sort)}));
 }
-
-function buildNav(){
-  const gs=groupsOf(CUR);
-  $('nav').innerHTML=gs.map(g=>
-    '<button data-nav="'+esc(g.key)+'" aria-expanded="false">'+esc(g.label)
-    +'<span class="caret">\u25be</span></button>').join('');
-  $('nav').querySelectorAll('button').forEach(b=>{
-    b.onclick=e=>{e.stopPropagation();openMega(b.dataset.nav,b)};
-    b.onmouseenter=()=>{ if($('mega').classList.contains('open')) openMega(b.dataset.nav,b) };
-  });
+function docsOf(secId){return DOCS.filter(d=>d.section===secId).sort((a,b)=>a.sort-b.sort)}
+function hrefOf(d){return d.url?d.url:'doc.html?doc='+encodeURIComponent(d.slug)}
+function isExternal(d){return d.kind==='link'&&d.url}
+function fmtDate(s){
+  if(!s)return'';
+  try{return new Date(s).toLocaleDateString(PW.prefs.lang,{day:'2-digit',month:'short'})}
+  catch(e){return new Date(s).toLocaleDateString()}
 }
 
+/* ---------- navigation ---------- */
+function buildNav(){
+  const gs=groupsOf(CUR);
+  $('nav').innerHTML=gs.map(g=>'<button data-nav="'+esc(g.key)+'" aria-expanded="false">'
+    +esc(g.label)+'<span class="caret">▾</span></button>').join('');
+  $('nav').querySelectorAll('button').forEach(b=>{
+    b.onclick=e=>{e.stopPropagation();openMega(b.dataset.nav,b)};
+    b.onmouseenter=()=>{if($('mega').classList.contains('open'))openMega(b.dataset.nav,b)};
+  });
+}
 function openMega(key,btn){
   const m=$('mega');
-  if(btn && btn.getAttribute('aria-expanded')==='true'){ closeMega(); return }
+  if(btn&&btn.getAttribute('aria-expanded')==='true'){closeMega();return}
   const g=groupsOf(CUR).find(x=>x.key===key);
-  if(!g){ closeMega(); return }
+  if(!g){closeMega();return}
   m.innerHTML='<div class="in">'+g.sections.map(sec=>{
-    const list=DOCS.filter(d=>d.section===sec.id).sort((a,b)=>a.sort-b.sort);
+    const list=docsOf(sec.id);
     return '<div class="col"><h5>'+esc(sec.name)+'</h5>'
-      +(list.length?list.slice(0,6).map(d=>{
-          const href=d.url?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug);
-          const tgt=(d.kind==='link'&&d.url)?' target="_blank" rel="noopener"':'';
-          return '<a href="'+href+'"'+tgt+'>'+esc(d.title)
-            +(d.subtitle?'<span class="sub">'+esc(d.subtitle)+'</span>':'')+'</a>';
-        }).join('')
-       :'<p class="none">'+esc(t('nothingHere'))+'</p>')
-      +(list.length>6?'<a class="all" href="#sec-'+esc(sec.id)+'">'+esc(t('openAll'))+'</a>':'')
+      +(list.length?list.slice(0,6).map(d=>
+          '<a href="'+esc(hrefOf(d))+'"'+(isExternal(d)?' target="_blank" rel="noopener"':'')+'>'
+          +esc(d.title)+(d.subtitle?'<span class="sub">'+esc(d.subtitle)+'</span>':'')+'</a>').join('')
+        :'<p class="none">'+esc(t('nothingHere'))+'</p>')
       +'</div>';
   }).join('')+'</div>';
   m.classList.add('open');
-  $('nav').querySelectorAll('button').forEach(b=>
-    b.setAttribute('aria-expanded',String(b.dataset.nav===key)));
+  $('nav').querySelectorAll('button').forEach(b=>b.setAttribute('aria-expanded',String(b.dataset.nav===key)));
 }
 function closeMega(){
   $('mega').classList.remove('open');
@@ -213,75 +219,122 @@ function search(term){
   if(!q){r.classList.remove('open');return}
   const secName=id=>{const s=SECTIONS.find(x=>x.id===id);return s?s.name:''};
   const spName=id=>{const s=SPACES.find(x=>x.id===id);return s?s.name:''};
-  const hits=DOCS.filter(d=>
-    (d.title||'').toLowerCase().includes(q) ||
-    (d.subtitle||'').toLowerCase().includes(q) ||
-    secName(d.section).toLowerCase().includes(q)).slice(0,10);
+  const hits=DOCS.filter(d=>(d.title||'').toLowerCase().includes(q)
+    ||(d.subtitle||'').toLowerCase().includes(q)
+    ||secName(d.section).toLowerCase().includes(q)).slice(0,10);
   r.innerHTML=hits.length
-    ? hits.map(d=>{
-        const href=d.url?esc(d.url):'doc.html?doc='+encodeURIComponent(d.slug);
-        return '<a href="'+href+'">'+esc(d.title)
-          +'<span class="where">'+esc(spName(d.space))+' · '+esc(secName(d.section))+'</span></a>';
-      }).join('')
+    ? hits.map(d=>'<a href="'+esc(hrefOf(d))+'">'+esc(d.title)
+        +'<span class="where">'+esc(spName(d.space))+' · '+esc(secName(d.section))+'</span></a>').join('')
     : '<p class="none">'+esc(t('noResults'))+'</p>';
   r.classList.add('open');
 }
 
-/* ---------- content ---------- */
-function fmtDate(s){
-  if(!s) return '';
-  try{ return new Date(s).toLocaleDateString(PW.prefs.lang,{day:'2-digit',month:'short',year:'numeric'}); }
-  catch(e){ return new Date(s).toLocaleDateString(); }
+/* ---------- drawer ---------- */
+function openDrawer(sec){
+  const list=docsOf(sec.id);
+  $('dtitle').textContent=sec.name;
+  $('dsub').textContent=(SPACES.find(s=>s.id===sec.space)||{}).name
+    +' · '+(list.length===1?t('item'):t('items',list.length));
+  $('dbody').innerHTML=list.length?list.map(d=>{
+    const vacio=!d.has_content&&d.kind==='diagram';
+    const meta=vacio?t('noContent')
+      :(d.updated_at?t('updated')+' '+fmtDate(d.updated_at)
+        +(d.updated_by?' · '+esc(d.updated_by.split('@')[0]):''):'');
+    return '<a class="card'+(vacio?' empty':'')+'" href="'+esc(hrefOf(d))+'"'
+      +(isExternal(d)?' target="_blank" rel="noopener"':'')+'>'
+      +'<p class="t">'+esc(d.title)
+        +(vacio?' <span class="tag">'+esc(t('empty'))+'</span>':'')
+        +(isExternal(d)?' <span class="tag">'+esc(t('link'))+'</span>':'')+'</p>'
+      +(d.subtitle?'<p class="d">'+esc(d.subtitle)+'</p>':'')
+      +(meta?'<p class="m">'+meta+'</p>':'')+'</a>';
+  }).join(''):'<p class="none">'+esc(t('nothingHere'))+'</p>';
+  $('drawer').classList.add('open');
+  $('drawer').setAttribute('aria-hidden','false');
+  $('scrim').classList.add('open');
+}
+function closeDrawer(){
+  $('drawer').classList.remove('open');
+  $('drawer').setAttribute('aria-hidden','true');
+  $('scrim').classList.remove('open');
 }
 
-function card(d){
-  const vacio = !d.has_content && d.kind==='diagram';
-  const meta = vacio ? t('noContent')
-    : (d.updated_at ? t('updated')+' '+fmtDate(d.updated_at)
-        + (d.updated_by?' · '+esc(d.updated_by.split('@')[0]):'') : '');
-  const inner =
-     '<p class="t">'+esc(d.title)
-      +(vacio?' <span class="tag">'+esc(t('empty'))+'</span>':'')
-      +(d.kind==='link'?' <span class="tag">'+esc(t('link'))+'</span>':'')+'</p>'
-    +(d.subtitle?'<p class="d">'+esc(d.subtitle)+'</p>':'')
-    +(meta?'<p class="m">'+meta+'</p>':'');
-  if(d.kind==='form'&&d.url)
-    return '<a class="card" href="'+esc(d.url)+'">'+inner+'</a>';
-  if(d.kind==='link'&&d.url)
-    return '<a class="card" href="'+esc(d.url)+'" target="_blank" rel="noopener">'+inner+'</a>';
-  if(vacio && ROLES[d.space]!=='editor') return '<div class="card empty">'+inner+'</div>';
-  return '<a class="card'+(vacio?' empty':'')+'" href="doc.html?doc='+encodeURIComponent(d.slug)+'">'+inner+'</a>';
+/* ---------- dashboard ---------- */
+function renderQuick(){
+  const items=[];
+  const form=DOCS.find(d=>d.space===CUR&&d.kind==='form');
+  if(form) items.push(['＋',form.title,hrefOf(form)]);
+  const chart=DOCS.find(d=>d.space===CUR&&d.kind==='diagram'&&d.has_content);
+  if(chart) items.push(['◇',chart.title,hrefOf(chart)]);
+  if(IS_ADMIN) items.push(['⚙','Administration','admin.html']);
+  $('quick').innerHTML=items.map(([g,l,h])=>
+    '<a href="'+esc(h)+'"><span class="ic">'+g+'</span>'+esc(l)+'</a>').join('');
+}
+
+function renderMods(){
+  const gs=groupsOf(CUR);
+  $('mods').innerHTML=gs.map(g=>g.sections.map(sec=>{
+    const list=docsOf(sec.id);
+    const filled=list.filter(d=>d.has_content||d.kind!=='diagram').length;
+    const pct=list.length?Math.round(filled/list.length*100):0;
+    return '<button class="mod" data-sec="'+esc(sec.id)+'">'
+      +'<div class="top"><span class="glyph">'+(GLYPH[g.key]||'◇')+'</span>'
+        +'<span class="n">'+list.length+'</span></div>'
+      +'<p class="nm">'+esc(sec.name)+'</p>'
+      +'<p class="meta">'+esc(g.label)+'</p>'
+      +(list.length?'<div class="bar"><i style="width:'+pct+'%"></i></div>':'')
+      +'</button>';
+  }).join('')).join('');
+  $('mods').querySelectorAll('[data-sec]').forEach(b=>
+    b.onclick=()=>openDrawer(SECTIONS.find(s=>s.id===b.dataset.sec)));
+}
+
+function renderSide(){
+  const recent=DOCS.filter(d=>d.space===CUR&&d.updated_at)
+    .sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).slice(0,5);
+  const total=DOCS.filter(d=>d.space===CUR).length;
+  const empty=DOCS.filter(d=>d.space===CUR&&!d.has_content&&d.kind==='diagram').length;
+  let h='';
+  if(PENDING>0||IS_ADMIN){
+    h+='<div class="widget"><h4>Requests</h4>'
+      +'<div class="stat"><b>'+PENDING+'</b><span>waiting</span></div>'
+      +(IS_ADMIN?'<a class="go" href="admin.html">Open the inbox →</a>':'')+'</div>';
+  }
+  h+='<div class="widget"><h4>'+esc(t('recent'))+'</h4><div class="feed">'
+    +(recent.length?recent.map(d=>'<a href="'+esc(hrefOf(d))+'">'+esc(d.title)
+        +'<span>'+fmtDate(d.updated_at)
+        +(d.updated_by?' · '+esc(d.updated_by.split('@')[0]):'')+'</span></a>').join('')
+      :'<p class="none" style="border:0;padding:0">'+esc(t('nothingHere'))+'</p>')
+    +'</div></div>';
+  h+='<div class="widget"><h4>Library</h4>'
+    +'<div class="stat"><b>'+total+'</b><span>documents</span></div>'
+    +(empty?'<p style="font-size:12px;color:var(--mut);margin:4px 0 0">'
+        +empty+' still to be written</p>':'')
+    +'</div>';
+  $('side').innerHTML=h;
 }
 
 function chrome(){
   $('seg').textContent=t('portal');
-  $('userlbl').textContent='';
   $('av').textContent=initials(PW.email||'?');
-  document.title='Precious Woods · '+t('portal');
   $('q').placeholder=t('searchPh');
-  buildNav();
+  document.title='Precious Woods · '+t('portal');
+  const sp=SPACES.find(s=>s.id===CUR);
+  $('co').textContent=sp?sp.name:'';
+  $('h1').textContent=t('portal');
+  $('bandmods').textContent=t('portal');
 }
 
-function render(){
-  const sp=SPACES.find(s=>s.id===CUR);
-  $('h1').textContent=sp?sp.name:'';
-  $('pill').textContent=ROLES[CUR]==='editor'?t('canEdit'):t('readOnly');
-  const secs=SECTIONS.filter(s=>s.space===CUR);
-  const ds=DOCS.filter(d=>d.space===CUR);
-  if(!secs.length){$('body').innerHTML='<p class="none">'+esc(t('noSections'))+'</p>';return}
-  $('body').innerHTML=secs.map(s=>{
-    const list=ds.filter(d=>d.section===s.id).sort((a,b)=>a.sort-b.sort);
-    return '<section class="sec" id="sec-'+esc(s.id)+'"><h2>'+esc(s.name)+'</h2>'
-      +(list.length?'<div class="grid">'+list.map(card).join('')+'</div>'
-                   :'<p class="none">'+esc(t('nothingHere'))+'</p>')
-      +'</section>';
-  }).join('');
-}
+function redrawAll(){ chrome(); buildNav(); closeMega(); renderQuick(); renderMods(); renderSide() }
 
 /* ---------- start ---------- */
 (async()=>{
   document.documentElement.lang=PW.prefs.lang;
   $('gatemsg').textContent=t('checking');
+
+  const img=$('logo');
+  img.onload=()=>{img.hidden=false;$('wordmark').hidden=true};
+  img.onerror=()=>{img.remove()};
+  img.src=LOGO;
 
   const c=await PW.connect();
   if(!c.ok){
@@ -290,41 +343,47 @@ function render(){
     wireGateLang(()=>location.reload());
     return;
   }
-  if(!c.session){ loginScreen(); return; }
-
+  if(!c.session){loginScreen();return}
   await PW.loadPrefs();
   document.documentElement.lang=PW.prefs.lang;
 
-  const [sp,se,dc]=await Promise.all([
+  const [sp,se,dc,am]=await Promise.all([
     PW.sb.from('spaces').select('id,name,sort').order('sort'),
-    PW.sb.from('sections').select('id,space,name,icon,sort').order('sort'),
-    PW.sb.from('doc_index').select('*')
+    PW.sb.from('sections').select('id,space,name,icon,nav,nav_sort,sort').order('sort'),
+    PW.sb.from('doc_index').select('*'),
+    PW.sb.from('app_users').select('role').eq('email',PW.email).maybeSingle()
   ]);
-  if(sp.error){ loginScreen(t('loadFail',sp.error.message)); return; }
-  SPACES=sp.data||[]; SECTIONS=se.data||[]; DOCS=dc.data||[];
-  if(!SPACES.length){ noAccessScreen(); return; }
-
-  const am=await PW.sb.from('app_users').select('role').eq('email',PW.email).maybeSingle();
-  IS_ADMIN = !!(am.data && am.data.role==='admin');
+  if(sp.error){loginScreen(t('loadFail',sp.error.message));return}
+  SPACES=sp.data||[];SECTIONS=se.data||[];DOCS=dc.data||[];
+  IS_ADMIN=!!(am.data&&am.data.role==='admin');
+  if(!SPACES.length){noAccessScreen();return}
 
   const rs=await Promise.all(SPACES.map(s=>PW.sb.rpc('role_in',{p_space:s.id})));
   SPACES.forEach((s,i)=>{ROLES[s.id]=(rs[i]&&rs[i].data)||'viewer'});
 
   const want=new URLSearchParams(location.search).get('space')||PW.prefs.space;
   CUR=(SPACES.find(s=>s.id===want)||SPACES[0]).id;
-  if(PW.prefs.space!==CUR) PW.setPref('space',CUR);
+  if(PW.prefs.space!==CUR)PW.setPref('space',CUR);
 
-  ungate(); chrome(); panel(); render();
+  const pend=await PW.sb.from('form_submissions')
+    .select('id',{count:'exact',head:true}).eq('status','new');
+  PENDING=pend.count||0;
+
+  ungate(); $('main').hidden=false; panel(); redrawAll();
 
   $('q').addEventListener('input',e=>search(e.target.value));
   $('q').addEventListener('focus',e=>{if(e.target.value)search(e.target.value)});
   $('res').onclick=e=>e.stopPropagation();
   $('mega').onclick=e=>e.stopPropagation();
-  $('userbtn').onclick=e=>{e.stopPropagation();togglePanel();closeMega()};
   $('panel').onclick=e=>e.stopPropagation();
+  $('userbtn').onclick=e=>{e.stopPropagation();togglePanel();closeMega()};
+  $('dclose').onclick=closeDrawer;
+  $('scrim').onclick=closeDrawer;
+  $('drawer').onclick=e=>e.stopPropagation();
   document.addEventListener('click',()=>{togglePanel(false);closeMega();$('res').classList.remove('open')});
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){togglePanel(false);closeMega();$('res').classList.remove('open');$('q').blur()}
+    if(e.key==='Escape'){togglePanel(false);closeMega();closeDrawer();
+      $('res').classList.remove('open');$('q').blur()}
   });
 })();
 </script>
