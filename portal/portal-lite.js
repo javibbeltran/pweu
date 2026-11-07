@@ -16,14 +16,14 @@ window.PWLite = (function () {
   /* ---------- what each portal contains ---------- */
   const CFG = {
     sales:    { title: 'pSales',    side: true,  price: true,  avail: true,  order: true,
-                tabs: ['home', 'catalogue', 'neworder', 'myorders', 'customers', 'flow', 'library'] },
+                tabs: ['home', 'catalogue', 'neworder', 'myorders', 'calendar', 'invoices', 'downloads'] },
     customer: { title: 'pCustomer', side: false, price: false, avail: false, order: false,
                 tabs: ['home', 'catalogue', 'orders', 'documents', 'contact'] }
   };
   const LABEL  = { home:'home', catalogue:'catalogue', pricing:'priceLists', pipeline:'pipeline', customers:'customersTab',
-                   flow:'flow', library:'documents', orders:'orders', documents:'documents', contact:'contact', neworder:'newOrder', myorders:'myOrders' };
+                   flow:'flow', library:'documents', orders:'orders', documents:'documents', contact:'contact', neworder:'newOrder', myorders:'myOrders', calendar:'calendar', invoices:'openInvoices', downloads:'downloads' };
   const STATUS = { home:null, catalogue:'ready', pricing:'todo', pipeline:'todo', customers:'todo', flow:'ready',
-                   library:'ready', orders:'todo', documents:'todo', contact:'todo', neworder:'ready', myorders:'ready' };
+                   library:'ready', orders:'todo', documents:'todo', contact:'todo', neworder:'ready', myorders:'ready', calendar:'ready', invoices:'todo', downloads:'todo' };
 
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
@@ -272,7 +272,7 @@ window.PWLite = (function () {
   let DRAFT = { cust: null, lines: [], terms: {}, cur: 'EUR' };
   let BASE_C = [], BASE_O = [], LOCAL_C = [], LOCAL_O = [], OD_LOADED = false;
   const OF = { cust: 'all', from: '', to: '', st: [], sp: 'all' };
-  const ST = { quote: 'stQuote', submitted: 'stSubmitted', open: 'stOpen', transit: 'stTransit', delivered: 'stDelivered' };
+  const ST = { quote: 'stQuote', submitted: 'stSubmitted', approved: 'stApproved', open: 'stOpen', transit: 'stTransit', partial: 'stPartial', completed: 'stCompleted', delivered: 'stDelivered' };
   const custs = () => BASE_C.concat(LOCAL_C);
   const orders = () => BASE_O.concat(LOCAL_O).sort((a, b) => String(b.date).localeCompare(String(a.date)));
   const custById = id => custs().find(c => c.id === id);
@@ -532,6 +532,47 @@ window.PWLite = (function () {
     draw();
   }
 
+
+  /* ---- Calendar of orders and shipments (first version) ---- */
+  const CAL = { y: new Date().getFullYear(), m: new Date().getMonth(), st: [] };
+  async function renderCalendar(){
+    $('content').innerHTML = '<p class="none">' + esc(t('checking')) + '</p>';
+    await Promise.all([loadSpecies(), loadOrdersData()]);
+    if(TAB !== 'calendar') return;
+    const first = new Date(CAL.y, CAL.m, 1), days = new Date(CAL.y, CAL.m + 1, 0).getDate();
+    const lead = (first.getDay() + 6) % 7;
+    const pad = n => String(n).padStart(2, '0'), key = d => CAL.y + '-' + pad(CAL.m + 1) + '-' + pad(d);
+    const ev = {};
+    orders().filter(o => !CAL.st.length || CAL.st.includes(o.status)).forEach(o => {
+      const d = o.eta || o.date; (ev[d] = ev[d] || []).push(o);
+    });
+    const monthName = new Intl.DateTimeFormat(PW.prefs.lang, { month: 'long', year: 'numeric' }).format(first);
+    const wd = [...Array(7)].map((_, i) => new Intl.DateTimeFormat(PW.prefs.lang, { weekday: 'short' }).format(new Date(2024, 0, 1 + i)));
+    let cells = wd.map(w => '<div class="cal-wd">' + esc(w) + '</div>').join('') + '<div class="cal-e"></div>'.repeat(lead);
+    let n = 0;
+    for(let d = 1; d <= days; d++){
+      const list = ev[key(d)] || []; n += list.length;
+      cells += '<div class="cal-d"><span class="cal-n">' + d + '</span>' + list.map(o =>
+        '<span class="cal-ev st-' + esc(o.status) + '" title="' + esc(o.ref + ' · ' + (o.custName || '') + ' · ' + t(ST[o.status] || 'stQuote')) + '">' + esc(o.ref) + (o.custName ? ' · ' + esc(o.custName) : '') + '</span>').join('') + '</div>';
+    }
+    $('content').innerHTML = '<section class="sec"><div class="sp-tools">'
+      + '<button class="ghost2" id="calp" aria-label="Previous">‹</button><b class="cal-t">' + esc(monthName) + '</b><button class="ghost2" id="caln" aria-label="Next">›</button>'
+      + '<button class="ghost2" id="calt">' + esc(t('todayWord')) + '</button>'
+      + '<details class="sp-dd" id="calsd"><summary id="calsum"></summary><div class="sp-dd-b">'
+        + Object.keys(ST).map(k => '<button type="button" data-cst="' + k + '" aria-pressed="' + CAL.st.includes(k) + '">' + esc(t(ST[k])) + '</button>').join('') + '</div></details></div>'
+      + '<div class="cal">' + cells + '</div>' + (n ? '' : none('noEvents')) + '</section>'
+      + todo('Calendar: to connect', [
+          'Real shipment dates (ETD / ETA from the shipping data) so "In transit" and "Partially delivered" show on the right days. For now an order shows on its "eta" date if it has one, otherwise on its order date.',
+          'Invoice due dates and document deadlines, if the salesperson should monitor them here.',
+          'Which orders each salesperson sees.'
+        ]);
+    $('calsum').textContent = CAL.st.length ? t('statusWord') + ' (' + CAL.st.length + ')' : t('allStatuses');
+    const mv = d => { CAL.m += d; if(CAL.m < 0){ CAL.m = 11; CAL.y--; } if(CAL.m > 11){ CAL.m = 0; CAL.y++; } renderCalendar(); };
+    $('calp').onclick = () => mv(-1); $('caln').onclick = () => mv(1);
+    $('calt').onclick = () => { CAL.y = new Date().getFullYear(); CAL.m = new Date().getMonth(); renderCalendar(); };
+    document.querySelectorAll('[data-cst]').forEach(b => b.onclick = () => { CAL.st = CAL.st.includes(b.dataset.cst) ? CAL.st.filter(x => x !== b.dataset.cst) : CAL.st.concat(b.dataset.cst); renderCalendar(); });
+  }
+
   /* ---------- the other tabs ---------- */
   /* ---- quick search + shortcuts (home) ---- */
   function openCatalogue(opts){
@@ -584,6 +625,16 @@ window.PWLite = (function () {
     if(ID === 'sales') await loadOrdersData();
     const label = t(LABEL[tab]);
     const T = {
+      invoices: () => todo('Open invoices', [
+        'Source of the invoices (Acadon): which ones the salesperson should monitor (own customers, unpaid, overdue).',
+        'Fields to show: invoice number, customer, date, due date, amount, status, link to the PDF.',
+        'Reminders or alerts for overdue invoices, if wanted.'
+      ]),
+      downloads: () => todo('Downloads', [
+        'Which documents a salesperson needs to download: invoices, packing lists, B/L, certificates (FSC / PEFC), product data sheets, signed quotes.',
+        'Where the files live today (Drive, Acadon, SharePoint) and how each one is linked to an order or customer.',
+        'Order documents should appear here per order once My orders is connected to the real data.'
+      ]),
       customers: () => (custs().length ? '<div class="grid">' + custs().map(c => '<div class="card"><p class="t">' + esc(c.name) + '</p><p class="d">' + esc((c.country || '') + ' · ' + t(c.status === 'requested' ? 'stRequested' : 'stApproved')) + '</p></div>').join('') + '</div>' : '')
         + '<div class="grid"><a class="card" href="../forms/customer-request.html"><p class="t">' + esc(t('newCustomer')) + '</p>'
           + '<p class="d">Master data request, sent to the master data admin.</p></a></div>'
@@ -634,6 +685,7 @@ window.PWLite = (function () {
     if(TAB === 'catalogue') return renderCatalogue();
     if(TAB === 'neworder') return renderNewOrder();
     if(TAB === 'myorders') return renderMyOrders();
+    if(TAB === 'calendar') return renderCalendar();
     if(TAB === 'flow') return renderFlow();
     if(TAB === 'library') return renderLibrary();
     return renderSimple(TAB);

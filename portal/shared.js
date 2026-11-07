@@ -215,7 +215,7 @@ window.PW = (function () {
     stQuote:'Quote sent', stSubmitted:'Submitted', stOpen:'Open contract', stTransit:'In transit', stDelivered:'Delivered',
     allCustomers:'All my customers', allSpecies:'All species', allStatuses:'All statuses', statusWord:'Status', dateFrom:'From', dateTo:'To',
     ordersCount:'{0} orders', noOrders:'No orders match these filters.', specOfCust:'Species ordered by this customer', custOfSpec:'Customers who ordered this species',
-    noCustName:'No customer', quoteTitle:'Quote', date:'Date', clear:'Clear'
+    noCustName:'No customer', quoteTitle:'Quote', date:'Date', clear:'Clear', calendar:'Calendar', openInvoices:'Open invoices', downloads:'Downloads', stPartial:'Partially delivered', stCompleted:'Completed', todayWord:'Today', noEvents:'No orders or shipments this month.'
   });
 
   /* ---------- preferences ---------- */
