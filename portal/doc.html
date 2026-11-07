@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="es" data-theme="dark"><head><meta charset="utf-8">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="settings.css">
+<script src="shared.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=6, user-scalable=yes, viewport-fit=cover">
 <title>PWEU · Operaciones</title>
 <style id="pg">@page{size:A4 portrait;margin:0}</style>
@@ -190,6 +192,11 @@ body:not(.ed) .st,body:not(.ed) .ph,body:not(.ed) .q,body:not(.ed) .lb{cursor:de
   .st,.ph,.q,.lb,.cols{break-inside:avoid}
   body>*:last-child{margin-bottom:0}
 }
+/* settings panel (shared with the rest of the portal): map its colours onto this page's */
+:root{--surf:var(--card);--surf2:var(--bg);--bg2:var(--bg);--radius:10px;--accent:#00A65C;--fg2:var(--fg)}
+#panel{position:fixed;left:10px;bottom:52px;right:auto;top:auto;max-height:80vh;overflow:auto;z-index:60}
+@media (max-width:760px){#panel{left:auto;right:10px;bottom:98px;width:min(286px,calc(100vw - 20px))}}
+@media print{#panel{display:none!important}}
 </style></head><body>
 <button id="flip" title="Cambiar entre vertical y horizontal">⇄</button>
 <div id="zc" aria-label="Zoom"><button data-z="-" title="Reducir">−</button><button data-z="f" title="Ajustar al ancho">⤢</button><button data-z="+" title="Ampliar">+</button></div>
@@ -544,7 +551,7 @@ function lockViewer(){
   EDIT=false;applyEdit();
   const g=document.getElementById('gear');if(g)g.remove();
   document.addEventListener('click',e=>{
-    if(!e.target.closest('#flip,#zc,#who'))
+    if(!e.target.closest('#flip,#zc,#who,#panel'))
       {e.stopPropagation();e.preventDefault()}
   },true);
   document.querySelectorAll('[contenteditable]').forEach(n=>n.setAttribute('contenteditable','false'));
@@ -564,8 +571,10 @@ function whoBadge(){
   let w=document.getElementById('who');
   if(!w){w=document.createElement('div');w.id='who';document.body.appendChild(w)}
   const rot={viewer:'solo lectura',editor:'puede editar'}[ROLE]||ROLE;
-  w.innerHTML='<span>'+ME+' · '+rot+'</span><button id="out">Salir</button>';
-  document.getElementById('out').onclick=async()=>{await sb.auth.signOut();location.reload()};
+  w.innerHTML='<button id="userbtn" title="Settings">'+ME+' · '+rot+' ▾</button>';
+  let p=document.getElementById('panel');
+  if(!p){p=document.createElement('div');p.id='panel';p.className='panel';p.setAttribute('role','menu');document.body.appendChild(p)}
+  PW.mountSettings({btn:'userbtn',panel:'panel',current:'operations',email:ME,sub:rot});
 }
 
 push = async function(){
@@ -618,6 +627,8 @@ async function waitLib(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){loginScreen();return}
   ME=session.user.email;
+  PW.adopt(sb,session);
+  await PW.loadPrefs();
   const {data:ds,error}=await sb.from('docs').select('slug,title,space,sort,spaces(name,sort)').order('sort');
   if(error){loginScreen('Error comprobando tu acceso: '+error.message);return}
   DOCS=ds||[];

@@ -182,6 +182,18 @@ window.PW = (function () {
     }
   };
 
+  /* ---------- strings for the portal switcher and the Sales / Customer portals ---------- */
+  const T2 = {
+    en:      { portals:'Portals', pOperations:'Operations', pSales:'Sales', pCustomer:'Customer', settings:'Settings', orders:'My orders', ordersEmpty:'Your orders will appear here.', documents:'Documents', docsEmpty:'Documents shared with you will appear here.', flow:'Process flow' },
+    nl:      { portals:'Portalen', pOperations:'Operaties', pSales:'Verkoop', pCustomer:'Klant', settings:'Instellingen', orders:'Mijn bestellingen', ordersEmpty:'Je bestellingen verschijnen hier.', documents:'Documenten', docsEmpty:'Met jou gedeelde documenten verschijnen hier.', flow:'Procesflow' },
+    de:      { portals:'Portale', pOperations:'Operations', pSales:'Vertrieb', pCustomer:'Kunde', settings:'Einstellungen', orders:'Meine Bestellungen', ordersEmpty:'Deine Bestellungen erscheinen hier.', documents:'Dokumente', docsEmpty:'Mit dir geteilte Dokumente erscheinen hier.', flow:'Prozessablauf' },
+    fr:      { portals:'Portails', pOperations:'Opérations', pSales:'Ventes', pCustomer:'Client', settings:'Paramètres', orders:'Mes commandes', ordersEmpty:'Tes commandes apparaîtront ici.', documents:'Documents', docsEmpty:'Les documents partagés avec toi apparaîtront ici.', flow:'Flux de processus' },
+    'pt-BR': { portals:'Portais', pOperations:'Operações', pSales:'Vendas', pCustomer:'Cliente', settings:'Configurações', orders:'Meus pedidos', ordersEmpty:'Seus pedidos aparecerão aqui.', documents:'Documentos', docsEmpty:'Os documentos compartilhados com você aparecerão aqui.', flow:'Fluxo de processo' },
+    es:      { portals:'Portales', pOperations:'Operaciones', pSales:'Ventas', pCustomer:'Cliente', settings:'Ajustes', orders:'Mis pedidos', ordersEmpty:'Tus pedidos aparecerán aquí.', documents:'Documentos', docsEmpty:'Los documentos compartidos contigo aparecerán aquí.', flow:'Flujo de proceso' },
+    it:      { portals:'Portali', pOperations:'Operazioni', pSales:'Vendite', pCustomer:'Cliente', settings:'Impostazioni', orders:'I miei ordini', ordersEmpty:'I tuoi ordini appariranno qui.', documents:'Documenti', docsEmpty:'I documenti condivisi con te appariranno qui.', flow:'Flusso di processo' }
+  };
+  Object.keys(T2).forEach(l => Object.assign(T[l], T2[l]));
+
   /* ---------- preferences ---------- */
   const DEF = { lang:'en', theme:'system', accent:'#00A65C', space:null };
   let prefs = Object.assign({}, DEF);
@@ -275,6 +287,95 @@ window.PW = (function () {
   }
   async function signOut(){ if(sb) await sb.auth.signOut(); }
 
+  /* A page that already made its own client can hand it over, so the
+     preferences still sync to the user's account. */
+  function adopt(client, sess){ sb = client; session = sess || null; }
+
+  /* ---------- portal switcher + shared settings panel ---------- */
+  const BASE = (function(){
+    const m = location.pathname.match(/^(.*\/portal\/)/);
+    return m ? m[1] : '/portal/';
+  })();
+  const PORTALS = [
+    ['operations', 'pOperations', ''],
+    ['sales',      'pSales',      'sales/'],
+    ['customer',   'pCustomer',   'customer/']
+  ];
+  const ACCENTS = ['#00a65c','#2f7d55','#6b7f3a','#8a6a3b','#3a6b7d','#54595f'];
+  const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function initials(em){
+    const n = String(em||'?').split('@')[0].replace(/[._-]+/g,' ').trim().split(' ').filter(Boolean);
+    return ((n[0]||'?')[0] + ((n[1]||'')[0]||'')).toUpperCase();
+  }
+
+  function portalsHtml(current){
+    return '<h4>'+esc(t('portals'))+'</h4><div class="plist">'
+      + PORTALS.map(([id,key,path]) =>
+          '<a href="'+esc(BASE+path)+'"'+(id===current?' aria-current="page"':'')+'>'+esc(t(key))+'</a>').join('')
+      + '</div>';
+  }
+
+  /* o: { btn, panel, current, email, sub, top(), onLang(), admin, adminHref }
+     Language, appearance, accent colour, portal switcher and sign out.
+     English unless the user has chosen otherwise. */
+  function mountSettings(o){
+    o = o || {};
+    const btn = document.getElementById(o.btn || 'userbtn');
+    const p   = document.getElementById(o.panel || 'panel');
+    if(!btn || !p) return;
+    const who = () => o.email || (session ? session.user.email : '');
+
+    function render(){
+      p.innerHTML =
+        '<div class="who"><b>'+esc(who())+'</b>'+(o.sub?'<span>'+esc(o.sub)+'</span>':'')+'</div>'
+        + (o.top ? o.top() : '')
+        + portalsHtml(o.current)
+        + '<h4>'+esc(t('language'))+'</h4><select id="pw-lang">'
+          + LANGS.map(([c,n]) => '<option value="'+c+'"'+(c===prefs.lang?' selected':'')+'>'+n+'</option>').join('')
+          + '</select>'
+        + '<h4>'+esc(t('appearance'))+'</h4><div class="seg3">'
+          + [['system',t('system')],['light',t('light')],['dark',t('dark')]]
+            .map(([v,l]) => '<button data-pwtheme="'+v+'" aria-pressed="'+(prefs.theme===v)+'">'+esc(l)+'</button>').join('')
+          + '</div>'
+        + '<h4>'+esc(t('accent'))+'</h4><div class="swatches">'
+          + ACCENTS.map(c => '<button data-pwacc="'+c+'" style="background:'+c+'" aria-label="'+c+'" aria-pressed="'
+              + ((prefs.accent||'').toLowerCase()===c)+'"></button>').join('')
+          + '<input type="color" id="pw-acc" value="'+esc(prefs.accent||DEF.accent)+'"></div>'
+        + '<div class="foot">'
+          + (o.admin ? '<button id="pw-admin">Administration</button>' : '')
+          + '<button id="pw-out">'+esc(t('signout'))+'</button></div>';
+
+      p.querySelector('#pw-lang').onchange = e => {
+        setPref('lang', e.target.value);
+        document.documentElement.lang = e.target.value;
+        render();
+        if(o.onLang) o.onLang();
+      };
+      p.querySelectorAll('[data-pwtheme]').forEach(b => b.onclick = () => { setPref('theme', b.dataset.pwtheme); render(); });
+      p.querySelectorAll('[data-pwacc]').forEach(b => b.onclick = () => { setPref('accent', b.dataset.pwacc); render(); });
+      p.querySelector('#pw-acc').oninput = e => setPref('accent', e.target.value);
+      const a = p.querySelector('#pw-admin');
+      if(a) a.onclick = () => { location.href = o.adminHref || (BASE + 'admin.html'); };
+      p.querySelector('#pw-out').onclick = async () => { await signOut(); location.reload(); };
+    }
+
+    function toggle(open){
+      const show = open === undefined ? !p.classList.contains('open') : open;
+      p.classList.toggle('open', show);
+      btn.setAttribute('aria-expanded', String(show));
+    }
+
+    btn.setAttribute('aria-haspopup', 'true');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.onclick = e => { e.stopPropagation(); toggle(); };
+    p.onclick = e => e.stopPropagation();
+    document.addEventListener('click', () => toggle(false));
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') toggle(false); });
+    render();
+    return { render, toggle };
+  }
+
   readLocal();
   applyTheme();
   if(window.matchMedia){
@@ -284,7 +385,8 @@ window.PW = (function () {
 
   return {
     LANGS, T, t, prefs, setPref, applyTheme, resolved,
-    connect, loadPrefs, signIn, signOut,
+    connect, loadPrefs, signIn, signOut, adopt,
+    BASE, PORTALS, initials, portalsHtml, mountSettings,
     get sb(){ return sb; },
     get session(){ return session; },
     get email(){ return session ? session.user.email : null; }

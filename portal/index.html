@@ -133,6 +133,7 @@ function panel(){
   p.innerHTML='<div class="who"><b>'+esc(PW.email)+'</b><span>'
       +esc(ROLES[CUR]==='editor'?t('canEdit'):t('readOnly'))+'</span></div>'
     + spaceRow
+    + PW.portalsHtml('operations')
     + '<h4>'+esc(t('language'))+'</h4><select id="plang">'
       + PW.LANGS.map(([c,n])=>'<option value="'+c+'"'+(c===PW.prefs.lang?' selected':'')+'>'+n+'</option>').join('')
       + '</select>'
