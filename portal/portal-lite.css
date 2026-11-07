@@ -137,9 +137,15 @@ h3.sub{font-size:13px;font-weight:600;color:var(--fg2);margin:20px 0 10px}
   position:absolute;z-index:30;top:calc(100% + 6px);left:0;min-width:250px;background:var(--surf);
   border:1px solid var(--ln);border-radius:var(--radius);box-shadow:var(--shadow);padding:8px;display:flex;flex-direction:column;
 }
-.sp-dd-b label{display:flex;align-items:center;gap:10px;min-height:42px;padding:0 8px;border-radius:8px;font-size:14px;cursor:pointer}
-.sp-dd-b label:hover{background:var(--bg2)}
-.sp-dd-b input{width:18px;height:18px;accent-color:var(--accent)}
+.sp-dd-b button{
+  text-align:left;background:none;border:0;color:var(--fg2);font:inherit;font-size:14px;min-height:42px;
+  padding:0 12px;border-radius:8px;cursor:pointer;
+}
+.sp-dd-b button:hover{background:var(--bg2);color:var(--fg)}
+.sp-dd-b button[aria-pressed="true"]{background:var(--bg2);color:var(--fg);font-weight:700;box-shadow:inset 3px 0 0 var(--accent)}
+.sp-dd-b{max-height:60vh;overflow:auto}
+.sample-b{margin:0 0 12px}
+.sample-b span{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;border:1px solid var(--accent);color:var(--ink);border-radius:999px;padding:2px 9px}
 .sp-clear{background:none;border:0;color:var(--ink);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;min-height:44px;padding:0 8px}
 .sp-clear[hidden]{display:none}
 
