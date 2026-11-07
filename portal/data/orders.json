@@ -1,0 +1,6 @@
+{
+  "_readme": "Optional starting data for Sales > My orders. customers: [{id,name,country,status:'approved'|'requested'}]. orders: [{id,ref,cust,custName,date:'YYYY-MM-DD',status:'quote'|'submitted'|'open'|'transit'|'delivered',cur,total,lines:[{code,vol,price,thick,width,length}]}]. Real orders should come from Acadon or Supabase (with access rules), not from this public file.",
+  "sample": false,
+  "customers": [],
+  "orders": []
+}
