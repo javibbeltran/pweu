@@ -1,0 +1,20 @@
+{
+ "_readme": "Order of the catalogue for salespeople. popular: species codes in the order they should appear first (Sort by: Most popular). lesser: species we want to push (lesser known), shown after the popular ones, also in the order given. Everything else follows A-Z. Later this order will be editable from the admin account.",
+ "popular": [
+  "ANPE",
+  "LOIT",
+  "CDRI",
+  "OKOU",
+  "OKAN",
+  "PEQU"
+ ],
+ "lesser": [
+  "CUPI",
+  "LOGA",
+  "LOPR",
+  "TAUV",
+  "LIMB",
+  "SORR",
+  "OZIG"
+ ]
+}

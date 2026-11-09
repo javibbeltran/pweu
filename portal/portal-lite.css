@@ -313,3 +313,9 @@ h3.sub{font-size:13px;font-weight:600;color:var(--fg2);margin:20px 0 10px}
 .sr-step{margin:0;font-size:12.5px;color:var(--mut);line-height:1.4}
 .sr-step.on{color:var(--ink);font-weight:600}
 @media (max-width:860px){.sr-b{grid-template-columns:1fr}.sr-stage{border-right:0;border-bottom:1px solid var(--ln)}}
+
+/* ---------- focus badges ---------- */
+.fp-b{position:absolute;top:10px;left:10px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:999px;background:var(--accent);color:#fff;z-index:2}
+.fp-lesser{background:var(--surf);color:var(--ink);border:1px solid var(--accent)}
+.sp-ph img{position:absolute;inset:0}
+.av-b{z-index:2}

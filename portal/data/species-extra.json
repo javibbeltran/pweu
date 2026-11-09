@@ -1,5 +1,5 @@
 {
- "_readme": "Optional commercial data per species, keyed by species code. Fill it in as it becomes available. price: {value, unit, currency}. availability: 'stock' | 'produce' | 'na'. applications: free-text list added to the use-class based applications. description: free text, searchable. Note: this file is public. Prices and stock that must stay private belong in a Supabase table with access rules instead. Availability was set from the species Excel: red rows = available to be produced, CDRI and ANPE = in stock, all others N/A.",
+ "_readme": "Optional commercial data per species, keyed by species code. Fill it in as it becomes available. price: {value, unit, currency}. availability: 'stock' | 'produce' | 'na'. applications: free-text list added to the use-class based applications. description: free text, searchable. Note: this file is public. Prices and stock that must stay private belong in a Supabase table with access rules instead. Availability was set from the species Excel: red rows = available to be produced, CDRI and ANPE = in stock, all others N/A. applications: list of application ids (ap0..ap19, see portal-lite.js) that REPLACES the ones derived from the use class; tags: free-text extras shown on the card; image: optional URL, otherwise portal/data/img/<CODE>.jpg is used when it exists. Applications and descriptions for ANPE, CDRI, CUPI, LOGA, LOPR, PEQU, TAUV, LIMB and SORR come from Development_overview.xlsx (2026-09-25).",
  "sample": false,
  "species": {
   "ABUI": {
@@ -21,7 +21,20 @@
    "availability": "na"
   },
   "ANPE": {
-   "availability": "stock"
+   "availability": "stock",
+   "applications": [
+    "ap13",
+    "ap4",
+    "ap16",
+    "ap0",
+    "ap2",
+    "ap14",
+    "ap12",
+    "ap15",
+    "ap3",
+    "ap6"
+   ],
+   "description": "High volume, big logs with few defects and long lengths possible."
   },
   "ANRA": {
    "availability": "na"
@@ -48,7 +61,23 @@
    "availability": "na"
   },
   "CDRI": {
-   "availability": "stock"
+   "availability": "stock",
+   "applications": [
+    "ap4",
+    "ap6",
+    "ap3",
+    "ap17",
+    "ap18",
+    "ap12"
+   ],
+   "tags": [
+    "Thermo cladding",
+    "Carbonized cladding",
+    "Thermo decking",
+    "Fascia boards",
+    "Pergolas"
+   ],
+   "description": "High volume, cedar look."
   },
   "CUMA": {
    "availability": "na"
@@ -57,7 +86,20 @@
    "availability": "na"
   },
   "CUPI": {
-   "availability": "produce"
+   "availability": "produce",
+   "applications": [
+    "ap4",
+    "ap6",
+    "ap11",
+    "ap8",
+    "ap12",
+    "ap16",
+    "ap3"
+   ],
+   "tags": [
+    "Thermo decking"
+   ],
+   "description": "High volume, big logs with few defects."
   },
   "FAAM": {
    "availability": "na"
@@ -90,13 +132,31 @@
    "availability": "na"
   },
   "LOGA": {
-   "availability": "produce"
+   "availability": "produce",
+   "applications": [
+    "ap4",
+    "ap6",
+    "ap2",
+    "ap12"
+   ],
+   "description": "High volume, attractive look."
   },
   "LOIT": {
    "availability": "produce"
   },
   "LOPR": {
-   "availability": "produce"
+   "availability": "produce",
+   "applications": [
+    "ap12",
+    "ap11",
+    "ap4",
+    "ap6"
+   ],
+   "tags": [
+    "Playground equipment",
+    "Steamed cladding / decking"
+   ],
+   "description": "Reasonably good volume, nice touch and finish."
   },
   "MASS": {
    "availability": "produce"
@@ -114,7 +174,18 @@
    "availability": "na"
   },
   "PEQU": {
-   "availability": "produce"
+   "availability": "produce",
+   "applications": [
+    "ap12",
+    "ap14",
+    "ap3",
+    "ap11",
+    "ap19",
+    "ap1"
+   ],
+   "tags": [
+    "Luxury furniture"
+   ]
   },
   "PEMA": {
    "availability": "produce"
@@ -141,7 +212,15 @@
    "availability": "na"
   },
   "TAUV": {
-   "availability": "produce"
+   "availability": "produce",
+   "applications": [
+    "ap4",
+    "ap7",
+    "ap15"
+   ],
+   "tags": [
+    "Carbonized cladding"
+   ]
   },
   "TAXV": {
    "availability": "na"
@@ -192,7 +271,10 @@
    "availability": "produce"
   },
   "LIMB": {
-   "availability": "na"
+   "availability": "na",
+   "applications": [
+    "ap4"
+   ]
   },
   "MOVI": {
    "availability": "produce"
@@ -216,7 +298,13 @@
    "availability": "produce"
   },
   "SORR": {
-   "availability": "na"
+   "availability": "na",
+   "applications": [
+    "ap4"
+   ],
+   "tags": [
+    "Heat-treated cladding"
+   ]
   },
   "TALI": {
    "availability": "na"

@@ -15,9 +15,9 @@ window.PWLite = (function () {
 
   /* ---------- what each portal contains ---------- */
   const CFG = {
-    sales:    { title: 'pSales',    side: true,  price: true,  avail: true,  order: true,
+    sales:    { title: 'pSales',    side: true,  price: true,  avail: true,  order: true,  focus: true,
                 tabs: ['home', 'catalogue', 'neworder', 'myorders', 'calendar', 'invoices', 'downloads', 'showroom'] },
-    customer: { title: 'pCustomer', side: false, price: false, avail: false, order: false,
+    customer: { title: 'pCustomer', side: false, price: false, avail: false, order: false, focus: false,
                 tabs: ['home', 'catalogue', 'orders', 'documents', 'contact'] }
   };
   const LABEL  = { home:'home', catalogue:'catalogue', pricing:'priceLists', pipeline:'pipeline', customers:'customersTab',
@@ -27,7 +27,7 @@ window.PWLite = (function () {
 
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
-  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az';
+  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, FOC = 'all', FEAT = { popular: [], lesser: [] };
 
   const title = () => t(ID === 'sales' ? 'portalSales' : 'portalCustomer');
   const tabLabel = x => t(LABEL[x]);
@@ -94,7 +94,9 @@ window.PWLite = (function () {
   /* applications: the Excel only has the EN 335 use class, so the applications are derived from it
      (indicative). Each application lists the use classes it is typically used in. Real per-species applications
      can be added in species-extra.json ("applications": [...]) and are matched by name. */
-  const APP_LIST = [['ap0', [1, 2]], ['ap1', [1, 2]], ['ap2', [1, 2, 3]], ['ap3', [2, 3]], ['ap4', [3, 4]], ['ap5', [3, 4]], ['ap6', [3, 4]], ['ap7', [3, 4]], ['ap8', [4, 5]], ['ap9', [3, 4]], ['ap10', [4, 5]], ['ap11', [5]]];
+  const APP_LIST = [['ap0', [1, 2]], ['ap1', [1, 2]], ['ap2', [1, 2, 3]], ['ap3', [2, 3]], ['ap4', [3, 4]], ['ap5', [3, 4]], ['ap6', [3, 4]], ['ap7', [3, 4]], ['ap8', [4, 5]], ['ap9', [3, 4]], ['ap10', [4, 5]], ['ap11', [5]],
+    ['ap12', [3, 4]], ['ap13', [3, 4]], ['ap14', [4]], ['ap15', [3, 4]], ['ap16', [2, 3]], ['ap17', [3, 4]], ['ap18', [1, 2]], ['ap19', [3, 4]]];
+  const APP_IDS = APP_LIST.map(a => a[0]);
   function classesOf(uc){
     if(!uc) return [];
     let x = String(uc).replace(/(\d)\.\d/g, '$1');
@@ -113,6 +115,10 @@ window.PWLite = (function () {
       SP = (await r.json()).species || [];
     }catch(e){ SPERR = true; return; }
     let X = {};
+    if(CFG[ID].focus){
+      try{ const rf = await fetch('../data/featured.json', { cache: 'no-cache' }); if(rf.ok){ const jf = await rf.json(); FEAT = { popular: jf.popular || [], lesser: jf.lesser || [] }; } }catch(e){}
+      if(!SORTSET){ SORT = 'popular'; SORTSET = true; }
+    }
     try{
       const r2 = await fetch('../data/species-extra.json', { cache: 'no-cache' });
       if(r2.ok){ const j = await r2.json(); X = j.species || {}; SAMPLE = !!j.sample; }
@@ -122,8 +128,14 @@ window.PWLite = (function () {
       s.price = (CFG[ID].price && x.price && typeof x.price.value === 'number') ? x.price : null;
       s.av = CFG[ID].avail ? (['stock', 'produce'].includes(x.availability) ? x.availability : 'na') : 'na';
       s.desc = x.description || '';
-      s.appN = appsOf(s.useClass);
-      s.appX = Array.isArray(x.applications) ? x.applications : [];
+      const ex = Array.isArray(x.applications) ? x.applications : [];
+      const ids = ex.filter(k => APP_IDS.includes(k));
+      s.appN = ids.length ? ids : appsOf(s.useClass);
+      s.appX = ex.filter(k => !APP_IDS.includes(k)).concat(Array.isArray(x.tags) ? x.tags : []);
+      s.imgUrl = x.image || ('../data/img/' + s.code + '.jpg');
+      const ip = FEAT.popular.indexOf(s.code), il = FEAT.lesser.indexOf(s.code);
+      s.fp = ip >= 0 ? 'popular' : (il >= 0 ? 'lesser' : '');
+      s.rank = ip >= 0 ? ip : (il >= 0 ? 100 + il : 1000);
       s._hay = [s.name, s.botanical, s.cirad, s.code, s.colour, s.durability, s.useClass, s.strength, s.remark, s.desc,
                 s.appX.join(' ')].join(' ').toLowerCase();
     });
@@ -162,7 +174,8 @@ window.PWLite = (function () {
     const all = s.appX.concat(s.appN.map(k => t(k))), apps = all.slice(0, 4);
     const commercial = CFG[ID].price || CFG[ID].avail;
     return '<article class="spc">'
-      + '<div class="sp-ph">' + (s.image ? '<img loading="lazy" src="' + esc(s.image) + '" alt="' + esc(s.name) + '">' : '<span>' + esc(t('photoTodo')) + '</span>')
+      + '<div class="sp-ph">' + '<span>' + esc(t('photoTodo')) + '</span><img loading="lazy" src="' + esc(s.image || s.imgUrl) + '" alt="' + esc(s.name) + '" onerror="this.remove()">'
+      + (CFG[ID].focus && s.fp ? '<span class="fp-b fp-' + s.fp + '">' + esc(t(s.fp === 'popular' ? 'focPopular' : 'focLesser')) + '</span>' : '')
       + (CFG[ID].avail ? '<span class="av-b av-' + s.av + '">' + esc(t(AVKEY[s.av])) + '</span>' : '') + '</div>'
       + '<div class="sp-b">'
       + '<p class="sp-rg">' + esc(s.code) + '</p>'
@@ -189,7 +202,8 @@ window.PWLite = (function () {
     const toks = Q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const list = (SP || []).filter(s => toks.every(w => s._hay.includes(w) || s.appN.some(k => t(k).toLowerCase().includes(w)))
       && (!APPS.length || APPS.some(k => s.appN.includes(k) || s.appX.some(x => x.toLowerCase() === t(k).toLowerCase())))
-      && (!AV.length || AV.includes(s.av)));
+      && (!AV.length || AV.includes(s.av))
+      && (FOC === 'all' || s.fp === FOC));
     const byName = (a, b) => a.name.localeCompare(b.name);
     const byPrice = d => (a, b) => {
       const pa = a.price ? a.price.value : null, pb = b.price ? b.price.value : null;
@@ -198,7 +212,7 @@ window.PWLite = (function () {
       if(pb == null) return -1;
       return (pa - pb) * d || byName(a, b);
     };
-    list.sort(SORT === 'za' ? (a, b) => byName(b, a) : SORT === 'low' ? byPrice(1) : SORT === 'high' ? byPrice(-1) : byName);
+    list.sort(SORT === 'popular' ? (a, b) => (a.rank - b.rank) || byName(a, b) : SORT === 'za' ? (a, b) => byName(b, a) : SORT === 'low' ? byPrice(1) : SORT === 'high' ? byPrice(-1) : byName);
     return list;
   }
   function drawGrid(){
@@ -212,7 +226,8 @@ window.PWLite = (function () {
     const sa = $('avsum'); if(sa) sa.textContent = m ? t('availability') + ' (' + m + ')' : t('allAvailability');
     document.querySelectorAll('[data-app]').forEach(b => b.setAttribute('aria-pressed', String(APPS.includes(b.dataset.app))));
     document.querySelectorAll('[data-avf]').forEach(b => b.setAttribute('aria-pressed', String(AV.includes(b.dataset.avf))));
-    const dirty = Q || n || m;
+    const dirty = Q || n || m || FOC !== 'all';
+    document.querySelectorAll('[data-foc]').forEach(b => b.setAttribute('aria-pressed', String(FOC === b.dataset.foc)));
     $('spclear').hidden = !dirty;
   }
 
@@ -221,14 +236,16 @@ window.PWLite = (function () {
     await loadSpecies();
     if(TAB !== 'catalogue') return;
     if(SPERR){ $('content').innerHTML = none('loadSpeciesFail'); return; }
-    const sorts = [['az', 'sortAZ'], ['za', 'sortZA']].concat(CFG[ID].price ? [['low', 'sortPriceLow'], ['high', 'sortPriceHigh']] : []);
+    const sorts = (CFG[ID].focus ? [['popular', 'sortPopular']] : []).concat([['az', 'sortAZ'], ['za', 'sortZA']]).concat(CFG[ID].price ? [['low', 'sortPriceLow'], ['high', 'sortPriceHigh']] : []);
     if(!CFG[ID].price && (SORT === 'low' || SORT === 'high')) SORT = 'az';
     const missing = ID === 'sales'
       ? todo('Species catalogue: information still to add', [
           'Prices per species: fill portal/data/species-extra.json (or a Supabase table with access rules if prices must stay private).',
           'Availability per species: in stock / available to be produced / N/A (same file).',
           'Log volumes per species (internal commercial data: keep it behind the login, in a Supabase table with access rules, not in a public file).',
-          'Photos per species (the lesser-known species project) and the field "image" in portal/data/species.json.',
+          'Photos per species: drop a file named after the code (for example ANPE.jpg) in portal/data/img/. The lesser-known species project has photos but it is behind a login.',
+          'Catalogue order (Most popular, Lesser known): today it is read from portal/data/featured.json; it should become editable from the admin account.',
+          'Challenges and sales notes per species (from the development overview): not published here because this file is public; they need a private table.',
           'Real applications per species (the Excel only has the use class, so applications are derived from it for now): add "applications" in species-extra.json.',
           'A short description per species (same file).'
         ])
@@ -250,6 +267,7 @@ window.PWLite = (function () {
         + sorts.map(([v, k]) => '<option value="' + v + '"' + (SORT === v ? ' selected' : '') + '>' + esc(t('sortBy') + ': ' + t(k)) + '</option>').join('') + '</select>'
       + '</div>'
       + '<div class="sp-tools">'
+      + (CFG[ID].focus ? '<div class="sp-chips">' + [['all', 'focAll'], ['popular', 'focPopular'], ['lesser', 'focLesser']].map(([v, k]) => '<button data-foc="' + v + '" aria-pressed="' + (FOC === v) + '">' + esc(t(k)) + '</button>').join('') + '</div>' : '')
       + '<button class="sp-clear" id="spclear" hidden>' + esc(t('clearFilters')) + '</button>'
       + '<span class="sp-count" id="spcount"></span></div>'
       + '<div class="sp-grid" id="spgrid"></div></section>'
@@ -259,7 +277,8 @@ window.PWLite = (function () {
     const toggle = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : arr.concat(v);
     document.querySelectorAll('[data-app]').forEach(c => c.onclick = () => { APPS = toggle(APPS, c.dataset.app); drawGrid(); });
     document.querySelectorAll('[data-avf]').forEach(c => c.onclick = () => { AV = toggle(AV, c.dataset.avf); drawGrid(); });
-    $('spclear').onclick = () => { Q = ''; APPS = []; AV = []; renderCatalogue(); };
+    document.querySelectorAll('[data-foc]').forEach(b => b.onclick = () => { FOC = b.dataset.foc; drawGrid(); });
+    $('spclear').onclick = () => { Q = ''; APPS = []; AV = []; FOC = 'all'; renderCatalogue(); };
     drawGrid();
   }
 
@@ -787,7 +806,7 @@ window.PWLite = (function () {
   /* ---------- the other tabs ---------- */
   /* ---- quick search + shortcuts (home) ---- */
   function openCatalogue(opts){
-    Q = (opts && opts.q) || ''; AV = (opts && opts.av) ? [opts.av] : []; APPS = [];
+    Q = (opts && opts.q) || ''; AV = (opts && opts.av) ? [opts.av] : []; APPS = []; FOC = 'all';
     go('catalogue');
   }
   async function renderHome(){
