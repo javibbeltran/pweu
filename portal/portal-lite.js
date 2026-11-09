@@ -27,7 +27,7 @@ window.PWLite = (function () {
 
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
-  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, FOC = 'all', FEAT = { popular: [], lesser: [] };
+  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, FOC = 'all', FEAT = { popular: [], lesser: [] };
 
   const title = () => t(ID === 'sales' ? 'portalSales' : 'portalCustomer');
   const tabLabel = x => t(LABEL[x]);
@@ -160,6 +160,53 @@ window.PWLite = (function () {
     return 'hsl(' + h + ' ' + sa + '% ' + l + '%)';
   }
 
+
+  /* ---- card pictures: generated illustrations per species and application (placeholders until real photos exist) ---- */
+  const SCENE_OF = { ap0: 'floor', ap16: 'floor', ap1: 'bench', ap12: 'bench', ap6: 'deck', ap13: 'deck', ap14: 'deck', ap4: 'clad', ap7: 'clad', ap5: 'clad' };
+  const SLIDE_KEY = { board: 'slideBoard', floor: 'slideFloor', deck: 'slideDeck', clad: 'slideClad', bench: 'slideBench' };
+  const slidesOf = s => ['board'].concat([...new Set(s.appN.map(k => SCENE_OF[k]).filter(Boolean))].slice(0, 3));
+  function drawScene(cv, rgb, kind){
+    const W = cv.width, H = cv.height, g = cv.getContext('2d');
+    const wood = (app, plank, ang) => { const c = document.createElement('canvas'); c.width = W; c.height = H; paintWood(c.getContext('2d'), W, H, rgb, app, plank, ang); return c; };
+    const clip = (pts, tex) => { g.save(); g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.clip(); g.drawImage(tex, 0, 0); g.restore(); };
+    const grad = (y0, y1, c0, c1, h0, h1) => { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, c0); gr.addColorStop(1, c1); g.fillStyle = gr; g.fillRect(0, h0, W, h1 - h0); };
+    if(kind === 'board'){
+      g.drawImage(wood('floor', 34, -8), 0, 0);
+      grad(0, H, 'rgba(255,255,255,.10)', 'rgba(0,0,0,.18)', 0, H);
+    }else if(kind === 'floor'){
+      grad(0, H, '#ece8df', '#d6d0c3', 0, H);
+      g.fillStyle = '#bfd8e8'; g.fillRect(W * .62, H * .12, W * .24, H * .36); g.strokeStyle = '#fafafa'; g.lineWidth = 4; g.strokeRect(W * .62, H * .12, W * .24, H * .36);
+      clip([[W * .1, H * .56], [W * .9, H * .56], [W, H], [0, H]], wood('floor', 20, 0));
+      g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, H * .54, W, 4);
+    }else if(kind === 'deck'){
+      grad(0, H * .5, '#bcd9ee', '#eaf2f5', 0, H * .5);
+      g.fillStyle = '#7fa66a'; g.fillRect(0, H * .42, W, H * .12);
+      clip([[W * .06, H * .52], [W * .94, H * .52], [W, H], [0, H]], wood('deck', 18, 0));
+      g.fillStyle = 'rgba(40,30,20,.75)';
+      for(let i = 0; i < 6; i++){ g.fillRect(W * .08 + i * W * .17, H * .3, 5, H * .24); }
+      g.fillRect(W * .06, H * .3, W * .88, 5);
+    }else if(kind === 'clad'){
+      g.drawImage(wood('clad', 22, 0), 0, 0);
+      g.fillStyle = '#c9dbe6'; g.fillRect(W * .58, H * .2, W * .24, H * .42); g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 5; g.strokeRect(W * .58, H * .2, W * .24, H * .42);
+      g.fillStyle = '#8f8b84'; g.fillRect(0, H * .9, W, H * .1);
+    }else if(kind === 'bench'){
+      grad(0, H, '#d5d8d4', '#b9bcb7', 0, H);
+      const tex = wood('floor', 12, 0), slat = (x, y, w, h) => clip([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], tex);
+      g.fillStyle = '#33302c'; g.fillRect(W * .2, H * .62, 7, H * .3); g.fillRect(W * .76, H * .62, 7, H * .3);
+      slat(W * .16, H * .6, W * .68, H * .08); slat(W * .16, H * .7, W * .68, H * .08);
+      slat(W * .16, H * .26, W * .68, H * .1); slat(W * .16, H * .39, W * .68, H * .1);
+      g.fillStyle = '#33302c'; g.fillRect(W * .2, H * .26, 6, H * .4); g.fillRect(W * .77, H * .26, 6, H * .4);
+    }
+  }
+  function paintSlide(ph){
+    const s = SP.find(x => x.code === ph.dataset.code); if(!s) return;
+    const cv = ph.querySelector('canvas'), list = slidesOf(s), i = +ph.dataset.i || 0, kind = list[i];
+    cv.width = 480; cv.height = 200;
+    drawScene(cv, toRgb(swatch(s.colour) || '#a0703c'), kind);
+    const cap = ph.querySelector('.ph-cap'); if(cap) cap.textContent = t(SLIDE_KEY[kind]) + ' · ' + t('illus') + (list.length > 1 ? '  ' + (i + 1) + '/' + list.length : '');
+    ph.querySelectorAll('.ph-n').forEach(b => b.hidden = list.length < 2);
+  }
+
   const AVKEY = { stock: 'avStock', produce: 'avProduce', na: 'avNA' };
   function money(p){
     let v;
@@ -174,7 +221,8 @@ window.PWLite = (function () {
     const all = s.appX.concat(s.appN.map(k => t(k))), apps = all.slice(0, 4);
     const commercial = CFG[ID].price || CFG[ID].avail;
     return '<article class="spc">'
-      + '<div class="sp-ph">' + '<span>' + esc(t('photoTodo')) + '</span><img loading="lazy" src="' + esc(s.image || s.imgUrl) + '" alt="' + esc(s.name) + '" onerror="this.remove()">'
+      + '<div class="sp-ph" data-code="' + esc(s.code) + '" data-i="0"><canvas></canvas><button class="ph-n prev" data-dir="-1" aria-label="Previous">‹</button><button class="ph-n next" data-dir="1" aria-label="Next">›</button><span class="ph-cap"></span>'
+      + '<img loading="lazy" src="' + esc(s.image || s.imgUrl) + '" alt="' + esc(s.name) + '" onerror="this.remove()">'
       + (CFG[ID].focus && s.fp ? '<span class="fp-b fp-' + s.fp + '">' + esc(t(s.fp === 'popular' ? 'focPopular' : 'focLesser')) + '</span>' : '')
       + (CFG[ID].avail ? '<span class="av-b av-' + s.av + '">' + esc(t(AVKEY[s.av])) + '</span>' : '') + '</div>'
       + '<div class="sp-b">'
@@ -220,7 +268,15 @@ window.PWLite = (function () {
     const list = filtered();
     g.innerHTML = list.length ? list.map(speciesCard).join('') : none('noMatch');
     $('spcount').textContent = t('results', list.length, SP.length);
-    g.onclick = e => { const b = e.target.closest('[data-add]'); if(!b) return; toggleCart(b.dataset.add); drawGrid(); };
+    g.onclick = e => {
+      const nb = e.target.closest('[data-dir]');
+      if(nb){ const ph = nb.closest('.sp-ph'), s = SP.find(x => x.code === ph.dataset.code), n = slidesOf(s).length;
+        ph.dataset.i = (((+ph.dataset.i || 0) + (+nb.dataset.dir)) % n + n) % n; paintSlide(ph); return; }
+      const b = e.target.closest('[data-add]'); if(!b) return; toggleCart(b.dataset.add); drawGrid();
+    };
+    if(PHIO) PHIO.disconnect();
+    PHIO = ('IntersectionObserver' in window) ? new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting){ PHIO.unobserve(en.target); paintSlide(en.target); } }), { rootMargin: '300px' }) : null;
+    g.querySelectorAll('.sp-ph').forEach(ph => PHIO ? PHIO.observe(ph) : paintSlide(ph));
     const n = APPS.length, m = AV.length;
     const sm = $('appsum'); if(sm) sm.textContent = n ? t('applications') + ' (' + n + ')' : t('allApplications');
     const sa = $('avsum'); if(sa) sa.textContent = m ? t('availability') + ' (' + m + ')' : t('allAvailability');

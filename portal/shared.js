@@ -205,6 +205,7 @@ window.PW = (function () {
     srStep:'Click the corners of the surface, then close the shape (click the first point or press Finish).', srMark:'Mark a surface', srFinish:'Finish', srUndo:'Undo', srClear:'Clear all',
     srPlank:'Board width', srAngle:'Angle', srOpacity:'Intensity', srDownload:'Download image', srPanel:'Panel / furniture', srNeedImg:'Add a picture first.', srClose:'Close'
   });
+  Object.assign(T.en, { illus:'Sample illustration', slideBoard:'Wood sample', slideFloor:'Flooring', slideDeck:'Decking', slideClad:'Cladding', slideBench:'Street furniture' });
   Object.assign(T.en, { sortPopular:'Most popular', focAll:'All species', focPopular:'Most popular', focLesser:'Lesser known' });
   Object.assign(T.en, { portalSales:'Sales Portal', portalCustomer:'Customer Portal' });
   Object.assign(T.nl, { portalSales:'Verkoopportaal', portalCustomer:'Klantenportaal' });
