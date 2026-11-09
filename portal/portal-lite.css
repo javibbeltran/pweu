@@ -410,3 +410,6 @@ body.sheet-open header.bar,body.sheet-open #nav,body.sheet-open .sidemenu,body.s
 .ord-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .ord-act button{background:var(--surf);border:1px solid var(--ln);color:var(--fg);border-radius:999px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
 .ord-act .primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.oc-box select,.sp-tools input[type=search]#calq{background:var(--surf);border:1px solid var(--ln);color:var(--fg);border-radius:999px;padding:9px 16px;font:inherit;min-height:44px}
+.oc-box select{width:100%;box-sizing:border-box}

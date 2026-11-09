@@ -29,6 +29,9 @@ window.PWLite = (function () {
   let SPACES = [], SECTIONS = [], DOCS = [];
   let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, DETAIL = null, KEYS = null, FEAT = { popular: [], lesser: [] };
 
+  const vis = k => PW.prefs[k] !== false;
+  const TABPREF = { calendar: 'tabCalendar', invoices: 'tabInvoices', downloads: 'tabDownloads', showroom: 'tabShowroom' };
+  const tabsOf = () => CFG[ID].tabs.filter(x => ID !== 'sales' || !TABPREF[x] || vis(TABPREF[x]));
   const priceOn = () => !!CFG[ID].price && PW.prefs.showPrice !== false;
   const title = () => t(ID === 'sales' ? 'portalSales' : 'portalCustomer');
   const tabLabel = x => t(LABEL[x]);
@@ -567,6 +570,7 @@ window.PWLite = (function () {
 
   function saveOrder(status){
     if(!DRAFT.lines.length){ flash(t('needLines')); return; }
+    if(!custById(DRAFT.cust)){ flash(t('needCustomer')); return; }
     const c = custById(DRAFT.cust), n = BASE_O.length + LOCAL_O.length + 1;
     LOCAL_O.push({ id: 'o' + Date.now(), ref: DRAFT.terms.ref || ('Q-' + new Date().getFullYear() + '-' + String(n).padStart(3, '0')),
       cust: c ? c.id : '', custName: c ? c.name : '', date: new Date().toISOString().slice(0, 10), status, cur: DRAFT.cur,
@@ -593,8 +597,8 @@ window.PWLite = (function () {
       + '<td class="lt" id="lt' + i + '">' + esc(lineTotal(l) ? money2(lineTotal(l), DRAFT.cur) : '–') + '</td>'
       + '<td><button class="rm" data-rm="' + i + '" aria-label="Remove">✕</button></td></tr>').join('');
     $('content').innerHTML = '<section class="sec"><h2>' + esc(t('customer')) + '</h2>'
-      + '<div class="oc-row"><div class="oc-box"><input id="ocq" type="search" autocomplete="off" placeholder="' + esc(t('customerPh')) + '" aria-label="' + esc(t('customer')) + '">'
-      + '<div class="qs-res" id="ocres" hidden></div></div>'
+      + '<div class="oc-row"><div class="oc-box"><select id="ocsel" aria-label="' + esc(t('customer')) + '"><option value="">' + esc(t('selectCustomer')) + '</option>'
+        + custs().slice().sort((a, b) => a.name.localeCompare(b.name)).map(x => '<option value="' + esc(x.id) + '"' + (DRAFT.cust === x.id ? ' selected' : '') + '>' + esc(x.name) + (x.country ? ' · ' + esc(x.country) : '') + (x.status === 'requested' ? ' (' + esc(t('stRequested')) + ')' : '') + '</option>').join('') + '</select></div>'
       + '<button class="primary" id="ocnew">' + esc(t('newPlus')) + '</button></div>'
       + '<p class="oc-sel">' + (c ? '<span class="chip-sel">' + esc(c.name) + (c.country ? ' · ' + esc(c.country) : '') + ' · ' + esc(t(c.status === 'requested' ? 'stRequested' : 'stApproved'))
           + ' <button id="ocx" aria-label="Remove">✕</button></span>' : esc(t('noCustomer'))) + '</p></section>'
@@ -625,17 +629,11 @@ window.PWLite = (function () {
       + '<button data-ex="doc">' + esc(t('exportWord')) + '</button><button data-ex="csv">' + esc(t('exportCsv')) + '</button></span>'
       + '<span class="act-g"><button id="osave">' + esc(t('saveQuote')) + '</button><button class="primary" id="osub">' + esc(t('submitOrder')) + '</button></span></div>';
 
-    // customer search
-    const q = $('ocq'), res = $('ocres');
-    q.oninput = () => {
-      const v = q.value.trim().toLowerCase();
-      const hits = custs().filter(x => !v || (x.name + ' ' + (x.country || '')).toLowerCase().includes(v)).slice(0, 8);
-      res.innerHTML = hits.map(x => '<button data-cid="' + esc(x.id) + '"><b>' + esc(x.name) + '</b> <i>' + esc(x.country || '') + '</i><span>' + esc(t(x.status === 'requested' ? 'stRequested' : 'stApproved')) + '</span></button>').join('')
-        || '<p class="none">' + esc(t('noMatch')) + '</p>';
-      res.hidden = false;
-      res.querySelectorAll('[data-cid]').forEach(b => b.onclick = () => { DRAFT.cust = b.dataset.cid; const k = custById(b.dataset.cid) || {}; if(k.payment) DRAFT.terms.payment = k.payment; if(k.port) DRAFT.terms.port = k.port; saveDraft(); renderNewOrder(); });
+    // customer dropdown
+    $('ocsel').onchange = e => {
+      DRAFT.cust = e.target.value || null; const k = custById(DRAFT.cust) || {};
+      if(k.payment) DRAFT.terms.payment = k.payment; if(k.port) DRAFT.terms.port = k.port; saveDraft(); renderNewOrder();
     };
-    q.onfocus = q.oninput;
     $('ocnew').onclick = openCustModal;
     if($('ocx')) $('ocx').onclick = () => { DRAFT.cust = null; saveDraft(); renderNewOrder(); };
     // add species
@@ -730,7 +728,7 @@ window.PWLite = (function () {
 
 
   /* ---- Calendar of orders and shipments (first version) ---- */
-  const CAL = { y: new Date().getFullYear(), m: new Date().getMonth(), st: [] };
+  const CAL = { y: new Date().getFullYear(), m: new Date().getMonth(), st: [], cust: 'all', q: '', foc: false };
   async function renderCalendar(){
     $('content').innerHTML = '<p class="none">' + esc(t('checking')) + '</p>';
     await Promise.all([loadSpecies(), loadOrdersData()]);
@@ -739,7 +737,10 @@ window.PWLite = (function () {
     const lead = (first.getDay() + 6) % 7;
     const pad = n => String(n).padStart(2, '0'), key = d => CAL.y + '-' + pad(CAL.m + 1) + '-' + pad(d);
     const ev = {};
-    orders().filter(o => !CAL.st.length || CAL.st.includes(o.status)).forEach(o => {
+    const cq = CAL.q.trim().toLowerCase();
+    const cnames = [...new Set(orders().map(o => o.custName || '').concat(custs().map(c => c.name)))].filter(Boolean).sort();
+    orders().filter(o => (!CAL.st.length || CAL.st.includes(o.status)) && (CAL.cust === 'all' || o.custName === CAL.cust)
+      && (!cq || [o.ref, o.custName, o.lines.map(l => nameOf(l.code)).join(' ')].join(' ').toLowerCase().includes(cq))).forEach(o => {
       const d = o.eta || o.date; (ev[d] = ev[d] || []).push(o);
     });
     const monthName = new Intl.DateTimeFormat(PW.prefs.lang, { month: 'long', year: 'numeric' }).format(first);
@@ -754,6 +755,8 @@ window.PWLite = (function () {
     $('content').innerHTML = '<section class="sec"><div class="sp-tools">'
       + '<button class="ghost2" id="calp" aria-label="Previous">‹</button><b class="cal-t">' + esc(monthName) + '</b><button class="ghost2" id="caln" aria-label="Next">›</button>'
       + '<button class="ghost2" id="calt">' + esc(t('todayWord')) + '</button>'
+      + '<input id="calq" type="search" autocomplete="off" placeholder="' + esc(t('calSearchPh')) + '" aria-label="' + esc(t('calSearchPh')) + '" value="' + esc(CAL.q) + '">'
+      + '<select id="calc" aria-label="' + esc(t('customer')) + '"><option value="all">' + esc(t('allCustomers')) + '</option>' + cnames.map(n => '<option value="' + esc(n) + '"' + (CAL.cust === n ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '</select>'
       + '<details class="sp-dd" id="calsd"><summary id="calsum"></summary><div class="sp-dd-b">'
         + Object.keys(ST).map(k => '<button type="button" data-cst="' + k + '" aria-pressed="' + CAL.st.includes(k) + '">' + esc(t(ST[k])) + '</button>').join('') + '</div></details></div>'
       + '<div class="cal">' + cells + '</div>' + (n ? '' : none('noEvents')) + '</section>'
@@ -764,6 +767,10 @@ window.PWLite = (function () {
         ]);
     $('calsum').textContent = CAL.st.length ? t('statusWord') + ' (' + CAL.st.length + ')' : t('allStatuses');
     const mv = d => { CAL.m += d; if(CAL.m < 0){ CAL.m = 11; CAL.y--; } if(CAL.m > 11){ CAL.m = 0; CAL.y++; } renderCalendar(); };
+    $('calc').onchange = e => { CAL.cust = e.target.value; renderCalendar(); };
+    let ct = null; const cqi = $('calq');
+    cqi.oninput = () => { clearTimeout(ct); ct = setTimeout(() => { CAL.q = cqi.value; CAL.foc = true; renderCalendar(); }, 350); };
+    if(CAL.foc){ CAL.foc = false; cqi.focus(); cqi.setSelectionRange(cqi.value.length, cqi.value.length); }
     $('calp').onclick = () => mv(-1); $('caln').onclick = () => mv(1);
     $('calt').onclick = () => { CAL.y = new Date().getFullYear(); CAL.m = new Date().getMonth(); renderCalendar(); };
     document.querySelectorAll('[data-cst]').forEach(b => b.onclick = () => { CAL.st = CAL.st.includes(b.dataset.cst) ? CAL.st.filter(x => x !== b.dataset.cst) : CAL.st.concat(b.dataset.cst); renderCalendar(); });
@@ -986,14 +993,15 @@ window.PWLite = (function () {
     go('catalogue');
   }
   async function renderHome(){
-    const tabs = CFG[ID].tabs.filter(x => x !== 'home');
-    const sc = [{ k: 'catalogue', n: tabLabel('catalogue'), st: 'ready', f: () => openCatalogue() }];
+    const tabs = tabsOf().filter(x => x !== 'home');
+    let sc = [{ k: 'catalogue', n: tabLabel('catalogue'), st: 'ready', f: () => openCatalogue() }];
     if(CFG[ID].avail){
       sc.push({ k: 'stock', n: t('scStock'), st: 'ready', f: () => openCatalogue({ av: 'stock' }) });
       if(ID !== 'sales') sc.push({ k: 'produce', n: t('scProduce'), st: 'ready', f: () => openCatalogue({ av: 'produce' }) });
     }
     if(ID === 'sales') sc.push({ k: 'neworder', n: tabLabel('neworder'), st: 'ready', f: () => go('neworder') });
     else tabs.filter(x => x !== 'catalogue').forEach(x => sc.push({ k: x, n: tabLabel(x), st: STATUS[x], f: () => go(x) }));
+    if(ID === 'sales'){ const SCP = { catalogue: 'scCatalogue', stock: 'scStock', neworder: 'scNewOrder' }; sc = sc.filter(x => !SCP[x.k] || vis(SCP[x.k])); }
     $('content').innerHTML = '<section class="sec qs"><h2>' + esc(t('quickSearch')) + '</h2>'
       + '<div class="qs-box"><input id="qsq" type="search" autocomplete="off" placeholder="' + esc(t('quickSearchPh')) + '" aria-label="' + esc(t('quickSearch')) + '">'
       + '<div class="qs-res" id="qsres" hidden></div></div></section>'
@@ -1104,7 +1112,7 @@ window.PWLite = (function () {
   const ico = k => '<svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (ICO[k] || ICO.catalogue) + '"/></svg>';
   const badge = x => (x === 'neworder' && cartCount()) ? '<b class="cart-n" aria-label="' + cartCount() + '">' + cartCount() + '</b>' : '';
   function buildNav(){
-    $('nav').innerHTML = CFG[ID].tabs.map(x =>
+    $('nav').innerHTML = tabsOf().map(x =>
       '<button data-tab="' + x + '" aria-expanded="' + (x === TAB) + '">' + esc(tabLabel(x)) + badge(x) + '</button>').join('');
     $('nav').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.tab));
     const sb = $('sidemenu');
@@ -1112,7 +1120,7 @@ window.PWLite = (function () {
       const sub = (v, k) => '<button class="sub' + (TAB === 'catalogue' && AV.length === 1 && AV[0] === v ? ' on' : '') + '" data-av="' + v + '">' + esc(t(k)) + '</button>';
       const open = LS.get('pw-side-open', false);
       sb.classList.toggle('collapsed', !open);
-      sb.innerHTML = '<button class="side-t" id="sidet" aria-label="' + esc(t('menu')) + '" title="' + esc(t('menu')) + '" aria-expanded="' + open + '">' + ico('menu') + '<span class="lb">' + esc(t('menu')) + '</span></button>' + CFG[ID].tabs.map(x =>
+      sb.innerHTML = '<button class="side-t" id="sidet" aria-label="' + esc(t('menu')) + '" title="' + esc(t('menu')) + '" aria-expanded="' + open + '">' + ico('menu') + '<span class="lb">' + esc(t('menu')) + '</span></button>' + tabsOf().map(x =>
         '<button class="' + (x === TAB && !(x === 'catalogue' && AV.length) ? 'on' : '') + '" data-tab="' + x + '" title="' + esc(tabLabel(x)) + '">' + ico(x) + '<span class="lb">' + esc(tabLabel(x)) + '</span>' + badge(x) + '</button>'
         + (x === 'catalogue' && CFG[ID].avail ? sub('stock', 'avStock') + sub('produce', 'avProduce') : '')).join('');
       $('sidet').onclick = () => { LS.set('pw-side-open', !LS.get('pw-side-open', false)); buildNav(); };
@@ -1164,7 +1172,7 @@ window.PWLite = (function () {
     if(CFG[ID].focus || CFG[ID].price){ const hs = hashSpecies(); if(hs){ DETAIL = hs; TAB = 'catalogue'; } }
     window.addEventListener('popstate', () => { const hs = hashSpecies(); DETAIL = hs; if(hs) TAB = 'catalogue'; buildNav(); chrome(); render(); });
     redraw();
-    PW.mountSettings({ current: ID, onLang: redraw, toggles: CFG[ID].price ? [{ key: 'showPrice', label: t('showPrices') }] : null, onChange: redraw });
+    PW.mountSettings({ current: ID, onLang: redraw, toggles: ID === 'sales' ? [{ key: 'showPrice', label: t('showPrices') }, { key: 'scCatalogue', label: t('scTCat') }, { key: 'scStock', label: t('scTStock') }, { key: 'scNewOrder', label: t('scTNew') }, { key: 'tabCalendar', label: t('tabTCal') }, { key: 'tabInvoices', label: t('tabTInv') }, { key: 'tabDownloads', label: t('tabTDl') }, { key: 'tabShowroom', label: t('tabTShow') }] : (CFG[ID].price ? [{ key: 'showPrice', label: t('showPrices') }] : null), onChange: redraw });
   }
 
   return { boot };
