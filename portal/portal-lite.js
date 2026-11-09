@@ -708,7 +708,16 @@ window.PWLite = (function () {
       $('olist').innerHTML = L.length ? L.map(o => '<article class="ord"><div class="ord-h"><b>' + esc(o.ref) + '</b><span class="st st-' + esc(o.status) + '">' + esc(t(ST[o.status] || 'stQuote')) + '</span></div>'
         + '<p class="ord-c">' + esc(o.custName || t('noCustName')) + ' · ' + esc(o.date) + '</p>'
         + '<ul>' + o.lines.map(l => '<li>' + esc(nameOf(l.code)) + (l.vol ? ' · ' + esc(l.vol) + ' m³' : '') + '</li>').join('') + '</ul>'
-        + (o.total ? '<p class="ord-t">' + esc(money2(o.total, o.cur)) + '</p>' : '') + '</article>').join('') : none('noOrders');
+        + (o.total ? '<p class="ord-t">' + esc(money2(o.total, o.cur)) + '</p>' : '')
+        + (LOCAL_O.some(x => x.id === o.id) && (o.status === 'quote' || o.status === 'submitted')
+            ? '<div class="ord-act">' + (o.status === 'quote' ? '<button data-oact="submitted" data-oid="' + esc(o.id) + '">' + esc(t('submitOrder')) + '</button>' : '')
+              + '<button class="primary" data-oact="approved" data-oid="' + esc(o.id) + '">' + esc(t('markApproved')) + '</button></div>' : '')
+        + '</article>').join('') : none('noOrders');
+      $('olist').querySelectorAll('[data-oact]').forEach(b => b.onclick = () => {
+        const o = LOCAL_O.find(x => x.id === b.dataset.oid); if(!o) return;
+        o.status = b.dataset.oact; LS.set('pw-sales-orders', LOCAL_O);
+        flash(t(o.status === 'approved' ? 'orderApproved' : 'submittedOrder')); renderMyOrders();
+      });
     };
     $('ofc').onchange = e => { OF.cust = e.target.value; renderMyOrders(); };
     $('ofs').onchange = e => { OF.sp = e.target.value; renderMyOrders(); };

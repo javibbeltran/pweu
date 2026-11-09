@@ -406,3 +406,7 @@ h3.sub{font-size:13px;font-weight:600;color:var(--fg2);margin:20px 0 10px}
 body.sheet-open .lede h1{display:none}
 body.sheet-open header.bar,body.sheet-open #nav,body.sheet-open .sidemenu,body.sheet-open nav{display:none !important}
 .sheet .sh-h{text-transform:none;letter-spacing:0;color:var(--fg);border:0;padding:0;font-weight:700}
+
+.ord-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ord-act button{background:var(--surf);border:1px solid var(--ln);color:var(--fg);border-radius:999px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+.ord-act .primary{background:var(--accent);border-color:var(--accent);color:#fff}
