@@ -27,7 +27,7 @@ window.PWLite = (function () {
 
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
-  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, FEAT = { popular: [], lesser: [] };
+  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, DETAIL = null, KEYS = null, FEAT = { popular: [], lesser: [] };
 
   const priceOn = () => !!CFG[ID].price && PW.prefs.showPrice !== false;
   const title = () => t(ID === 'sales' ? 'portalSales' : 'portalCustomer');
@@ -231,19 +231,20 @@ window.PWLite = (function () {
     const all = s.appX.concat(s.appN.map(k => t(k))), apps = all.slice(0, 4);
     const commercial = CFG[ID].price || CFG[ID].avail;
     return '<article class="spc">'
-      + '<div class="sp-ph" data-code="' + esc(s.code) + '" data-i="0"><canvas></canvas><button class="ph-n prev" data-dir="-1" aria-label="Previous">‹</button><button class="ph-n next" data-dir="1" aria-label="Next">›</button><span class="ph-cap"></span>'
+      + '<div class="sp-ph" data-open="' + esc(s.code) + '" data-code="' + esc(s.code) + '" data-i="0"><canvas></canvas><button class="ph-n prev" data-dir="-1" aria-label="Previous">‹</button><button class="ph-n next" data-dir="1" aria-label="Next">›</button><span class="ph-cap"></span>'
       + '<img loading="lazy" src="' + esc(s.image || s.imgUrl) + '" alt="' + esc(s.name) + '" onerror="this.remove()">'
       + (CFG[ID].focus && s.fp ? '<span class="fp-b fp-' + s.fp + '">' + esc(t(s.fp === 'popular' ? 'focPopular' : 'focLesser')) + '</span>' : '')
       + (CFG[ID].avail ? '<span class="av-b av-' + s.av + '">' + esc(t(AVKEY[s.av])) + '</span>' : '') + '</div>'
       + '<div class="sp-b">'
       + '<p class="sp-rg">' + esc(s.code) + '</p>'
-      + '<h3>' + esc(s.name) + '</h3>'
+      + '<h3 data-open="' + esc(s.code) + '">' + esc(s.name) + '</h3>'
       + (s.botanical ? '<p class="sp-bot">' + esc(s.botanical) + '</p>' : '')
       + (s.cirad ? '<p class="sp-ci">' + esc(s.cirad) + '</p>' : '')
       + (priceOn() ? '<p class="sp-price' + (s.price ? '' : ' none') + '"><span>' + esc(t('price')) + '</span> ' + esc(s.price ? money(s.price) : t('priceNone')) + '</p>' : '')
       + (s.desc ? '<p class="sp-desc">' + esc(s.desc) + '</p>' : '')
       + (apps.length ? '<div class="sp-apps">' + apps.map(a => '<span>' + esc(a) + '</span>').join('') + (all.length > 4 ? '<span>+' + (all.length - 4) + '</span>' : '') + '</div>' : '')
-      + (CFG[ID].order ? '<button class="add-o' + (inCart(s.code) ? ' on' : '') + '" data-add="' + esc(s.code) + '">' + esc(inCart(s.code) ? t('inOrderRemove') : t('addToOrder')) + '</button>' : '')
+      + '<div class="sp-act"><button class="view-s" data-open="' + esc(s.code) + '">' + esc(t('viewSheet')) + '</button>'
+      + (CFG[ID].order ? '<button class="add-o' + (inCart(s.code) ? ' on' : '') + '" data-add="' + esc(s.code) + '">' + esc(inCart(s.code) ? t('inOrderRemove') : t('addToOrder')) + '</button>' : '') + '</div>'
       + '<dl>'
       + (s.colour ? '<div><dt>' + esc(t('colour')) + '</dt><dd>' + (sw ? '<i class="sw" style="background:' + sw + '"></i>' : '') + esc(s.colour) + '</dd></div>' : '')
       + row('sg', s.sg)
@@ -281,6 +282,7 @@ window.PWLite = (function () {
       const nb = e.target.closest('[data-dir]');
       if(nb){ const ph = nb.closest('.sp-ph'), s = SP.find(x => x.code === ph.dataset.code), n = slidesOf(s).length;
         ph.dataset.i = (((+ph.dataset.i || 0) + (+nb.dataset.dir)) % n + n) % n; paintSlide(ph); return; }
+      const o = e.target.closest('[data-open]'); if(o){ openSpecies(o.dataset.open); return; }
       const b = e.target.closest('[data-add]'); if(!b) return; toggleCart(b.dataset.add); drawGrid();
     };
     if(PHIO) PHIO.disconnect();
@@ -295,6 +297,110 @@ window.PWLite = (function () {
     const dirty = Q || n || m;
     $('spclear').hidden = !dirty;
   }
+
+
+  /* ---------- full species sheet: on screen, as a link, as a printable PDF ---------- */
+  const sheetUrl = code => location.href.split('#')[0] + '#species=' + encodeURIComponent(code);
+  function openSpecies(code){
+    DETAIL = code; TAB = 'catalogue';
+    try{ history.pushState(null, '', '#species=' + encodeURIComponent(code)); }catch(e){}
+    buildNav(); chrome(); render(); window.scrollTo(0, 0);
+  }
+  function closeSpecies(){
+    DETAIL = null; KEYS = null; try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+    try{ history.pushState(null, '', location.href.split('#')[0]); }catch(e){}
+    render(); window.scrollTo(0, 0);
+  }
+  function slideImg(s, i, w, h){
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    drawScene(cv, toRgb(swatch(s.colour) || '#a0703c'), slidesOf(s)[i]);
+    return cv.toDataURL('image/jpeg', .88);
+  }
+  function specRows(s){
+    const sw = swatch(s.colour);
+    const r = (k, v, x) => v ? '<tr><th>' + esc(t(k)) + '</th><td>' + esc(v) + (x ? ' <small>' + esc(x) + '</small>' : '') + '</td></tr>' : '';
+    return (s.colour ? '<tr><th>' + esc(t('colour')) + '</th><td>' + (sw ? '<i class="sw" style="background:' + sw + '"></i>' : '') + esc(s.colour) + '</td></tr>' : '')
+      + r('sg', s.sg) + r('durability', s.durability) + r('useClass', s.useClass) + r('strength', s.strength, s.strengthSource ? t('source') + ': ' + s.strengthSource : '')
+      + r('logDia', s.logs ? s.logs + ' ' + t('cm') : '') + r('sapwood', s.sapwood ? s.sapwood + ' ' + t('cm') : '') + r('remark', s.remark);
+  }
+  const allApps = s => s.appX.concat(s.appN.map(k => t(k)));
+  function sheetCore(s, heroSrc, thumbs){
+    const apps = allApps(s);
+    return '<div class="sh-top"><div><p class="sp-rg">' + esc(s.code) + '</p><h2 class="sh-h">' + esc(s.name) + '</h2>'
+      + (s.botanical ? '<p class="sp-bot">' + esc(s.botanical) + '</p>' : '') + (s.cirad ? '<p class="sp-ci">' + esc(s.cirad) + '</p>' : '') + '</div>'
+      + '<div class="sh-meta">' + (CFG[ID].avail ? '<span class="av-b av-' + s.av + ' inl">' + esc(t(AVKEY[s.av])) + '</span>' : '')
+      + (priceOn() ? '<p class="sp-price' + (s.price ? '' : ' none') + '"><span>' + esc(t('price')) + '</span> ' + esc(s.price ? money(s.price) : t('priceNone')) + '</p>' : '') + '</div></div>'
+      + (heroSrc ? '<div class="sh-hero"><img src="' + heroSrc + '" alt="">' + (thumbs ? '<div class="sh-th">' + thumbs + '</div>' : '') + '</div>' : '')
+      + (s.desc ? '<p class="sh-desc">' + esc(s.desc) + '</p>' : '')
+      + (apps.length ? '<h3 class="sh-s">' + esc(t('useCases')) + '</h3><div class="sp-apps uc">' + apps.map(a => '<span>' + esc(a) + '</span>').join('') + '</div>' : '')
+      + '<h3 class="sh-s">' + esc(t('techSpecs')) + '</h3><table class="sh-t">' + specRows(s) + '</table>';
+  }
+  function printSheet(s){
+    let el = $('sprint'); if(!el){ el = document.createElement('div'); el.id = 'sprint'; document.body.appendChild(el); }
+    const n = slidesOf(s).length, th = [];
+    for(let i = 1; i < n; i++) th.push('<img src="' + slideImg(s, i, 480, 200) + '" alt="">');
+    el.innerHTML = '<div class="pr-hd"><b>PRECIOUS WOODS</b><span>' + esc(PW.t ? '' : '') + 'Europe · ' + esc(title()) + '</span></div>'
+      + sheetCore(s, slideImg(s, 0, 1200, 500), th.join(''))
+      + '<p class="pr-ft">' + esc(t('sheetFoot', new Date().toLocaleDateString(PW.prefs.lang))) + '</p>';
+    document.body.classList.add('print-sheet');
+    const done = () => { document.body.classList.remove('print-sheet'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    try{ window.print(); }catch(e){ done(); }
+  }
+  function emailSheet(s){
+    const sub = 'Precious Woods – ' + s.name + ' (' + s.code + ')';
+    const body = t('mailBody', s.name, sheetUrl(s.code));
+    location.href = 'mailto:?subject=' + encodeURIComponent(sub) + '&body=' + encodeURIComponent(body);
+  }
+  async function copyLink(s, btn){
+    const u = sheetUrl(s.code); let ok = false;
+    try{ await navigator.clipboard.writeText(u); ok = true; }catch(e){
+      const ta = document.createElement('textarea'); ta.value = u; document.body.appendChild(ta); ta.select();
+      try{ ok = document.execCommand('copy'); }catch(e2){} ta.remove();
+    }
+    const old = btn.textContent; btn.textContent = ok ? t('linkCopied') : u; setTimeout(() => { btn.textContent = old; }, 2200);
+  }
+  async function renderSpecies(){
+    $('content').innerHTML = '<p class="none">' + esc(t('checking')) + '</p>';
+    await loadSpecies();
+    if(TAB !== 'catalogue' || !DETAIL) return;
+    const s = (SP || []).find(x => x.code === DETAIL);
+    if(!s){ DETAIL = null; return renderCatalogue(); }
+    const mine = new Set(s.appN), rel = SP.filter(x => x.code !== s.code && x.appN.some(k => mine.has(k))).sort((a, b) => (a.rank - b.rank) || a.name.localeCompare(b.name)).slice(0, 6);
+    $('content').innerHTML = '<section class="sec sheet">'
+      + '<div class="sh-bar"><button class="sh-back" id="shback">← ' + esc(t('backCat')) + '</button><div class="sh-acts"><button id="shfs">' + esc(t('present')) + '</button>'
+      + '<button id="shprint">' + esc(t('printPdf')) + '</button><button id="shcopy">' + esc(t('copyLink')) + '</button><button id="shmail">' + esc(t('sendEmail')) + '</button>'
+      + (CFG[ID].order ? '<button class="primary add-o' + (inCart(s.code) ? ' on' : '') + '" id="shadd">' + esc(inCart(s.code) ? t('inOrderRemove') : t('addToOrder')) + '</button>' : '') + '</div></div>'
+      + '<div class="sh-grid"><div class="sh-gal"><div class="sp-ph sh-ph" data-code="' + esc(s.code) + '" data-i="0"><canvas></canvas><button class="ph-n prev" data-dir="-1" aria-label="Previous">‹</button><button class="ph-n next" data-dir="1" aria-label="Next">›</button><span class="ph-cap"></span>'
+      + '<img src="' + esc(s.image || s.imgUrl) + '" alt="' + esc(s.name) + '" onerror="this.remove()"></div><div class="sh-dots" id="shdots"></div></div>'
+      + '<div class="sh-info">' + sheetCore(s, '', '').replace('<h3 class="sh-s">' + esc(t('techSpecs')) + '</h3><table class="sh-t">' + specRows(s) + '</table>', '') + '</div></div>'
+      + '<h3 class="sh-s">' + esc(t('techSpecs')) + '</h3><table class="sh-t">' + specRows(s) + '</table>'
+      + (rel.length ? '<h3 class="sh-s">' + esc(t('relatedSp')) + '</h3><div class="sp-apps rel">' + rel.map(x => '<button data-open="' + esc(x.code) + '">' + esc(x.name) + '</button>').join('') + '</div>' : '')
+      + '</section>';
+    const ph = $('content').querySelector('.sh-ph');
+    const paint = () => { const cv = ph.querySelector('canvas'); cv.width = 1000; cv.height = 460; const list = slidesOf(s), i = +ph.dataset.i || 0;
+      drawScene(cv, toRgb(swatch(s.colour) || '#a0703c'), list[i]);
+      ph.querySelector('.ph-cap').textContent = t(SLIDE_KEY[list[i]]) + ' · ' + t('illus') + (list.length > 1 ? '  ' + (i + 1) + '/' + list.length : '');
+      ph.querySelectorAll('.ph-n').forEach(b => b.hidden = list.length < 2);
+      $('shdots').innerHTML = list.map((k, j) => '<button data-j="' + j + '" class="' + (j === i ? 'on' : '') + '" aria-label="' + (j + 1) + '"></button>').join(''); };
+    const step = d => { const n = slidesOf(s).length; ph.dataset.i = (((+ph.dataset.i || 0) + d) % n + n) % n; paint(); };
+    paint();
+    ph.onclick = e => { const nb = e.target.closest('[data-dir]'); if(nb) step(+nb.dataset.dir); };
+    $('shdots').onclick = e => { const b = e.target.closest('[data-j]'); if(b){ ph.dataset.i = b.dataset.j; paint(); } };
+    let x0 = null;
+    ph.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+    ph.addEventListener('touchend', e => { if(x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if(Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); });
+    KEYS = e => { if(e.key === 'ArrowRight') step(1); else if(e.key === 'ArrowLeft') step(-1); else if(e.key === 'Escape' && !document.fullscreenElement) closeSpecies(); };
+    $('shfs').onclick = () => { const el = document.documentElement; try{ document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen(); }catch(e){} };
+    $('shback').onclick = closeSpecies;
+    $('shprint').onclick = () => printSheet(s);
+    $('shcopy').onclick = e => copyLink(s, e.currentTarget);
+    $('shmail').onclick = () => emailSheet(s);
+    const ad = $('shadd'); if(ad) ad.onclick = () => { toggleCart(s.code); renderSpecies(); };
+    $('content').querySelectorAll('.rel [data-open]').forEach(b => b.onclick = () => openSpecies(b.dataset.open));
+  }
+  document.addEventListener('keydown', e => { if(DETAIL && KEYS) KEYS(e); });
+  function hashSpecies(){ const m = /species=([^&]+)/.exec(location.hash || ''); return m ? decodeURIComponent(m[1]) : null; }
 
   async function renderCatalogue(){
     $('content').innerHTML = '<p class="none">' + esc(t('checking')) + '</p>';
@@ -967,8 +1073,9 @@ window.PWLite = (function () {
   }
 
   function render(){
+    document.body.classList.toggle('sheet-open', !!(DETAIL && TAB === 'catalogue'));
     if(TAB === 'home') return renderHome();
-    if(TAB === 'catalogue') return renderCatalogue();
+    if(TAB === 'catalogue') return DETAIL ? renderSpecies() : renderCatalogue();
     if(TAB === 'neworder') return renderNewOrder();
     if(TAB === 'myorders') return renderMyOrders();
     if(TAB === 'calendar') return renderCalendar();
@@ -1003,7 +1110,7 @@ window.PWLite = (function () {
       sb.querySelectorAll('[data-av]').forEach(b => b.onclick = () => openCatalogue({ av: b.dataset.av }));
     }
   }
-  function go(tab){ TAB = tab; buildNav(); chrome(); render(); window.scrollTo(0, 0); }
+  function go(tab){ TAB = tab; DETAIL = null; buildNav(); chrome(); render(); window.scrollTo(0, 0); }
 
   function chrome(){
     $('seg').textContent = title();
@@ -1044,6 +1151,8 @@ window.PWLite = (function () {
 
     if(ID === 'sales') await loadOrdersData();
     ungate(); $('main').hidden = false;
+    if(CFG[ID].focus || CFG[ID].price){ const hs = hashSpecies(); if(hs){ DETAIL = hs; TAB = 'catalogue'; } }
+    window.addEventListener('popstate', () => { const hs = hashSpecies(); DETAIL = hs; if(hs) TAB = 'catalogue'; buildNav(); chrome(); render(); });
     redraw();
     PW.mountSettings({ current: ID, onLang: redraw, toggles: CFG[ID].price ? [{ key: 'showPrice', label: t('showPrices') }] : null, onChange: redraw });
   }

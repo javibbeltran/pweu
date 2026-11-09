@@ -206,7 +206,7 @@ window.PW = (function () {
     srPlank:'Board width', srAngle:'Angle', srOpacity:'Intensity', srDownload:'Download image', srPanel:'Panel / furniture', srNeedImg:'Add a picture first.', srClose:'Close'
   });
   Object.assign(T.en, { illus:'Sample illustration', slideBoard:'Wood sample', slideFloor:'Flooring', slideDeck:'Decking', slideClad:'Cladding', slideBench:'Street furniture' });
-  Object.assign(T.en, { sortLesser:'Lesser known first', sortPopular:'Most popular', focAll:'All species', focPopular:'Most popular', focLesser:'Lesser known' });
+  Object.assign(T.en, { useCases:'Suggested use cases', present:'Full screen', viewSheet:'Full sheet', backCat:'Back to catalogue', printPdf:'Print / save as PDF', copyLink:'Copy link', linkCopied:'Link copied', sendEmail:'Send by email', techSpecs:'Technical specifications', relatedSp:'Also used for the same applications', sheetFoot:'Precious Woods Europe · Species sheet · {0} · Indicative technical data; confirm availability and price with your sales contact.', mailBody:'Hello,\n\nHere is the full species sheet for {0}:\n{1}\n\nKind regards', sortLesser:'Lesser known first', sortPopular:'Most popular', focAll:'All species', focPopular:'Most popular', focLesser:'Lesser known' });
   Object.assign(T.en, { displayH:'Display', showPrices:'Show prices' });
   Object.assign(T.nl, { displayH:'Weergave', showPrices:'Prijzen tonen' });
   Object.assign(T.es, { displayH:'Visualización', showPrices:'Mostrar precios' });
