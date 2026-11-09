@@ -981,15 +981,16 @@ window.PWLite = (function () {
     const sc = [{ k: 'catalogue', n: tabLabel('catalogue'), st: 'ready', f: () => openCatalogue() }];
     if(CFG[ID].avail){
       sc.push({ k: 'stock', n: t('scStock'), st: 'ready', f: () => openCatalogue({ av: 'stock' }) });
-      sc.push({ k: 'produce', n: t('scProduce'), st: 'ready', f: () => openCatalogue({ av: 'produce' }) });
+      if(ID !== 'sales') sc.push({ k: 'produce', n: t('scProduce'), st: 'ready', f: () => openCatalogue({ av: 'produce' }) });
     }
-    tabs.filter(x => x !== 'catalogue').forEach(x => sc.push({ k: x, n: tabLabel(x), st: STATUS[x], f: () => go(x) }));
+    if(ID === 'sales') sc.push({ k: 'neworder', n: tabLabel('neworder'), st: 'ready', f: () => go('neworder') });
+    else tabs.filter(x => x !== 'catalogue').forEach(x => sc.push({ k: x, n: tabLabel(x), st: STATUS[x], f: () => go(x) }));
     $('content').innerHTML = '<section class="sec qs"><h2>' + esc(t('quickSearch')) + '</h2>'
       + '<div class="qs-box"><input id="qsq" type="search" autocomplete="off" placeholder="' + esc(t('quickSearchPh')) + '" aria-label="' + esc(t('quickSearch')) + '">'
       + '<div class="qs-res" id="qsres" hidden></div></div></section>'
       + section(t('shortcuts'), '<div class="tiles">' + sc.map((x, i) =>
           '<button class="tile" data-sc="' + i + '"><span class="tile-n">' + esc(x.n) + '</span>'
-          + '<span class="tile-s ' + (x.st === 'ready' ? 'ready' : 'pending') + '">' + esc(t(x.st === 'ready' ? 'ready' : 'toComplete')) + '</span></button>').join('') + '</div>')
+          + (ID === 'sales' ? '' : '<span class="tile-s ' + (x.st === 'ready' ? 'ready' : 'pending') + '">' + esc(t(x.st === 'ready' ? 'ready' : 'toComplete')) + '</span>') + '</button>').join('') + '</div>')
       + (ID === 'customer'
           ? todo('Customer home: welcome message', [
               'Short welcome text and what customers can do here.',
