@@ -29,6 +29,7 @@ window.PWLite = (function () {
   let SPACES = [], SECTIONS = [], DOCS = [];
   let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, FOC = 'all', FEAT = { popular: [], lesser: [] };
 
+  const priceOn = () => !!CFG[ID].price && PW.prefs.showPrice !== false;
   const title = () => t(ID === 'sales' ? 'portalSales' : 'portalCustomer');
   const tabLabel = x => t(LABEL[x]);
 
@@ -115,10 +116,18 @@ window.PWLite = (function () {
       SP = (await r.json()).species || [];
     }catch(e){ SPERR = true; return; }
     let X = {};
-    if(CFG[ID].focus){
-      try{ const rf = await fetch('../data/featured.json', { cache: 'no-cache' }); if(rf.ok){ const jf = await rf.json(); FEAT = { popular: jf.popular || [], lesser: jf.lesser || [] }; } }catch(e){}
-      if(!SORTSET){ SORT = 'popular'; SORTSET = true; }
-    }
+    let HID = new Set();
+    try{ const rf = await fetch('../data/featured.json', { cache: 'no-cache' }); if(rf.ok){ const jf = await rf.json(); FEAT = { popular: jf.popular || [], lesser: jf.lesser || [] }; HID = new Set(jf.hidden || []); } }catch(e){}
+    try{   /* the Administration > Catalogue screen (table catalogue_settings) decides when it has data */
+      const rs = PW.sb ? await PW.sb.from('catalogue_settings').select('code,published,tier,sort') : null;
+      if(rs && !rs.error && rs.data && rs.data.length){
+        const by = tier => rs.data.filter(r => r.tier === tier).sort((a, b) => (a.sort - b.sort) || a.code.localeCompare(b.code)).map(r => r.code);
+        FEAT = { popular: by('popular'), lesser: by('lesser') };
+        HID = new Set(rs.data.filter(r => r.published === false).map(r => r.code));
+      }
+    }catch(e){}
+    if(CFG[ID].focus && !SORTSET){ SORT = 'popular'; SORTSET = true; }
+    SP = SP.filter(s => !HID.has(s.code));
     try{
       const r2 = await fetch('../data/species-extra.json', { cache: 'no-cache' });
       if(r2.ok){ const j = await r2.json(); X = j.species || {}; SAMPLE = !!j.sample; }
@@ -230,7 +239,7 @@ window.PWLite = (function () {
       + '<h3>' + esc(s.name) + '</h3>'
       + (s.botanical ? '<p class="sp-bot">' + esc(s.botanical) + '</p>' : '')
       + (s.cirad ? '<p class="sp-ci">' + esc(s.cirad) + '</p>' : '')
-      + (CFG[ID].price ? '<p class="sp-price' + (s.price ? '' : ' none') + '"><span>' + esc(t('price')) + '</span> ' + esc(s.price ? money(s.price) : t('priceNone')) + '</p>' : '')
+      + (priceOn() ? '<p class="sp-price' + (s.price ? '' : ' none') + '"><span>' + esc(t('price')) + '</span> ' + esc(s.price ? money(s.price) : t('priceNone')) + '</p>' : '')
       + (s.desc ? '<p class="sp-desc">' + esc(s.desc) + '</p>' : '')
       + (apps.length ? '<div class="sp-apps">' + apps.map(a => '<span>' + esc(a) + '</span>').join('') + (all.length > 4 ? '<span>+' + (all.length - 4) + '</span>' : '') + '</div>' : '')
       + (CFG[ID].order ? '<button class="add-o' + (inCart(s.code) ? ' on' : '') + '" data-add="' + esc(s.code) + '">' + esc(inCart(s.code) ? t('inOrderRemove') : t('addToOrder')) + '</button>' : '')
@@ -292,8 +301,8 @@ window.PWLite = (function () {
     await loadSpecies();
     if(TAB !== 'catalogue') return;
     if(SPERR){ $('content').innerHTML = none('loadSpeciesFail'); return; }
-    const sorts = (CFG[ID].focus ? [['popular', 'sortPopular']] : []).concat([['az', 'sortAZ'], ['za', 'sortZA']]).concat(CFG[ID].price ? [['low', 'sortPriceLow'], ['high', 'sortPriceHigh']] : []);
-    if(!CFG[ID].price && (SORT === 'low' || SORT === 'high')) SORT = 'az';
+    const sorts = (CFG[ID].focus ? [['popular', 'sortPopular']] : []).concat([['az', 'sortAZ'], ['za', 'sortZA']]).concat(priceOn() ? [['low', 'sortPriceLow'], ['high', 'sortPriceHigh']] : []);
+    if(!priceOn() && (SORT === 'low' || SORT === 'high')) SORT = 'az';
     const missing = ID === 'sales'
       ? todo('Species catalogue: information still to add', [
           'Prices per species: fill portal/data/species-extra.json (or a Supabase table with access rules if prices must stay private).',
@@ -1032,7 +1041,7 @@ window.PWLite = (function () {
     if(ID === 'sales') await loadOrdersData();
     ungate(); $('main').hidden = false;
     redraw();
-    PW.mountSettings({ current: ID, onLang: redraw });
+    PW.mountSettings({ current: ID, onLang: redraw, toggles: CFG[ID].price ? [{ key: 'showPrice', label: t('showPrices') }] : null, onChange: redraw });
   }
 
   return { boot };

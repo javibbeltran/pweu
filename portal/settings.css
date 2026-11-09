@@ -65,3 +65,9 @@
 }
 .panel .plist a:hover{background:var(--surf2);color:var(--fg)}
 .panel .plist a[aria-current="page"]{background:var(--bg2);color:var(--fg);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
+
+.tgl{display:flex;align-items:center;justify-content:space-between;gap:12px;width:calc(100% - 16px);margin:0 8px 4px;padding:0 12px;min-height:42px;background:var(--surf);border:1px solid var(--ln);border-radius:10px;color:var(--fg);font:inherit;font-size:14px;cursor:pointer}
+.tgl i{position:relative;flex:none;width:36px;height:20px;border-radius:999px;background:var(--ln2);transition:background .12s}
+.tgl i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .12s}
+.tgl[aria-pressed="true"] i{background:var(--accent)}
+.tgl[aria-pressed="true"] i::after{transform:translateX(16px)}

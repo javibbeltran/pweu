@@ -36,6 +36,7 @@
     <button data-tab="people"  aria-selected="true">People &amp; access</button>
     <button data-tab="content" aria-selected="false">Content</button>
     <button data-tab="requests" aria-selected="false">Requests</button>
+    <button data-tab="catalogue" aria-selected="false">Catalogue</button>
   </div>
 
   <section id="tab-people">
@@ -64,6 +65,15 @@
       <h3>Customer requests</h3>
       <p class="sub" id="rqsub">—</p>
       <div style="overflow:auto"><table class="rows" id="rqtable"></table></div>
+    </div>
+  </section>
+  <section id="tab-catalogue" hidden>
+    <div class="pane">
+      <h3>Catalogue: publish and order</h3>
+      <p class="sub" id="catsub">—</p>
+      <div class="addrow"><input id="catq" placeholder="Filter species…"><button id="catall">Save all</button></div>
+      <p class="msg" id="catmsg"></p>
+      <div style="overflow:auto"><table class="rows" id="cattable"></table></div>
     </div>
   </section>
 </main>
@@ -256,6 +266,59 @@ function renderRequests(){
   });
 }
 
+/* ---- Catalogue: published / group / order of each species (table catalogue_settings) ---- */
+let CAT=[];
+const CATTIERS=[['','None'],['popular','Most popular'],['lesser','Lesser known']];
+function catRow(code){return CAT.find(x=>x.code===code)}
+function renderCat(){
+  const q=($('catq').value||'').trim().toLowerCase();
+  const rows=CAT.slice().sort((a,b)=>{
+    const ta=a.tier==='popular'?0:a.tier==='lesser'?1:2, tb=b.tier==='popular'?0:b.tier==='lesser'?1:2;
+    return ta-tb||a.sort-b.sort||a.name.localeCompare(b.name)}).filter(r=>!q||(r.name+' '+r.code).toLowerCase().includes(q));
+  const off=CAT.filter(r=>!r.published).length;
+  $('catsub').textContent=CAT.length+' species · '+(CAT.length-off)+' published · '+off+' hidden. Hidden species disappear from the Sales and Customer portals. Within a group, a lower number comes first.';
+  $('cattable').innerHTML='<tr><th>Code</th><th>Species</th><th>Published</th><th>Group</th><th>Order</th></tr>'+rows.map(r=>
+    '<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td>'
+    +'<td><input type="checkbox" data-cp="'+esc(r.code)+'"'+(r.published?' checked':'')+' aria-label="Published"></td>'
+    +'<td><select data-ct="'+esc(r.code)+'">'+CATTIERS.map(([v,l])=>'<option value="'+v+'"'+(r.tier===v?' selected':'')+'>'+l+'</option>').join('')+'</select></td>'
+    +'<td><input type="number" min="1" style="width:70px" data-cs="'+esc(r.code)+'" value="'+r.sort+'"></td></tr>').join('');
+}
+async function saveCat(rows){
+  const body=rows.map(r=>({code:r.code,published:r.published,tier:r.tier,sort:+r.sort||1000,updated_at:new Date().toISOString()}));
+  const {error}=await PW.sb.from('catalogue_settings').upsert(body);
+  if(error){
+    say('catmsg',/catalogue_settings/.test(error.message)&&/exist|schema cache/i.test(error.message)
+      ?'The table catalogue_settings does not exist yet. Run supabase/migrations/20261109_catalogue_settings.sql once, then try again.'
+      :'Could not save: '+error.message);
+    return false;
+  }
+  say('catmsg','Saved.');return true;
+}
+async function initCat(){
+  const [spj,fj,st]=await Promise.all([
+    fetch('data/species.json').then(r=>r.json()).catch(()=>({species:[]})),
+    fetch('data/featured.json').then(r=>r.json()).catch(()=>({})),
+    PW.sb.from('catalogue_settings').select('code,published,tier,sort')]);
+  const saved={}; (st.data||[]).forEach(r=>saved[r.code]=r);
+  const pop=fj.popular||[], les=fj.lesser||[], hid=new Set(fj.hidden||[]);
+  CAT=(spj.species||[]).map(s=>{
+    const r=saved[s.code]; if(r) return {code:s.code,name:s.name,published:r.published,tier:r.tier,sort:r.sort};
+    const ip=pop.indexOf(s.code), il=les.indexOf(s.code);
+    return {code:s.code,name:s.name,published:!hid.has(s.code),tier:ip>=0?'popular':il>=0?'lesser':'',sort:ip>=0?ip+1:il>=0?il+1:1000};
+  });
+  if(st.error) say('catmsg',/exist|schema cache/i.test(st.error.message)?'The table catalogue_settings does not exist yet. Run supabase/migrations/20261109_catalogue_settings.sql once; until then the portals use data/featured.json.':'Could not read the settings: '+st.error.message);
+  else if(!(st.data||[]).length) say('catmsg','Nothing saved yet: showing the current defaults. Press "Save all" once to start managing the catalogue from here.');
+  renderCat();
+  $('catq').oninput=renderCat;
+  $('catall').onclick=()=>saveCat(CAT).then(ok=>{if(ok)renderCat()});
+  $('cattable').onchange=async e=>{
+    const t=e.target, code=t.dataset.cp||t.dataset.ct||t.dataset.cs; if(!code) return;
+    const r=catRow(code);
+    if(t.dataset.cp) r.published=t.checked; else if(t.dataset.ct) r.tier=t.value; else r.sort=+t.value||1000;
+    if(await saveCat([r])) renderCat();
+  };
+}
+
 function initials(em){
   const n=em.split('@')[0].replace(/[._-]+/g,' ').trim().split(' ').filter(Boolean);
   return ((n[0]||'?')[0]+((n[1]||'')[0]||'')).toUpperCase();
@@ -293,11 +356,12 @@ function initials(em){
   $('av').textContent=initials(PW.email);
   $('gate').style.display='none'; $('main').hidden=false;
   renderPeople(); renderDetail(); renderSections(); renderDocs(); renderRequests();
+  initCat();
 
   $('tabs').onclick=e=>{
     const b=e.target.closest('[data-tab]'); if(!b)return;
     $('tabs').querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
-    ['people','content','requests'].forEach(k=>{$('tab-'+k).hidden=(k!==b.dataset.tab)});
+    ['people','content','requests','catalogue'].forEach(k=>{$('tab-'+k).hidden=(k!==b.dataset.tab)});
   };
 
   $('addp').onclick=async()=>{

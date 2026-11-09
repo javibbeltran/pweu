@@ -207,6 +207,9 @@ window.PW = (function () {
   });
   Object.assign(T.en, { illus:'Sample illustration', slideBoard:'Wood sample', slideFloor:'Flooring', slideDeck:'Decking', slideClad:'Cladding', slideBench:'Street furniture' });
   Object.assign(T.en, { sortPopular:'Most popular', focAll:'All species', focPopular:'Most popular', focLesser:'Lesser known' });
+  Object.assign(T.en, { displayH:'Display', showPrices:'Show prices' });
+  Object.assign(T.nl, { displayH:'Weergave', showPrices:'Prijzen tonen' });
+  Object.assign(T.es, { displayH:'Visualización', showPrices:'Mostrar precios' });
   Object.assign(T.en, { portalSales:'Sales Portal', portalCustomer:'Customer Portal' });
   Object.assign(T.nl, { portalSales:'Verkoopportaal', portalCustomer:'Klantenportaal' });
   Object.assign(T.es, { portalSales:'Portal de Ventas', portalCustomer:'Portal de Clientes' });
@@ -230,7 +233,7 @@ window.PW = (function () {
   });
 
   /* ---------- preferences ---------- */
-  const DEF = { lang:'en', theme:'system', accent:'#00A65C', space:null };
+  const DEF = { lang:'en', theme:'system', accent:'#00A65C', space:null, showPrice:true };
   let prefs = Object.assign({}, DEF);
 
   function readLocal(){
@@ -377,6 +380,7 @@ window.PW = (function () {
           + ACCENTS.map(c => '<button data-pwacc="'+c+'" style="background:'+c+'" aria-label="'+c+'" aria-pressed="'
               + ((prefs.accent||'').toLowerCase()===c)+'"></button>').join('')
           + '<input type="color" id="pw-acc" value="'+esc(prefs.accent||DEF.accent)+'"></div>'
+        + (o.toggles ? '<h4>'+esc(t('displayH'))+'</h4>' + o.toggles.map(x => '<button class="tgl" data-pwtgl="'+x.key+'" aria-pressed="'+(prefs[x.key] !== false)+'"><span>'+esc(x.label)+'</span><i></i></button>').join('') : '')
         + '<div class="foot">'
           + (o.admin ? '<button id="pw-admin">Administration</button>' : '')
           + '<button id="pw-out">'+esc(t('signout'))+'</button></div>';
@@ -390,6 +394,7 @@ window.PW = (function () {
       p.querySelectorAll('[data-pwtheme]').forEach(b => b.onclick = () => { setPref('theme', b.dataset.pwtheme); render(); });
       p.querySelectorAll('[data-pwacc]').forEach(b => b.onclick = () => { setPref('accent', b.dataset.pwacc); render(); });
       p.querySelector('#pw-acc').oninput = e => setPref('accent', e.target.value);
+      p.querySelectorAll('[data-pwtgl]').forEach(b => b.onclick = () => { const k = b.dataset.pwtgl; setPref(k, prefs[k] === false); render(); if(o.onChange) o.onChange(k); });
       const a = p.querySelector('#pw-admin');
       if(a) a.onclick = () => { location.href = o.adminHref || (BASE + 'admin.html'); };
       p.querySelector('#pw-out').onclick = async () => { await signOut(); location.reload(); };

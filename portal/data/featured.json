@@ -1,5 +1,5 @@
 {
- "_readme": "Order of the catalogue for salespeople. popular: species codes in the order they should appear first (Sort by: Most popular). lesser: species we want to push (lesser known), shown after the popular ones, also in the order given. Everything else follows A-Z. Later this order will be editable from the admin account.",
+ "_readme": "Order of the catalogue for salespeople. popular: species codes in the order they should appear first (Sort by: Most popular). lesser: species we want to push (lesser known), shown after the popular ones, also in the order given. Everything else follows A-Z. Later this order will be editable from the admin account. hidden: species codes that are not shown in the portals. Used until the Administration > Catalogue screen (table catalogue_settings) has data; then that screen decides.",
  "popular": [
   "ANPE",
   "LOIT",
@@ -16,5 +16,6 @@
   "LIMB",
   "SORR",
   "OZIG"
- ]
+ ],
+ "hidden": []
 }
