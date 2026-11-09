@@ -1,24 +1,30 @@
 {
- "_readme": "Optional commercial data per species, keyed by species code. Fill it in as it becomes available. price: {value, unit, currency}. availability: 'stock' | 'produce' | 'na'. applications: free-text list added to the use-class based applications. description: free text, searchable. Note: this file is public. Prices and stock that must stay private belong in a Supabase table with access rules instead. Availability was set from the species Excel: red rows = available to be produced, CDRI and ANPE = in stock, all others N/A. applications: list of application ids (ap0..ap19, see portal-lite.js) that REPLACES the ones derived from the use class; tags: free-text extras shown on the card; image: optional URL, otherwise portal/data/img/<CODE>.jpg is used when it exists. Applications and descriptions for ANPE, CDRI, CUPI, LOGA, LOPR, PEQU, TAUV, LIMB and SORR come from Development_overview.xlsx (2026-09-25).",
+ "_readme": "Optional commercial data per species, keyed by species code. Fill it in as it becomes available. price: {value, unit, currency}. availability: 'stock' | 'produce' | 'na'. applications: free-text list added to the use-class based applications. description: free text, searchable. Note: this file is public. Prices and stock that must stay private belong in a Supabase table with access rules instead. Availability was set from the species Excel: red rows = available to be produced, CDRI and ANPE = in stock, all others N/A. applications: list of application ids (ap0..ap19, see portal-lite.js) that REPLACES the ones derived from the use class; tags: free-text extras shown on the card; image: optional URL, otherwise portal/data/img/<CODE>.jpg is used when it exists. Applications and descriptions for ANPE, CDRI, CUPI, LOGA, LOPR, PEQU, TAUV, LIMB and SORR come from Development_overview.xlsx (2026-09-25). Descriptions are commercial drafts: hand-written for species with a market story, otherwise built from the specifications. Edit freely.",
  "sample": false,
  "species": {
   "ABUI": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light yellow hardwood with a specific gravity of 0.98. Durability class 4, best suited to dry, interior use."
   },
   "ACAR": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Hardwood with a specific gravity of 0.98. Very durable (class 1)."
   },
   "AMAP": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light brown hardwood with a specific gravity of 0.69. Durability class 5, best suited to dry, interior use."
   },
   "AMDO": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light brown hardwood with a specific gravity of 0.69. Durability class 5, best suited to dry, interior use."
   },
   "ANCA": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Yellow brown hardwood with a specific gravity of 0.88. Very durable (class 1)."
   },
   "ANFA": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Hardwood."
   },
   "ANPE": {
    "availability": "stock",
@@ -34,31 +40,39 @@
     "ap3",
     "ap6"
    ],
-   "description": "High volume, big logs with few defects and long lengths possible."
+   "description": "Our high-volume workhorse: big, clean logs with few defects and long lengths available. Strong track record in street furniture, with trials running in trailer flooring, cladding and sleepers."
   },
   "ANRA": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Orange - yellow hardwood with a specific gravity of 1.03. Moderately durable (class 3)."
   },
   "ANVE": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Red brown hardwood with a specific gravity of 1.07. Very durable (class 1). Strength class D50."
   },
   "ARVE": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Dark red brown hardwood with a specific gravity of 0.83. Durable (class 2)."
   },
   "BRBR": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light brown hardwood with a specific gravity of 0.64. Durability class 5, best suited to dry, interior use."
   },
   "BRVE": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light brown hardwood with a specific gravity of 0.63. Durability class 5, best suited to dry, interior use."
   },
   "CAJU": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Hardwood."
   },
   "CASA": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Red brown hardwood with a specific gravity of 0.96. Very durable (class 1)."
   },
   "CAST": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light brown blood red hardwood with a specific gravity of 0.90. Very durable (class 1)."
   },
   "CDRI": {
    "availability": "stock",
@@ -77,13 +91,15 @@
     "Fascia boards",
     "Pergolas"
    ],
-   "description": "High volume, cedar look."
+   "description": "The cedar look at hardwood volumes, with plenty of logs available. Offered natural, thermally modified or carbonized for cladding and decking; also used for fascias, pergolas, garden products and packaging."
   },
   "CUMA": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Yellow red brown hardwood with a specific gravity of 1.07. Very durable (class 1). Strength class D60."
   },
   "CUVE": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Red brown hardwood with a specific gravity of 1.07. Very durable (class 1)."
   },
   "CUPI": {
    "availability": "produce",
@@ -99,37 +115,47 @@
    "tags": [
     "Thermo decking"
    ],
-   "description": "High volume, big logs with few defects."
+   "description": "Reliable high volumes from big, clean logs. A strong candidate for decking, including thermally modified, as well as cladding, marine poles and street furniture."
   },
   "FAAM": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Yellow brown hardwood with a specific gravity of 0.75. Moderately durable (class 3)."
   },
   "GUAR": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Yellow orange red hardwood with a specific gravity of 0.70. Very durable (class 1/3). Strength class D35."
   },
   "IPE": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Brown hardwood with a specific gravity of 1.04. Very durable (class 1). Strength class D65."
   },
   "JACA": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light brown hardwood with a specific gravity of 0.65. Durable (class 2)."
   },
   "JARA": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light to red brown hardwood with a specific gravity of 0.90-1.20. Durable (class 2). Strength class D40."
   },
   "JATO": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Red brown hardwood with a specific gravity of 0.94. Durable (class 2/3). Strength class D50."
   },
   "JUPO": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Orange brown hardwood with a specific gravity of 0.90. Very durable (class 1/2)."
   },
   "LOAM": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Yellow beige brown hardwood with a specific gravity of 0.80. Very durable (class 1)."
   },
   "LOAR": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Yellow beige brown hardwood with a specific gravity of 0.80. Very durable (class 1)."
   },
   "LOFA": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Brown hardwood with a specific gravity of 0.70. Durable (class 2/3)."
   },
   "LOGA": {
    "availability": "produce",
@@ -139,10 +165,11 @@
     "ap2",
     "ap12"
    ],
-   "description": "High volume, attractive look."
+   "description": "An attractive look at good volumes. Suited to cladding, decking, joinery and street furniture."
   },
   "LOIT": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Yellow brown hardwood with a specific gravity of 0.86. Very durable (class 1). Strength class D40."
   },
   "LOPR": {
    "availability": "produce",
@@ -156,22 +183,27 @@
     "Playground equipment",
     "Steamed cladding / decking"
    ],
-   "description": "Reasonably good volume, nice touch and finish."
+   "description": "A fine touch and finish at reasonable volumes. Established in street furniture and playground equipment, and also suited to cladding, decking and marine poles."
   },
   "MASS": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Red brown hardwood with a specific gravity of 1.10. Very durable (class 1). Strength class D50."
   },
   "MANQ": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Pinkish brown hardwood with a specific gravity of 0.74. Moderately durable (class 3). Strength class D40."
   },
   "MAJU": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Hardwood."
   },
   "MUIR": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Dark brown hardwood with a specific gravity of 0.80. Very durable (class 1)."
   },
   "MUPI": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Dark red hardwood with a specific gravity of 1.10. Durable (class 2)."
   },
   "PEQU": {
    "availability": "produce",
@@ -185,31 +217,40 @@
    ],
    "tags": [
     "Luxury furniture"
-   ]
+   ],
+   "description": "A versatile hardwood for tough applications: street furniture, railway sleepers, crane mats and marine poles, with a place in furniture too."
   },
   "PEMA": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Light brown hardwood with a specific gravity of 0.94. Very durable (class 1). Strength class D40."
   },
   "PARA": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Yellow brown hardwood with a specific gravity of 0.80. Durable (class 2). Strength class D35."
   },
   "SUAM": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Brown hardwood with a specific gravity of 0.83. Very durable (class 1)."
   },
   "SUPR": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Dark brown hardwood with a specific gravity of 0.91. Durable (class 2)."
   },
   "SUVE": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Red brown hardwood with a specific gravity of 0.86. Durable (class 2)."
   },
   "TANI": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Yellow brown hardwood with a specific gravity of 0.93. Moderately durable (class 3)."
   },
   "TAUB": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Creamy white hardwood with a specific gravity of 0.62. Durability class 5, best suited to dry, interior use."
   },
   "TAUC": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Hardwood."
   },
   "TAUV": {
    "availability": "produce",
@@ -220,82 +261,107 @@
    ],
    "tags": [
     "Carbonized cladding"
-   ]
+   ],
+   "description": "A flexible option for cladding, natural or carbonized, as well as fencing and utility pole arms."
   },
   "TAXV": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Hardwood."
   },
   "TIMB": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Pinkish brown hardwood with a specific gravity of 0.80. Moderately durable (class 3). Strength class D40."
   },
   "UCHT": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Greyish red brown hardwood with a specific gravity of 0.95. Durable (class 2/3)."
   },
   "VIOL": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Purple hardwood with a specific gravity of 0.87. Durable (class 2/3). Strength class D55."
   },
   "AZOB": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Dark red hardwood with a specific gravity of 1.06. Durable (class 2). Strength class D70."
   },
   "BELI": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Brown hardwood with a specific gravity of 0.77. Moderately durable (class 3)."
   },
   "BILI": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Orange yellow hardwood with a specific gravity of 0.76. Very durable (class 1). Strength class D50."
   },
   "DABE": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Yellow brown hardwood with a specific gravity of 0.70. Moderately durable (class 3). Strength class D30."
   },
   "DIAN": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light yellow hardwood with a specific gravity of 0.72. Durability class 5, best suited to dry, interior use. Strength class D35."
   },
   "DIBE": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Brown hardwood with a specific gravity of 0.53. Moderately durable (class 3-4)."
   },
   "EBIA": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Pinkish brown hardwood with a specific gravity of 0.70. Moderately durable (class 3)."
   },
   "EVEU": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Brown hardwood with a specific gravity of 1.06. Durable (class 2v). Strength class D70."
   },
   "GOMB": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Salmon pink hardwood with a specific gravity of 0.57/0.65. Durability class 4v/3v, best suited to dry, interior use."
   },
   "ILOM": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Pinkish brown hardwood with a specific gravity of 0.49. Durability class 5, best suited to dry, interior use. Strength class D18."
   },
   "IROK": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Yellow brown hardwood with a specific gravity of 0.64. Very durable (class 1-2). Strength class D40."
   },
   "IZOM": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Yellow brown hardwood with a specific gravity of 0.72. Durable (class 2)."
   },
   "LIMB": {
    "availability": "na",
    "applications": [
     "ap4"
-   ]
+   ],
+   "description": "Red brown hardwood with a specific gravity of 0.81. Durable (class 2). Strength class D35."
   },
   "MOVI": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Yellow hardwood with a specific gravity of 0.73. Moderately durable (class 3)."
   },
   "NIOV": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Orange brown hardwood with a specific gravity of 0.88. Very durable (class 1). Strength class D50."
   },
   "OKAN": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Red brown hardwood with a specific gravity of 0.91. Very durable (class 1). Strength class D40."
   },
   "OKOU": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Light red hardwood with a specific gravity of 0.44. Durability class 4, best suited to dry, interior use. Strength class D18."
   },
   "OMVO": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Red brown hardwood with a specific gravity of 0.94. Very durable (class 1)."
   },
   "OZIG": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Light brown hardwood with a specific gravity of 0.59. Durability class 5, best suited to dry, interior use. Strength class D30."
   },
   "PADO": {
-   "availability": "produce"
+   "availability": "produce",
+   "description": "Red hardwood with a specific gravity of 0.79. Very durable (class 1). Strength class D40."
   },
   "SORR": {
    "availability": "na",
@@ -304,10 +370,12 @@
    ],
    "tags": [
     "Heat-treated cladding"
-   ]
+   ],
+   "description": "Brown hardwood with a specific gravity of 0.59. Durability class 5, best suited to dry, interior use. Strength class D18."
   },
   "TALI": {
-   "availability": "na"
+   "availability": "na",
+   "description": "Brown hardwood with a specific gravity of 0.91. Very durable (class 1). Strength class D40."
   }
  }
 }

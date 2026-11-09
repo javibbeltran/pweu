@@ -27,7 +27,7 @@ window.PWLite = (function () {
 
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
-  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, FOC = 'all', FEAT = { popular: [], lesser: [] };
+  let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, FEAT = { popular: [], lesser: [] };
 
   const priceOn = () => !!CFG[ID].price && PW.prefs.showPrice !== false;
   const title = () => t(ID === 'sales' ? 'portalSales' : 'portalCustomer');
@@ -145,6 +145,7 @@ window.PWLite = (function () {
       const ip = FEAT.popular.indexOf(s.code), il = FEAT.lesser.indexOf(s.code);
       s.fp = ip >= 0 ? 'popular' : (il >= 0 ? 'lesser' : '');
       s.rank = ip >= 0 ? ip : (il >= 0 ? 100 + il : 1000);
+      s.rankL = il >= 0 ? il : (ip >= 0 ? 100 + ip : 1000);
       s._hay = [s.name, s.botanical, s.cirad, s.code, s.colour, s.durability, s.useClass, s.strength, s.remark, s.desc,
                 s.appX.join(' ')].join(' ').toLowerCase();
     });
@@ -259,8 +260,7 @@ window.PWLite = (function () {
     const toks = Q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const list = (SP || []).filter(s => toks.every(w => s._hay.includes(w) || s.appN.some(k => t(k).toLowerCase().includes(w)))
       && (!APPS.length || APPS.some(k => s.appN.includes(k) || s.appX.some(x => x.toLowerCase() === t(k).toLowerCase())))
-      && (!AV.length || AV.includes(s.av))
-      && (FOC === 'all' || s.fp === FOC));
+      && (!AV.length || AV.includes(s.av)));
     const byName = (a, b) => a.name.localeCompare(b.name);
     const byPrice = d => (a, b) => {
       const pa = a.price ? a.price.value : null, pb = b.price ? b.price.value : null;
@@ -269,7 +269,7 @@ window.PWLite = (function () {
       if(pb == null) return -1;
       return (pa - pb) * d || byName(a, b);
     };
-    list.sort(SORT === 'popular' ? (a, b) => (a.rank - b.rank) || byName(a, b) : SORT === 'za' ? (a, b) => byName(b, a) : SORT === 'low' ? byPrice(1) : SORT === 'high' ? byPrice(-1) : byName);
+    list.sort(SORT === 'popular' ? (a, b) => (a.rank - b.rank) || byName(a, b) : SORT === 'lesser' ? (a, b) => (a.rankL - b.rankL) || byName(a, b) : SORT === 'za' ? (a, b) => byName(b, a) : SORT === 'low' ? byPrice(1) : SORT === 'high' ? byPrice(-1) : byName);
     return list;
   }
   function drawGrid(){
@@ -287,12 +287,12 @@ window.PWLite = (function () {
     PHIO = ('IntersectionObserver' in window) ? new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting){ PHIO.unobserve(en.target); paintSlide(en.target); } }), { rootMargin: '300px' }) : null;
     g.querySelectorAll('.sp-ph').forEach(ph => PHIO ? PHIO.observe(ph) : paintSlide(ph));
     const n = APPS.length, m = AV.length;
-    const sm = $('appsum'); if(sm) sm.textContent = n ? t('applications') + ' (' + n + ')' : t('allApplications');
-    const sa = $('avsum'); if(sa) sa.textContent = m ? t('availability') + ' (' + m + ')' : t('allAvailability');
+    const pick = (arr, f) => f(arr[0]) + (arr.length > 1 ? ' +' + (arr.length - 1) : '');
+    const sm = $('appsum'); if(sm) sm.textContent = n ? pick(APPS, k => t(k)) : t('allApplications');
+    const sa = $('avsum'); if(sa) sa.textContent = m ? pick(AV, v => t(AVKEY[v])) : t('allAvailability');
     document.querySelectorAll('[data-app]').forEach(b => b.setAttribute('aria-pressed', String(APPS.includes(b.dataset.app))));
     document.querySelectorAll('[data-avf]').forEach(b => b.setAttribute('aria-pressed', String(AV.includes(b.dataset.avf))));
-    const dirty = Q || n || m || FOC !== 'all';
-    document.querySelectorAll('[data-foc]').forEach(b => b.setAttribute('aria-pressed', String(FOC === b.dataset.foc)));
+    const dirty = Q || n || m;
     $('spclear').hidden = !dirty;
   }
 
@@ -301,7 +301,7 @@ window.PWLite = (function () {
     await loadSpecies();
     if(TAB !== 'catalogue') return;
     if(SPERR){ $('content').innerHTML = none('loadSpeciesFail'); return; }
-    const sorts = (CFG[ID].focus ? [['popular', 'sortPopular']] : []).concat([['az', 'sortAZ'], ['za', 'sortZA']]).concat(priceOn() ? [['low', 'sortPriceLow'], ['high', 'sortPriceHigh']] : []);
+    const sorts = (CFG[ID].focus ? [['popular', 'sortPopular'], ['lesser', 'sortLesser']] : []).concat([['az', 'sortAZ'], ['za', 'sortZA']]).concat(priceOn() ? [['low', 'sortPriceLow'], ['high', 'sortPriceHigh']] : []);
     if(!priceOn() && (SORT === 'low' || SORT === 'high')) SORT = 'az';
     const missing = ID === 'sales'
       ? todo('Species catalogue: information still to add', [
@@ -320,8 +320,8 @@ window.PWLite = (function () {
           'Certification (FSC / PEFC) per species, if it can differ.'
         ]);
     $('content').innerHTML = '<section class="sec">'
+      + '<div class="sp-search"><input id="spq" type="search" autocomplete="off" placeholder="' + esc(t('searchSpecies')) + '" aria-label="' + esc(t('searchSpecies')) + '" value="' + esc(Q) + '"></div>'
       + '<div class="sp-tools">'
-      + '<input id="spq" type="search" autocomplete="off" placeholder="' + esc(t('searchSpecies')) + '" aria-label="' + esc(t('searchSpecies')) + '" value="' + esc(Q) + '">'
       + '<details class="sp-dd" id="appdd"><summary id="appsum"></summary><div class="sp-dd-b">'
         + APP_LIST.map(([k]) => '<button type="button" data-app="' + k + '" aria-pressed="false">' + esc(t(k)) + '</button>').join('')
       + '</div></details>'
@@ -330,9 +330,6 @@ window.PWLite = (function () {
         + '</div></details>' : '')
       + '<select id="spsort" aria-label="' + esc(t('sortBy')) + '">'
         + sorts.map(([v, k]) => '<option value="' + v + '"' + (SORT === v ? ' selected' : '') + '>' + esc(t('sortBy') + ': ' + t(k)) + '</option>').join('') + '</select>'
-      + '</div>'
-      + '<div class="sp-tools">'
-      + (CFG[ID].focus ? '<div class="sp-chips">' + [['all', 'focAll'], ['popular', 'focPopular'], ['lesser', 'focLesser']].map(([v, k]) => '<button data-foc="' + v + '" aria-pressed="' + (FOC === v) + '">' + esc(t(k)) + '</button>').join('') + '</div>' : '')
       + '<button class="sp-clear" id="spclear" hidden>' + esc(t('clearFilters')) + '</button>'
       + '<span class="sp-count" id="spcount"></span></div>'
       + '<div class="sp-grid" id="spgrid"></div></section>'
@@ -342,8 +339,7 @@ window.PWLite = (function () {
     const toggle = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : arr.concat(v);
     document.querySelectorAll('[data-app]').forEach(c => c.onclick = () => { APPS = toggle(APPS, c.dataset.app); drawGrid(); });
     document.querySelectorAll('[data-avf]').forEach(c => c.onclick = () => { AV = toggle(AV, c.dataset.avf); drawGrid(); });
-    document.querySelectorAll('[data-foc]').forEach(b => b.onclick = () => { FOC = b.dataset.foc; drawGrid(); });
-    $('spclear').onclick = () => { Q = ''; APPS = []; AV = []; FOC = 'all'; renderCatalogue(); };
+    $('spclear').onclick = () => { Q = ''; APPS = []; AV = []; renderCatalogue(); };
     drawGrid();
   }
 
@@ -871,7 +867,7 @@ window.PWLite = (function () {
   /* ---------- the other tabs ---------- */
   /* ---- quick search + shortcuts (home) ---- */
   function openCatalogue(opts){
-    Q = (opts && opts.q) || ''; AV = (opts && opts.av) ? [opts.av] : []; APPS = []; FOC = 'all';
+    Q = (opts && opts.q) || ''; AV = (opts && opts.av) ? [opts.av] : []; APPS = [];
     go('catalogue');
   }
   async function renderHome(){
@@ -984,6 +980,11 @@ window.PWLite = (function () {
   }
 
   /* ---------- navigation and chrome ---------- */
+
+  const ICO = { menu: 'M4 6h16M4 12h16M4 18h16', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', catalogue: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+    neworder: 'M12 5v14M5 12h14', myorders: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01', calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
+    invoices: 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7', downloads: 'M12 4v11M7 11l5 5 5-5M5 20h14', showroom: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9' };
+  const ico = k => '<svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (ICO[k] || ICO.catalogue) + '"/></svg>';
   const badge = x => (x === 'neworder' && cartCount()) ? '<b class="cart-n" aria-label="' + cartCount() + '">' + cartCount() + '</b>' : '';
   function buildNav(){
     $('nav').innerHTML = CFG[ID].tabs.map(x =>
@@ -992,9 +993,12 @@ window.PWLite = (function () {
     const sb = $('sidemenu');
     if(sb && CFG[ID].side){
       const sub = (v, k) => '<button class="sub' + (TAB === 'catalogue' && AV.length === 1 && AV[0] === v ? ' on' : '') + '" data-av="' + v + '">' + esc(t(k)) + '</button>';
-      sb.innerHTML = '<p class="side-h">' + esc(t('menu')) + '</p>' + CFG[ID].tabs.map(x =>
-        '<button class="' + (x === TAB && !(x === 'catalogue' && AV.length) ? 'on' : '') + '" data-tab="' + x + '">' + esc(tabLabel(x)) + badge(x) + '</button>'
+      const open = LS.get('pw-side-open', false);
+      sb.classList.toggle('collapsed', !open);
+      sb.innerHTML = '<button class="side-t" id="sidet" aria-label="' + esc(t('menu')) + '" title="' + esc(t('menu')) + '" aria-expanded="' + open + '">' + ico('menu') + '<span class="lb">' + esc(t('menu')) + '</span></button>' + CFG[ID].tabs.map(x =>
+        '<button class="' + (x === TAB && !(x === 'catalogue' && AV.length) ? 'on' : '') + '" data-tab="' + x + '" title="' + esc(tabLabel(x)) + '">' + ico(x) + '<span class="lb">' + esc(tabLabel(x)) + '</span>' + badge(x) + '</button>'
         + (x === 'catalogue' && CFG[ID].avail ? sub('stock', 'avStock') + sub('produce', 'avProduce') : '')).join('');
+      $('sidet').onclick = () => { LS.set('pw-side-open', !LS.get('pw-side-open', false)); buildNav(); };
       sb.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(b.dataset.tab));
       sb.querySelectorAll('[data-av]').forEach(b => b.onclick = () => openCatalogue({ av: b.dataset.av }));
     }

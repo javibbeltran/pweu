@@ -206,7 +206,7 @@ window.PW = (function () {
     srPlank:'Board width', srAngle:'Angle', srOpacity:'Intensity', srDownload:'Download image', srPanel:'Panel / furniture', srNeedImg:'Add a picture first.', srClose:'Close'
   });
   Object.assign(T.en, { illus:'Sample illustration', slideBoard:'Wood sample', slideFloor:'Flooring', slideDeck:'Decking', slideClad:'Cladding', slideBench:'Street furniture' });
-  Object.assign(T.en, { sortPopular:'Most popular', focAll:'All species', focPopular:'Most popular', focLesser:'Lesser known' });
+  Object.assign(T.en, { sortLesser:'Lesser known first', sortPopular:'Most popular', focAll:'All species', focPopular:'Most popular', focLesser:'Lesser known' });
   Object.assign(T.en, { displayH:'Display', showPrices:'Show prices' });
   Object.assign(T.nl, { displayH:'Weergave', showPrices:'Prijzen tonen' });
   Object.assign(T.es, { displayH:'Visualización', showPrices:'Mostrar precios' });
