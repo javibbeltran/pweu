@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="en" data-theme="auto"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121513">
+<title>New contract form · Precious Woods</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Tinos:wght@400;700&display=swap">
+<link rel="stylesheet" href="../pw.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../shared.js"></script>
+<style>
+[hidden]{display:none!important}
+.form{max-width:900px}
+.back{
+  display:inline-block;color:var(--mut);text-decoration:none;font-size:12.5px;
+  border:1px solid var(--ln);border-radius:999px;padding:4px 12px;margin:0 0 20px;
+}
+.back:hover{color:var(--fg);border-color:var(--ln2)}
+.kicker{
+  font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 8px;
+}
+.form h1{font-family:var(--serif);font-size:30px;font-weight:600;margin:0 0 10px;line-height:1.15}
+.intro{color:var(--mut);font-size:14px;margin:0 0 26px;max-width:66ch;line-height:1.6}
+.printref,.printhead{display:none}
+
+fieldset{border:0;padding:0;margin:0 0 26px;min-width:0}
+.step{display:flex;align-items:center;gap:11px;margin:0 0 4px}
+.step .n{
+  width:23px;height:23px;border-radius:50%;background:var(--accent);color:#fff;flex:none;
+  display:grid;place-items:center;font-size:11.5px;font-weight:700;
+}
+.step .lg{font-size:16.5px;font-weight:600;padding:0}
+.step .by{
+  margin-left:auto;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--mut);border:1px solid var(--ln);border-radius:999px;padding:2px 9px;white-space:nowrap;
+}
+.box{
+  background:var(--surf);border:1px solid var(--ln);border-radius:var(--radius);
+  padding:18px;margin-top:11px;box-shadow:var(--shadow);
+}
+.fields{display:grid;gap:15px;grid-template-columns:repeat(6,1fr)}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0;grid-column:span 3}
+.f.wide{grid-column:1/-1}
+.f.c2{grid-column:span 2}
+.f.c1{grid-column:span 1}
+.f.c4{grid-column:span 4}
+.f label,.f .lab{font-size:12.5px;font-weight:600}
+.f .req{color:var(--accent)}
+.f .help{font-size:11.5px;color:var(--mut);line-height:1.45;margin:0}
+.f input,.f select,.f textarea{
+  background:var(--bg2);border:1px solid var(--ln);color:var(--fg);border-radius:8px;
+  padding:9px 11px;font:inherit;font-size:14px;width:100%;min-width:0;
+}
+.f textarea{resize:vertical;min-height:62px;line-height:1.5;overflow:hidden}
+.f input:focus,.f select:focus,.f textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.f.bad input,.f.bad select,.f.bad textarea{border-color:#b4524a}
+.f .err{font-size:11.5px;color:#d2766c;display:none;margin:0}
+.f.bad .err{display:block}
+.num{font-variant-numeric:tabular-nums}
+
+.toggle{display:flex;align-items:center;gap:10px;min-height:40px}
+.toggle button{
+  border:1px solid var(--accent);background:var(--surf);color:var(--accent);min-width:58px;
+  border-radius:999px;padding:6px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;
+}
+.toggle button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.toggle button:focus-visible,.chip:focus-visible,.mini:focus-visible,.primary:focus-visible,.second:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  border:1px dashed var(--ln2);background:none;color:var(--fg2);border-radius:999px;
+  padding:4px 11px;font:inherit;font-size:12px;cursor:pointer;text-align:left;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip::before{content:"+ ";color:var(--accent);font-weight:700}
+.chip.set::before{content:""}
+
+.check{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.45}
+.f .check{font-weight:500}
+.f .check input{width:17px;height:17px;flex:none;margin:2px 0 0;padding:0;accent-color:var(--accent)}
+.warn{
+  border:1px solid #b98a2e;border-radius:8px;padding:11px 13px;font-size:12.5px;line-height:1.5;
+  background:color-mix(in srgb,#b98a2e 12%,transparent);
+}
+.warn b{display:block;margin:0 0 6px}
+
+/* ---- product lines ---- */
+.lines{display:grid;gap:12px;margin-top:11px}
+.line{
+  background:var(--surf);border:1px solid var(--ln);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:14px 18px 18px;
+}
+.lhead{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+.lno{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--accent);white-space:nowrap;
+}
+.ldesc{font-size:13px;font-weight:600;min-width:0;flex:1 1 200px;overflow-wrap:anywhere}
+.lval{font-size:13px;font-weight:700;white-space:nowrap}
+.mini{
+  background:none;border:1px solid var(--ln);color:var(--mut);border-radius:999px;
+  font:inherit;font-size:11.5px;padding:3px 10px;cursor:pointer;white-space:nowrap;
+}
+.mini:hover{color:var(--fg);border-color:var(--ln2)}
+.addline{
+  margin-top:12px;width:100%;border:1px dashed var(--ln2);background:none;color:var(--accent);
+  border-radius:var(--radius);padding:11px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+}
+.addline:hover{border-color:var(--accent)}
+
+.totals{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:12px;
+  border:1px solid var(--ln);border-radius:var(--radius);background:var(--surf2);overflow:hidden;
+}
+.totals div{padding:11px 14px;border-left:1px solid var(--ln);min-width:0}
+.totals div:first-child{border-left:0}
+.totals span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut)}
+.totals b{font-size:16px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+
+/* ---- actions ---- */
+.actions{
+  position:sticky;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--ln);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));margin:6px 0 0;
+}
+.sum{font-size:12.5px;color:var(--mut);margin-right:auto;font-variant-numeric:tabular-nums;min-width:0}
+.sum b{color:var(--fg)}
+.primary{
+  background:var(--accent);border:0;color:#fff;border-radius:9px;padding:11px 22px;
+  font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;
+}
+.primary:hover{filter:brightness(1.08)}
+.primary:disabled{opacity:.55;cursor:default}
+.second{
+  background:var(--surf);border:1px solid var(--ln2);color:var(--fg);border-radius:9px;
+  padding:10px 16px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+}
+.second:hover{border-color:var(--accent)}
+.msg{font-size:12.5px;line-height:1.5;margin:10px 0 0;color:#d2766c}
+.msg.ok{color:var(--ink)}
+.route{
+  margin:12px 0 0;border:1px solid var(--ln);border-radius:var(--radius);background:var(--surf2);
+  padding:11px 14px;font-size:12.5px;line-height:1.5;display:grid;gap:4px;
+}
+.route b{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:600}
+.route div{display:flex;gap:10px;flex-wrap:wrap}
+.route span:first-child{color:var(--mut);min-width:64px}
+.route span:last-child{font-weight:600;overflow-wrap:anywhere;min-width:0}
+.route .off{font-weight:500;color:var(--mut)}
+.note{font-size:12px;color:var(--mut);line-height:1.5;margin:10px 0 0;max-width:70ch}
+
+.done{
+  border:1px solid var(--accent);border-radius:var(--radius);padding:16px 18px;margin:0 0 22px;
+  background:color-mix(in srgb,var(--accent) 10%,transparent);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.done .tick{
+  width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;flex:none;
+  display:grid;place-items:center;font-size:17px;
+}
+.done p{margin:0;font-size:13.5px;flex:1 1 240px;line-height:1.5}
+.done b{letter-spacing:.03em}
+
+@media (max-width:720px){
+  .fields{grid-template-columns:repeat(2,1fr)}
+  .f,.f.c2,.f.c4{grid-column:1/-1}
+  .f.c1,.f.half{grid-column:span 1}
+  .form h1{font-size:24px}
+  .step .by{display:none}
+  .totals{grid-template-columns:repeat(2,1fr)}
+  .totals div:nth-child(3){border-left:0}
+  .totals div:nth-child(n+3){border-top:1px solid var(--ln)}
+  .sum{flex:1 1 100%}
+}
+
+/* ---- quantity stepper ---- */
+.stepper{display:flex;gap:6px}
+.stepper input{text-align:center}
+.stepper button{
+  flex:none;width:42px;border:1px solid var(--ln2);background:var(--surf);color:var(--fg);
+  border-radius:8px;font:inherit;font-size:18px;font-weight:600;cursor:pointer;
+}
+.stepper button:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---- phone and tablet: big targets, 16px text so the screen does not zoom ---- */
+@media (max-width:1024px),(pointer:coarse){
+  .f input,.f select,.f textarea{font-size:16px;padding:11px 12px;min-height:48px}
+  .f .check input{min-height:0;width:22px;height:22px}
+  .f label,.f .lab{font-size:13px}
+  .toggle button{padding:11px 22px;font-size:15px;min-width:78px}
+  .chip{padding:9px 14px;font-size:13.5px}
+  .mini{padding:8px 14px;font-size:13px}
+  .addline{padding:16px;font-size:15px}
+  .stepper button{width:48px}
+  .primary,.second{padding:13px 20px;font-size:15px}
+}
+@media (max-width:720px){
+  .actions{position:static;padding:14px 0}
+  .actions .second,.actions .primary{flex:1 1 auto}
+  .actions .primary{flex-basis:100%;padding:15px}
+  .box,.line{padding:14px}
+}
+
+/* ---- print: one clean A4 page set ---- */
+@media print{
+  @page{size:A4;margin:12mm}
+  :root,:root[data-theme]{
+    --bg:#fff!important;--bg2:#fff!important;--surf:#fff!important;--surf2:#fff!important;
+    --ln:#cfcfcf!important;--ln2:#bdbdbd!important;--fg:#111!important;--fg2:#222!important;
+    --mut:#555!important;--shadow:none!important;--ink:#00743F!important;
+  }
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  html,body{background:#fff}
+  body{font-size:10.5px;line-height:1.35}
+  .stepper button,.bar,#gate,.back,.intro,.route,.actions,.chips,.help,.addline,.mini,.note,.msg,.done,.panel,.by,.err{display:none!important}
+  .page{padding:0;max-width:none}
+  .form h1{font-size:19px;margin:0 0 2px}
+  .kicker{margin:0 0 2px;font-size:9px}
+  .printhead{display:flex;align-items:center;gap:7px;margin:0 0 8px}
+  .printhead img{height:20px;width:auto}
+  .printhead span{font-family:Tinos,Georgia,serif;font-size:13px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}
+  .printref{display:block;font-size:10px;color:#555;margin:0 0 10px;padding-bottom:6px;border-bottom:1.5px solid #111;min-height:8px}
+  fieldset{margin:0 0 9px}
+  .step{gap:7px}
+  .step .n{width:15px;height:15px;font-size:8.5px}
+  .step .lg{font-size:11.5px}
+  .box,.line{padding:7px 9px;margin-top:4px;border-radius:4px;break-inside:avoid}
+  .lines{gap:5px;margin-top:4px}
+  .lhead{margin:0 0 5px}
+  .fields{gap:5px 10px;grid-template-columns:repeat(6,1fr)}
+  .f{gap:0}
+  .f label,.f .lab{font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:#555;font-weight:600}
+  .f input,.f select,.f textarea{
+    border:0;border-bottom:1px solid #cfcfcf;border-radius:0;padding:1px 0 2px;font-size:10.5px;
+    background:none;-webkit-appearance:none;appearance:none;min-height:0;font-weight:600;
+  }
+  .f textarea{min-height:0;font-weight:500;resize:none}
+  .f input:focus,.f select:focus,.f textarea:focus{outline:0}
+  input::placeholder,textarea::placeholder{color:transparent}
+  input::-webkit-calendar-picker-indicator{display:none}
+  .f .check{text-transform:none;letter-spacing:0;font-size:10px;color:#111}
+  .f .check input{width:11px;height:11px;border:1px solid #111;-webkit-appearance:auto;appearance:auto;margin:1px 0 0}
+  .step{break-after:avoid}
+  fieldset{break-inside:avoid}
+  fieldset:has(.lines){break-inside:auto}
+  .toggle{min-height:0}
+  .toggle button{border:0;padding:1px 0;min-width:0;background:none!important;color:#111!important;font-size:10.5px}
+  .totals{margin-top:5px;border-radius:4px}
+  .totals div{padding:5px 9px}
+  .totals b{font-size:12px}
+  .warn{padding:5px 8px;font-size:9.5px}
+  .check{font-size:10px}
+  [hidden]{display:none!important}
+}
+</style></head>
+<body>
+
+<div id="gate"><div class="gcard">
+  <img class="gmk" src="../img/pw-mark.png" alt="">
+  <p class="gmark">Precious Woods</p>
+  <p id="gatemsg">Checking your access…</p>
+</div></div>
+
+<header class="bar"><div class="in">
+  <a class="brand" href="../index.html">
+    <img class="mk" src="../img/pw-mark.png" alt="" width="24" height="24">
+    <span class="mark">Precious Woods</span>
+  </a>
+  <span class="sp"></span>
+  <button class="ghost" id="userbtn"><span class="av" id="av">··</span></button>
+</div></header>
+
+<main class="page form" id="main" hidden>
+  <a class="back" href="../index.html">← Forms</a>
+
+  <div class="printhead"><img src="../img/pw-mark.png" alt="" width="22" height="22"><span>Precious Woods</span></div>
+  <h1>New contract form</h1>
+  <p class="printref" id="printref"></p>
+  <p class="intro">Tap to choose wherever you can. Fields marked <span style="color:var(--accent)">*</span> are required. Your draft is kept on this device.</p>
+
+  <div class="done" id="done" hidden>
+    <div class="tick">✓</div>
+    <p>Contract request sent. Reference <b id="ref">—</b>. Save the PDF for the customer file.</p>
+    <button type="button" class="second" data-act="print">Print / Save as PDF</button>
+    <button type="button" class="second" id="again">Start another</button>
+  </div>
+
+  <form id="f" novalidate>
+
+    <!-- 1 · deal -->
+    <fieldset>
+      <div class="step"><span class="n">1</span><span class="lg">Deal</span></div>
+      <div class="box"><div class="fields">
+        <div class="f c2" data-f>
+          <label for="date">Date <span class="req">*</span></label>
+          <input id="date" name="date" type="date" required><p class="err">Required.</p>
+        </div>
+        <div class="f c2" data-f>
+          <label for="salesrep">Sales responsible <span class="req">*</span></label>
+          <select id="salesrep" name="salesrep" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f c2" data-f>
+          <label for="supplier">Supplier <span class="req">*</span></label>
+          <select id="supplier" name="supplier" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f c2">
+          <label for="contractno">Contract no.</label>
+          <input id="contractno" name="contractno" class="num" placeholder="e.g. 26046" autocomplete="off">
+          <p class="help">Leave empty if not assigned yet.</p>
+        </div>
+        <div class="f c4">
+          <label for="custpo">Customer order / PO reference</label>
+          <input id="custpo" name="custpo" autocomplete="off">
+        </div>
+      </div></div>
+    </fieldset>
+
+    <!-- 2 · customer -->
+    <fieldset>
+      <div class="step"><span class="n">2</span><span class="lg">Customer</span></div>
+      <div class="box"><div class="fields">
+        <div class="f c4" data-f>
+          <label for="customer">Customer name <span class="req">*</span></label>
+          <input id="customer" name="customer" list="dl-cust" required autocomplete="off" autocapitalize="words"><p class="err">Required.</p>
+        </div>
+        <div class="f c2">
+          <span class="lab">New customer?</span>
+          <div class="toggle"><button type="button" data-tog="newcust" aria-pressed="false">No</button></div>
+        </div>
+        <div class="f wide" id="w-custaddr" hidden data-f>
+          <label for="custaddr">Address <span class="req">*</span></label>
+          <input id="custaddr" name="custaddr" required>
+          <p class="help">New customers also need the “Request a new customer” form.</p>
+          <p class="err">Required for a new customer.</p>
+        </div>
+        <div class="f c2" id="w-custvat" hidden data-f>
+          <label for="custvat">VAT number <span class="req">*</span></label>
+          <input id="custvat" name="custvat" required><p class="err">Required.</p>
+        </div>
+        <div class="f c2" id="w-custcontact" hidden>
+          <label for="custcontact">Contact person</label>
+          <input id="custcontact" name="custcontact">
+        </div>
+        <div class="f c2" id="w-custemail" hidden>
+          <label for="custemail">E-mail</label>
+          <input id="custemail" name="custemail" type="email">
+        </div>
+        <div class="f c2">
+          <span class="lab">Agent involved?</span>
+          <div class="toggle"><button type="button" data-tog="agent" aria-pressed="false">No</button></div>
+        </div>
+        <div class="f c2" id="w-agentname" hidden data-f>
+          <label for="agentname">Agent name / contact <span class="req">*</span></label>
+          <input id="agentname" name="agentname" required><p class="err">Required.</p>
+        </div>
+        <div class="f c2" id="w-agentcomm" hidden data-f>
+          <label for="agentcomm">Commission % <span class="req">*</span></label>
+          <input id="agentcomm" name="agentcomm" class="num" inputmode="decimal" required><p class="err">Required.</p>
+        </div>
+      </div></div>
+    </fieldset>
+
+    <!-- 3 · products -->
+    <fieldset>
+      <div class="step"><span class="n">3</span><span class="lg">Products</span></div>
+      <div class="lines" id="lines"></div>
+      <button type="button" class="addline" id="addline">+ Add product line</button>
+      <div class="totals" aria-live="polite">
+        <div><span>Total volume</span><b id="t-m3">0 m³</b></div>
+        <div><span>Sales value</span><b id="t-sales">—</b></div>
+        <div><span>FOB value</span><b id="t-fob">—</b></div>
+        <div><span>Average FOB / m³</span><b id="t-avg">—</b></div>
+      </div>
+    </fieldset>
+
+    <!-- 4 · price and terms -->
+    <fieldset>
+      <div class="step"><span class="n">4</span><span class="lg">Price and payment</span></div>
+      <div class="box"><div class="fields">
+        <div class="f c1 half" data-f>
+          <label for="currency">Currency <span class="req">*</span></label>
+          <select id="currency" name="currency" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f c1 half" data-f>
+          <label for="incoterm">Incoterm <span class="req">*</span></label>
+          <select id="incoterm" name="incoterm" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f c2" data-f>
+          <label for="incoplace_sel">Named port / place <span class="req">*</span></label>
+          <select id="incoplace_sel" data-other="incoplace" required aria-label="Named port or place"></select>
+          <input id="incoplace" name="incoplace" required hidden autocomplete="off" placeholder="Port or place">
+          <p class="err">Required.</p>
+        </div>
+        <div class="f c2" id="w-freight" data-f>
+          <label for="freight">Freight per m³ <span class="req">*</span></label>
+          <input id="freight" name="freight" class="num" inputmode="decimal" required>
+          <p class="help">Deducted from the unit price to get the FOB value.</p>
+          <p class="err">Required for this Incoterm. Enter 0 if none.</p>
+        </div>
+        <div class="f c4" data-f>
+          <label for="payment">Payment terms <span class="req">*</span></label>
+          <select id="payment" name="payment" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f c2">
+          <span class="lab">FSC certified</span>
+          <div class="toggle"><button type="button" data-tog="fsc" aria-pressed="true">Yes</button></div>
+        </div>
+        <div class="f wide" id="w-paydetail" hidden data-f>
+          <label for="paydetail">Payment details <span class="req">*</span></label>
+          <input id="paydetail" name="paydetail" required
+            placeholder="e.g. 30% advance payment, balance payable at 45 days end of month">
+          <p class="err">Describe the agreed terms.</p>
+        </div>
+        <div class="f wide" id="w-approval" hidden data-f>
+          <div class="warn">
+            <b>Needs approval first</b>
+            <label class="check"><input type="checkbox" id="approved" name="approved" required>
+              <span>Discussed and approved with the CCO and the Manager Trading.</span></label>
+          </div>
+          <p class="err">Letter of credit and deferred payment need approval before the contract is sent.</p>
+        </div>
+      </div></div>
+    </fieldset>
+
+    <!-- 5 · shipment -->
+    <fieldset>
+      <div class="step"><span class="n">5</span><span class="lg">Production and shipment</span></div>
+      <div class="box"><div class="fields">
+        <div class="f c2" data-f>
+          <label for="loading">Loading <span class="req">*</span></label>
+          <select id="loading" name="loading" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f c2 half" id="w-loadqty" data-f>
+          <label for="loadqty">Quantity <span class="req">*</span></label>
+          <div class="stepper"><button type="button" data-step="-1" aria-label="One less">−</button>
+            <input id="loadqty" name="loadqty" class="num" inputmode="numeric" value="1" required>
+            <button type="button" data-step="1" aria-label="One more">+</button></div>
+          <p class="err">Required.</p>
+        </div>
+        <div class="f c2" data-f>
+          <label for="destination_sel">Destination <span class="req">*</span></label>
+          <select id="destination_sel" data-other="destination" required aria-label="Destination"></select>
+          <input id="destination" name="destination" required hidden autocomplete="off" placeholder="Destination">
+          <p class="err">Required.</p>
+        </div>
+        <div class="f">
+          <label for="production">Production period</label>
+          <input id="production" name="production" placeholder="e.g. Q3/Q4-2026" autocomplete="off">
+          <div class="chips" id="ch-production"></div>
+        </div>
+        <div class="f">
+          <label for="shipment">Shipment period</label>
+          <input id="shipment" name="shipment" placeholder="e.g. following production, approx. Q1-2027" autocomplete="off">
+          <div class="chips" id="ch-shipment"></div>
+        </div>
+      </div></div>
+    </fieldset>
+
+    <!-- 6 · specifications -->
+    <fieldset>
+      <div class="step"><span class="n">6</span><span class="lg">Specifications and remarks</span></div>
+      <div class="box"><div class="fields">
+        <div class="f wide">
+          <label for="lengthspec">Length specification</label>
+          <textarea id="lengthspec" name="lengthspec" rows="2"
+            placeholder="e.g. 2150 mm and longer, interval 300 mm, fair spread"></textarea>
+          <div class="chips" id="ch-lengthspec"></div>
+        </div>
+        <div class="f wide">
+          <label for="widthspec">Width specification</label>
+          <textarea id="widthspec" name="widthspec" rows="1"
+            placeholder="e.g. the 25x75 and 100 mm are recovery sizes"></textarea>
+        </div>
+        <div class="f" data-f>
+          <label for="marking">Marking <span class="req">*</span></label>
+          <select id="marking" name="marking" required></select><p class="err">Required.</p>
+        </div>
+        <div class="f">
+          <span class="lab">Ends treated with anchorseal</span>
+          <div class="toggle"><button type="button" data-tog="anchorseal" aria-pressed="true">Yes</button></div>
+        </div>
+        <div class="f wide" id="w-markingnote" hidden data-f>
+          <label for="markingnote">Marking instructions <span class="req">*</span></label>
+          <input id="markingnote" name="markingnote" required placeholder="e.g. according to “arrêté 36”, article 6">
+          <p class="err">Required.</p>
+        </div>
+        <div class="f c2 half">
+          <label for="stickmm">Stickers, thickness (mm)</label>
+          <select id="stickmm" name="stickmm"></select>
+        </div>
+        <div class="f c2 half">
+          <label for="stickevery">Stickers, placed</label>
+          <select id="stickevery" name="stickevery"></select>
+        </div>
+        <div class="f c2 half">
+          <label for="stickint">Stickers, interval (cm)</label>
+          <select id="stickint" name="stickint"></select>
+        </div>
+        <div class="f wide">
+          <label for="notes">Special notes and remarks</label>
+          <textarea id="notes" name="notes" rows="3"></textarea>
+          <div class="chips" id="ch-notes"></div>
+        </div>
+        <div class="f wide">
+          <span class="lab">Customer order or e-mail attached?</span>
+          <div class="toggle"><button type="button" data-tog="poattached" aria-pressed="false">No</button></div>
+          <p class="help">Always include the customer's order or e-mail with all their instructions.
+          It is needed in the file for countercheck and audits.</p>
+        </div>
+      </div></div>
+    </fieldset>
+
+    <div class="actions">
+      <p class="sum" id="sum"></p>
+      <button type="button" class="second" id="clear">Clear</button>
+      <button type="button" class="second" data-act="json">Save data file</button>
+      <button type="button" class="second" data-act="print" id="printbtn">Print / Save as PDF</button>
+      <button type="submit" class="primary" id="send">Submit contract</button>
+    </div>
+    <p class="msg" id="msg" hidden></p>
+    <div class="route" id="route" hidden></div>
+    <p class="note" id="note"></p>
+  </form>
+
+  <datalist id="dl-cust"></datalist>
+</main>
+
+<div class="panel" id="panel" role="menu"></div>
+
+<script>
+/* ============================================================
+   New contract form
+   Lists come from the portal `options` table when they exist
+   (list names below); otherwise the defaults in this file apply.
+   ============================================================ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const t=(...a)=>window.PW?PW.t(...a):a[0];
+
+const SLUG='contract-request';
+const DRAFT='pw-contract-draft-v1';
+const STANDALONE=!window.PW || location.protocol==='file:' || /[?&]preview\b/.test(location.search);
+let DOC=null, OPTS={}, SENT=false, CFG=null, CLEARING=false;
+
+/* ---------- default lists (edit here, or load them into `options`) ---------- */
+const DEFAULTS={
+  /* species: value = siglas, label = trade name, extra.botanical */
+  species:[
+    {value:"ABUI",label:"Abiuarana",extra:{botanical:"Chrysophyllum prieurii",origin:"PWA"}},
+    {value:"ACAR",label:"Acariquara",extra:{botanical:"Minquartia guianensis",origin:"PWA"}},
+    {value:"AMAP",label:"Amapa",extra:{botanical:"Brosimum parinarioides",origin:"PWA"}},
+    {value:"AMDO",label:"Amapa doce",extra:{botanical:"Brosimum potabile",origin:"PWA"}},
+    {value:"ANCA",label:"Angelim do campo",extra:{botanical:"Aldina heterophylla",origin:"PWA"}},
+    {value:"ANFA",label:"Angelim fava",extra:{botanical:"Parkia pendula",origin:"PWA"}},
+    {value:"ANPE",label:"Angelim pedra",extra:{botanical:"Hymenolobium modestum",origin:"PWA"}},
+    {value:"ANRA",label:"Angelim rajado",extra:{botanical:"Zygia racemosa",origin:"PWA"}},
+    {value:"ANVE",label:"Angelim vermelho",extra:{botanical:"Dinizia excelsa",origin:"PWA"}},
+    {value:"ARVE",label:"Arura vermelho",extra:{botanical:"Iryanthera paraensis",origin:"PWA"}},
+    {value:"BRBR",label:"Breu branco",extra:{botanical:"Protium paniculatum",origin:"PWA"}},
+    {value:"BRVE",label:"Breu vermelho",extra:{botanical:"Protium puncticulatum",origin:"PWA"}},
+    {value:"CAJU",label:"Caju",extra:{botanical:"Anacardium parvifolium",origin:"PWA"}},
+    {value:"CASA",label:"Castanha sapucaia",extra:{botanical:"Lecythis pisonis",origin:"PWA"}},
+    {value:"CAST",label:"Castanharana",extra:{botanical:"Lecythis prancei",origin:"PWA"}},
+    {value:"CDRI",label:"Cedrinho",extra:{botanical:"Scleronema micranthum",origin:"PWA"}},
+    {value:"CUMA",label:"Cumaru",extra:{botanical:"Dipteryx odorata",origin:"PWA"}},
+    {value:"CUVE",label:"Cumaru vermelho",extra:{botanical:"Dipteryx polyphylla",origin:"PWA"}},
+    {value:"CUPI",label:"Cupiuba",extra:{botanical:"Goupia glabra",origin:"PWA"}},
+    {value:"FAAM",label:"Fava amargosa",extra:{botanical:"Vatairea paraensis",origin:"PWA"}},
+    {value:"GUAR",label:"Guariuba",extra:{botanical:"Clarisia racemosa",origin:"PWA"}},
+    {value:"IPE",label:"Ipé",extra:{botanical:"Handroanthus serratifolius",origin:"PWA"}},
+    {value:"JACA",label:"Jacareuba",extra:{botanical:"Calophyllum brasiliense",origin:"PWA"}},
+    {value:"JARA",label:"Jarana",extra:{botanical:"Lecythis lurida",origin:"PWA"}},
+    {value:"JATO",label:"Jatoba",extra:{botanical:"Hymenaea courbaril",origin:"PWA"}},
+    {value:"JUPO",label:"Jutai pororoca",extra:{botanical:"Martiodendron elatum",origin:"PWA"}},
+    {value:"LOAM",label:"Louro amarelo",extra:{botanical:"Licaria rigida",origin:"PWA"}},
+    {value:"LOAR",label:"Louro aritu",extra:{botanical:"licaria guianensis",origin:"PWA"}},
+    {value:"LOFA",label:"Louro faia",extra:{botanical:"Roupala montana",origin:"PWA"}},
+    {value:"LOGA",label:"Louro gamela",extra:{botanical:"Sextonia rubra",origin:"PWA"}},
+    {value:"LOIT",label:"Louro itauba",extra:{botanical:"Mezilaurus itauba",origin:"PWA"}},
+    {value:"LOPR",label:"Louro preto",extra:{botanical:"Ocotea neesiana",origin:"PWA"}},
+    {value:"MASS",label:"Macaranduba",extra:{botanical:"Manilkara elata",origin:"PWA"}},
+    {value:"MANQ",label:"Mandioqueira",extra:{botanical:"Qualea paraensis",origin:"PWA"}},
+    {value:"MAJU",label:"Maparajuba",extra:{botanical:"Manilkara cavalcantei",origin:"PWA"}},
+    {value:"MUIR",label:"Muiracatiara",extra:{botanical:"Astronium lecointei",origin:"PWA"}},
+    {value:"MUPI",label:"Muirapiranga",extra:{botanical:"Brosimum rubescens",origin:"PWA"}},
+    {value:"PEQU",label:"Pequia",extra:{botanical:"Caryocar villosum",origin:"PWA"}},
+    {value:"PEMA",label:"Pequia marfim",extra:{botanical:"Aspidosperma desmanthum",origin:"PWA"}},
+    {value:"PARA",label:"Pequiarana",extra:{botanical:"Caryocar glabrum",origin:"PWA"}},
+    {value:"SUAM",label:"Sucupira amarela",extra:{botanical:"Enterolobium schomburgkii",origin:"PWA"}},
+    {value:"SUPR",label:"Sucupira preta",extra:{botanical:"Diplotropis racemosa",origin:"PWA"}},
+    {value:"SUVE",label:"Sucupira vermelha",extra:{botanical:"Andira parviflora",origin:"PWA"}},
+    {value:"TANI",label:"Tanibuca",extra:{botanical:"Buchenavia viridiflora",origin:"PWA"}},
+    {value:"TAUB",label:"Tauari branco",extra:{botanical:"Couratari guianensis",origin:"PWA"}},
+    {value:"TAUC",label:"Tauari cachimbo",extra:{botanical:"Allantoma decandra",origin:"PWA"}},
+    {value:"TAUV",label:"Tauari vermelho",extra:{botanical:"Cariniana micrantha",origin:"PWA"}},
+    {value:"TAXV",label:"Taxi vermelho",extra:{botanical:"Tachigali melanocarpum",origin:"PWA"}},
+    {value:"TIMB",label:"Timborana",extra:{botanical:"Pseudopiptadenia suaveolens",origin:"PWA"}},
+    {value:"UCHT",label:"Uchi torrado",extra:{botanical:"Vantanea parviflora",origin:"PWA"}},
+    {value:"VIOL",label:"Violeta",extra:{botanical:"Peltogyne catingae",origin:"PWA"}},
+    {value:"AZOB",label:"Azobé",extra:{botanical:"Lophira alata",origin:"PWG"}},
+    {value:"BELI",label:"Beli",extra:{botanical:"Julbernardia pellegriniana",origin:"PWG"}},
+    {value:"BILI",label:"Bilinga",extra:{botanical:"Nauclea diderrichii, N. Gilletii, N. Xanthoxylon",origin:"PWG"}},
+    {value:"DABE",label:"Dabema",extra:{botanical:"Piptadeniastrum africanum",origin:"PWG"}},
+    {value:"DIAN",label:"Diania",extra:{botanical:"Celtis adolfi-friderici, C. tessmannii",origin:"PWG"}},
+    {value:"DIBE",label:"Dibetou",extra:{botanical:"Lovoa swynnertonii, L. trichilioides",origin:"PWG"}},
+    {value:"EBIA",label:"Ebiara",extra:{botanical:"Berlinia bracteosa, B. confusa, B. grandiflora",origin:"PWG"}},
+    {value:"EVEU",label:"Eveuss",extra:{botanical:"Klainedoxa gabonensis, K. trillesii",origin:"PWG"}},
+    {value:"GOMB",label:"Gombe",extra:{botanical:"Didelotia africana, D. letouzeyi / Didelotia brevipaniculata, D. pauli-sitai",origin:"PWG"}},
+    {value:"ILOM",label:"Ilomba",extra:{botanical:"Pycnanthus angolensis",origin:"PWG"}},
+    {value:"IROK",label:"Iroko",extra:{botanical:"Milicia excelsa, M. regia",origin:"PWG"}},
+    {value:"IZOM",label:"Izombe",extra:{botanical:"Testulea gabonensis",origin:"PWG"}},
+    {value:"LIMB",label:"Limbali",extra:{botanical:"Gilbertiodendron dewevrei, G. preussii, G. splendidum",origin:"PWG"}},
+    {value:"MOVI",label:"Movingui",extra:{botanical:"Distemonanthus benthamianus",origin:"PWG"}},
+    {value:"NIOV",label:"Niove",extra:{botanical:"Staudtia kamerunensis",origin:"PWG"}},
+    {value:"OKAN",label:"Okan",extra:{botanical:"Cylicodiscus gabunensis",origin:"PWG"}},
+    {value:"OKOU",label:"Okoumé",extra:{botanical:"Aucoumea klaineana",origin:"PWG"}},
+    {value:"OMVO",label:"Omvong",extra:{botanical:"Dialium aubrevillei, D. bipidense, D. dinklagei, D. pachyphyllum",origin:"PWG"}},
+    {value:"OZIG",label:"Ozigo",extra:{botanical:"Dacryodes buettneri",origin:"PWG"}},
+    {value:"PADO",label:"Padouk rouge",extra:{botanical:"Pterocarpus osun, P. soyauxii",origin:"PWG"}},
+    {value:"SORR",label:"Sorro",extra:{botanical:"Scyphocephalium mannii",origin:"PWG"}},
+    {value:"TALI",label:"Tali",extra:{botanical:"Erythrophleum guineense, E. ivorense, E. suaveolens",origin:"PWG"}}
+  ],
+  contract_salesrep:[
+    /*SALESREP*/
+  ],
+  contract_supplier:[
+    {value:'PWA',label:'PWA',extra:{origin:'PWA'}},{value:'PWG',label:'PWG',extra:{origin:'PWG'}},
+    {value:'CEB',label:'CEB',extra:{origin:'PWG'}}
+  ],
+  contract_drying:[
+    {value:'AD',label:'AD · air dried'},{value:'KD',label:'KD · kiln dried'}
+  ],
+  contract_grade:[
+    {value:'FAS',label:'FAS'},{value:'AIC',label:'AIC'},
+    {value:'Marine',label:'Marine'},{value:'Marine, Cat. 7',label:'Marine, Cat. 7'}
+  ],
+  currency:[{value:'EUR',label:'EUR'},{value:'USD',label:'USD'}],
+  contract_incoterm:[
+    {value:'FOB',label:'FOB',extra:{freight:false}},
+    {value:'CIF',label:'CIF',extra:{freight:true}},
+    {value:'CFR',label:'CFR',extra:{freight:true}}
+  ],
+  contract_port:[
+    {value:'Antwerp',label:'Antwerp'},{value:'Libreville',label:'Libreville'},
+    {value:'Mayotte',label:'Mayotte'},{value:'Rotterdam',label:'Rotterdam'}
+  ],
+  contract_payment:[
+    {value:'1st',label:'1st choice · immediate payment against copies of documents by e-mail'},
+    {value:'2nd',label:'2nd choice · against presentation of documents via bank (CAD)'},
+    {value:'3rd',label:'3rd choice · letter of credit (approval needed)',extra:{approval:true,detail:true}},
+    {value:'Deferred',label:'Deferred payment (approval needed)',extra:{approval:true,detail:true}}
+  ],
+  contract_loading:[
+    {value:"40'",label:"40' container",extra:{qty:true}},
+    {value:"20'",label:"20' container",extra:{qty:true}},
+    {value:'Break bulk',label:'Break bulk',extra:{qty:false}}
+  ],
+  contract_marking:[
+    {value:'Only PW',label:'Only PW'},
+    {value:'As per customer PO',label:'As per customer PO'},
+    {value:'Other',label:'Other, specify',extra:{note:true}}
+  ],
+  contract_stick_mm:[{value:'7',label:'7'},{value:'10',label:'10'},{value:'15',label:'15'}],
+  contract_stick_every:[
+    {value:'every layer',label:'Every layer'},{value:'every 5th layer',label:'Every 5th layer'}
+  ],
+  contract_stick_int:[{value:'30',label:'30'},{value:'50',label:'50'}],
+  contract_finish:[{value:'V-pointed',label:'V-pointed'}],
+  /* one-click phrases */
+  contract_note:[
+    {value:'Marine quality: small defects, without influencing strength, are allowed. Sapwood allowed on bottom side of the pole, max. 1/3 of length.',label:'Marine quality clause'},
+    {value:'Order number to be mentioned on all communication: ',label:'Order number on all communication'},
+    {value:'Good quality required.',label:'Good quality required'}
+  ],
+  contract_length_note:[
+    {value:'Fair spread.',label:'Fair spread'},
+    {value:'Allowing max. 10% shorts, with 20% discount.',label:'Max. 10% shorts, 20% discount'},
+    {value:'See attached stock list.',label:'See stock list'}
+  ]
+};
+const list=n=>(OPTS[n]&&OPTS[n].length?OPTS[n]:DEFAULTS[n])||[];
+const opt=(n,v)=>list(n).find(o=>o.value===v);
+const extra=(n,v)=>((opt(n,v)||{}).extra)||{};
+
+/* Articles: SIGLAS+1 = Sawn Timber, SIGLAS+2 = Industrialized */
+const KINDS=[['1','Sawn Timber'],['2','Industrialized']];
+function articles(){
+  const out=[];
+  list('species').forEach(s=>KINDS.forEach(k=>out.push({
+    value:s.value+k[0], kind:k[0], species:s.label, origin:(s.extra||{}).origin||'Species',
+    label:s.value+k[0]+', '+s.label+' ('+((s.extra||{}).botanical||'—')+'), '+k[1]
+  })));
+  return out;
+}
+const article=v=>articles().find(a=>a.value===v);
+/* grouped by origin; the group of the chosen supplier comes first */
+function articleOptions(){
+  const pref=extra('contract_supplier',$('supplier').value).origin, g={};
+  articles().forEach(a=>{(g[a.origin]=g[a.origin]||[]).push(a)});
+  const keys=Object.keys(g).sort((a,b)=>(b===pref)-(a===pref)||a.localeCompare(b));
+  return '<option value="">Select species and type…</option>'+keys.map(k=>'<optgroup label="'+esc(k)+' species">'
+    +g[k].map(o=>'<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>').join('')+'</optgroup>').join('');
+}
+function regroup(){
+  document.querySelectorAll('[data-k="article"]').forEach(s=>{const v=s.value; s.innerHTML=articleOptions(); s.value=v});
+}
+
+function options(items,placeholder){
+  return '<option value="">'+(placeholder||'Select…')+'</option>'
+    +items.map(o=>'<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>').join('');
+}
+function fill(id,name,placeholder){ $(id).innerHTML=options(list(name),placeholder) }
+
+/* ---------- numbers ---------- */
+const num=v=>{const n=parseFloat(String(v==null?'':v).replace(/\s/g,'').replace(',','.'));return isFinite(n)?n:0};
+const fmt=(n,d)=>new Intl.NumberFormat('en-US',{maximumFractionDigits:d==null?2:d}).format(n);
+
+/* ---------- product lines ---------- */
+function lineHTML(){
+  return '<div class="lhead"><span class="lno"></span><span class="ldesc"></span><span class="lval num"></span>'
+   +'<button type="button" class="mini" data-dup>Duplicate</button>'
+   +'<button type="button" class="mini" data-del>Remove</button></div>'
+   +'<div class="fields">'
+   +'<div class="f wide" data-f><label>Article <span class="req">*</span></label>'
+     +'<select data-k="article" required>'+articleOptions()+'</select><p class="err">Required.</p></div>'
+   +'<div class="f c2 half" data-f><label>Drying <span class="req">*</span></label>'
+     +'<select data-k="drying" required>'+options(list('contract_drying'),'AD or KD…')+'</select><p class="err">Required.</p></div>'
+   +'<div class="f c2 half" data-f><label>Quality / grade <span class="req">*</span></label>'
+     +'<select data-k="grade" required>'+options(list('contract_grade'))+'</select><p class="err">Required.</p></div>'
+   +'<div class="f c2"><label>Finish</label>'
+     +'<select data-k="finish">'+options(list('contract_finish'),'None')+'</select></div>'
+   +'<div class="f c1 half" data-f><label>Thickness mm <span class="req">*</span></label>'
+     +'<input data-k="thickness" class="num" inputmode="decimal" required autocomplete="off"><p class="err">Required.</p></div>'
+   +'<div class="f c1 half" data-f><label>Width mm <span class="req">*</span></label>'
+     +'<input data-k="width" class="num" inputmode="text" required autocomplete="off" placeholder="150 or 75/100"><p class="err">Required.</p></div>'
+   +'<div class="f c1 half"><label>Length mm</label>'
+     +'<input data-k="length" class="num" autocomplete="off" placeholder="3000"></div>'
+   +'<div class="f c1 half" data-f><label>Volume m³ <span class="req">*</span></label>'
+     +'<input data-k="m3" class="num" inputmode="decimal" required autocomplete="off"><p class="err">Required.</p></div>'
+   +'<div class="f c1 half" data-f><label>Unit price / m³ <span class="req">*</span></label>'
+     +'<input data-k="price" class="num" inputmode="decimal" required autocomplete="off"><p class="err">Required.</p></div>'
+   +'<div class="f c1 half"><label>Purchase price</label>'
+     +'<input data-k="pp" class="num" inputmode="decimal" autocomplete="off"></div>'
+   +'<div class="f wide"><label>Line remark</label>'
+     +'<input data-k="remark" autocomplete="off" placeholder="e.g. MC abt. 18 to 20%"></div>'
+   +'</div>';
+}
+function addLine(data,after){
+  const el=document.createElement('div'); el.className='line'; el.innerHTML=lineHTML();
+  if(after) after.after(el); else $('lines').appendChild(el);
+  if(data) Object.keys(data).forEach(k=>{const i=el.querySelector('[data-k="'+k+'"]'); if(i) i.value=data[k]==null?'':data[k]});
+  return el;
+}
+function lineData(el){
+  const d={}; el.querySelectorAll('[data-k]').forEach(i=>{d[i.dataset.k]=i.value.trim()});
+  return d;
+}
+/* "Sawn AD, V-pointed" for sawn timber, "ADI" for industrialized */
+function describe(d){
+  const a=article(d.article); if(!a) return '';
+  let p=d.drying?(a.kind==='2'?d.drying+'I':'Sawn '+d.drying):(a.kind==='2'?'Industrialized':'Sawn');
+  if(d.finish) p+=', '+d.finish;
+  const size=[d.thickness,d.width,d.length].filter(Boolean).join(' x ');
+  return [a.species,p,d.grade,size?size+' mm':''].filter(Boolean).join(' · ');
+}
+
+/* ---------- state ---------- */
+const tog=k=>document.querySelector('[data-tog="'+k+'"]');
+const on=k=>tog(k).getAttribute('aria-pressed')==='true';
+function setTog(k,v){const b=tog(k); b.setAttribute('aria-pressed',String(!!v)); b.textContent=v?'Yes':'No'}
+function show(id,v){ $(id).hidden=!v }
+
+function freightApplies(){ const v=$('incoterm').value; return !!v && extra('contract_incoterm',v).freight!==false }
+
+function refresh(){
+  const nc=on('newcust'), ag=on('agent');
+  ['w-custaddr','w-custvat','w-custcontact','w-custemail'].forEach(i=>show(i,nc));
+  ['w-agentname','w-agentcomm'].forEach(i=>show(i,ag));
+  show('w-freight',freightApplies());
+  const px=extra('contract_payment',$('payment').value);
+  show('w-paydetail',!!px.detail); show('w-approval',!!px.approval);
+  show('w-loadqty',extra('contract_loading',$('loading').value).qty!==false);
+  show('w-markingnote',!!extra('contract_marking',$('marking').value).note);
+
+  const cur=$('currency').value||'', fr=freightApplies()?num($('freight').value):0;
+  let m3=0,sales=0,fob=0,priced=false;
+  [...$('lines').children].forEach((el,i)=>{
+    const d=lineData(el), v=num(d.m3), p=num(d.price);
+    el.querySelector('.lno').textContent='Line '+(i+1);
+    el.querySelector('.ldesc').textContent=describe(d);
+    el.querySelector('.lval').textContent=v&&p?cur+' '+fmt(v*p):'';
+    el.querySelector('[data-del]').hidden=$('lines').children.length<2;
+    m3+=v; sales+=v*p; fob+=v*(p-fr); if(v&&p) priced=true;
+  });
+  $('t-m3').textContent=fmt(m3,3)+' m³';
+  $('t-sales').textContent=priced?cur+' '+fmt(sales):'—';
+  $('t-fob').textContent=priced?cur+' '+fmt(fob):'—';
+  $('t-avg').textContent=priced&&m3?cur+' '+fmt(fob/m3):'—';
+  const c=$('customer').value.trim();
+  $('sum').innerHTML=(c?'<b>'+esc(c)+'</b> · ':'')+fmt(m3,3)+' m³'+(priced?' · <b>'+esc(cur)+' '+fmt(sales)+'</b>':'');
+  const no=$('contractno').value.trim();
+  $('printref').textContent=[no?'Contract '+no:'',$('ref').textContent!=='—'?'Ref. '+$('ref').textContent:'']
+    .filter(Boolean).join(' · ');
+  document.querySelectorAll('textarea').forEach(grow);
+}
+function grow(a){ a.style.height='auto'; a.style.height=(a.scrollHeight+2)+'px' }
+
+function collect(){
+  const d={};
+  $('f').querySelectorAll('[name]').forEach(el=>{
+    if(el.type==='checkbox') d[el.name]=el.checked; else d[el.name]=el.value.trim();
+  });
+  ['newcust','agent','fsc','anchorseal','poattached'].forEach(k=>{d[k]=on(k)});
+  if(!d.newcust) ['custaddr','custvat','custcontact','custemail'].forEach(k=>delete d[k]);
+  if(!d.agent) ['agentname','agentcomm'].forEach(k=>delete d[k]);
+  if(!freightApplies()) d.freight='0';
+  if($('w-paydetail').hidden) delete d.paydetail;
+  if($('w-approval').hidden) delete d.approved;
+  if($('w-loadqty').hidden) delete d.loadqty;
+  if($('w-markingnote').hidden) delete d.markingnote;
+  const fr=num(d.freight);
+  d.lines=[...$('lines').children].map(el=>{
+    const l=lineData(el), a=article(l.article)||{};
+    l.species=a.species||''; l.article_label=a.label||'';
+    l.description=describe(l);
+    l.sales_value=+(num(l.m3)*num(l.price)).toFixed(2);
+    l.fob_value=+(num(l.m3)*(num(l.price)-fr)).toFixed(2);
+    return l;
+  });
+  d.total_m3=+d.lines.reduce((s,l)=>s+num(l.m3),0).toFixed(3);
+  d.total_sales=+d.lines.reduce((s,l)=>s+l.sales_value,0).toFixed(2);
+  d.total_fob=+d.lines.reduce((s,l)=>s+l.fob_value,0).toFixed(2);
+  return d;
+}
+function apply(d){
+  if(!d) return;
+  $('f').querySelectorAll('[name]').forEach(el=>{
+    if(!(el.name in d)) return;
+    if(el.type==='checkbox') el.checked=!!d[el.name]; else el.value=d[el.name];
+  });
+  ['newcust','agent','fsc','anchorseal','poattached'].forEach(k=>{ if(k in d) setTog(k,d[k]) });
+  if(Array.isArray(d.lines)&&d.lines.length){ $('lines').innerHTML=''; d.lines.forEach(l=>addLine(l)) }
+  setOther('incoplace_sel',$('incoplace').value); setOther('destination_sel',$('destination').value);
+  if(d.destination) $('destination_sel').dataset.own='1';
+}
+let saveT=null;
+function saveDraft(){
+  clearTimeout(saveT);
+  saveT=setTimeout(saveNow,400);
+}
+function saveNow(){ clearTimeout(saveT); if(SENT||CLEARING) return; try{localStorage.setItem(DRAFT,JSON.stringify(collect()))}catch(e){} }
+function loadDraft(){ try{return JSON.parse(localStorage.getItem(DRAFT)||'null')}catch(e){return null} }
+function dropDraft(){ try{localStorage.removeItem(DRAFT)}catch(e){} }
+
+/* ---------- pick-or-type fields, recent customers ---------- */
+function syncOther(sel){
+  const inp=$(sel.dataset.other);
+  if(sel.value==='__other'){ inp.hidden=false; if([...sel.options].some(o=>o.value===inp.value)) inp.value=''; inp.focus() }
+  else { inp.hidden=true; inp.value=sel.value }
+}
+function setOther(selId,val){
+  const sel=$(selId), inp=$(sel.dataset.other); inp.value=val||'';
+  if(!val){ sel.value=''; inp.hidden=true }
+  else if([...sel.options].some(o=>o.value===val)){ sel.value=val; inp.hidden=true }
+  else { sel.value='__other'; inp.hidden=false }
+}
+function recent(){ try{return JSON.parse(localStorage.getItem(DRAFT+'-cust')||'[]')}catch(e){return []} }
+function remember(){
+  const c=$('customer').value.trim(); if(!c) return;
+  try{localStorage.setItem(DRAFT+'-cust',JSON.stringify([c].concat(recent().filter(x=>x!==c)).slice(0,30)))}catch(e){}
+}
+
+/* ---------- validation ---------- */
+function validate(){
+  let ok=true,first=null;
+  $('f').querySelectorAll('[data-f]').forEach(w=>{
+    if(w.hidden){w.classList.remove('bad');return}
+    let bad=false;
+    [...w.querySelectorAll('[required]')].filter(el=>!el.hidden).forEach(el=>{
+      const b=el.type==='checkbox'?!el.checked:!el.value.trim();
+      el.setAttribute('aria-invalid',String(b));
+      if(b){bad=true; if(!first) first=el}
+    });
+    w.classList.toggle('bad',bad); if(bad) ok=false;
+  });
+  if(first) first.focus();
+  say(ok?'':'Some required fields are still empty. They are marked in red.');
+  return ok;
+}
+function say(text,good){ const m=$('msg'); m.hidden=!text; m.textContent=text||''; m.classList.toggle('ok',!!good) }
+
+/* ---------- actions ---------- */
+async function submit(e){
+  e.preventDefault();
+  if(!validate()) return;
+  if(STANDALONE){ say('Submit works from the portal. This offline copy cannot send: save the PDF, or save the data file and upload it in the portal later.'); return }
+  const b=$('send'); b.disabled=true; b.textContent='Sending…';
+  const {data:row,error}=await PW.sb.from('form_submissions')
+    .insert({form:SLUG,space:DOC.space,section:DOC.section,data:collect()})
+    .select('ref').single();
+  if(error){ b.disabled=false; b.textContent='Submit contract'; say('Could not send the contract: '+error.message+'. Nothing was lost, try again.'); return }
+  SENT=true; dropDraft(); remember();
+  $('ref').textContent=row.ref||'—';
+  b.textContent='Sent'; $('done').hidden=false; refresh();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function doPrint(){
+  if(!SENT && !validate()) say('Some required fields are still empty. The PDF will be incomplete.');
+  remember(); refresh(); window.print();
+}
+function saveJSON(){
+  remember();
+  const d=collect();
+  const name='contract-'+(d.contractno||d.date||'draft')+'-'+(d.customer||'customer').replace(/[^\w-]+/g,'_').slice(0,40)+'.json';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({form:SLUG,version:1,data:d},null,2)],{type:'application/json'}));
+  a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  say('Data file saved as '+name+'.',true);
+}
+function clearForm(){
+  const b=$('clear');
+  if(b.dataset.sure!=='1'){ b.dataset.sure='1'; b.textContent='Clear everything?'; setTimeout(()=>{b.dataset.sure='';b.textContent='Clear'},3500); return }
+  CLEARING=true; dropDraft(); location.reload();
+}
+
+/* ---------- where Submit sends the contract (form_config row for this form) ---------- */
+function route(){
+  const c=CFG||{}, row=(k,v,off)=>'<div><span>'+k+'</span><span'+(v?'':' class="off"')+'>'+esc(v||off)+'</span></div>';
+  $('route').innerHTML='<b>Submit sends this contract to</b>'
+    +row('To',c.notify_email,STANDALONE?'set in the portal':'not set up yet')
+    +row('Copy',c.cc_email,STANDALONE?'PWEU, set in the portal':'PWEU address not set up yet')
+    +row('Acadon',c.webhook_url?'Direct import':'',STANDALONE?'direct import, set in the portal':'direct import not set up yet');
+  $('route').hidden=false;
+}
+
+/* ---------- chips ---------- */
+function chips(id,target,items,set){
+  $(id).innerHTML=items.map(o=>'<button type="button" class="chip'+(set?' set':'')+'" data-target="'+target
+    +'" data-text="'+esc(o.value)+'"'+(set?' data-set="1"':'')+'>'+esc(o.label)+'</button>').join('');
+}
+function quarters(){
+  const out=[], now=new Date(); let q=Math.floor(now.getMonth()/3)+1, y=now.getFullYear();
+  for(let i=0;i<4;i++){ out.push({value:'Q'+q+'-'+y,label:'Q'+q+'-'+y}); q++; if(q>4){q=1;y++} }
+  return out;
+}
+function chipClick(b){
+  const el=$(b.dataset.target), text=b.dataset.text;
+  if(b.dataset.set){ el.value=text }
+  else if(!el.value.includes(text.trim())){ el.value=(el.value.trim()?el.value.replace(/\s+$/,'')+'\n':'')+text }
+  el.focus(); refresh(); saveDraft();
+}
+
+/* ---------- start ---------- */
+function gate(h){const g=$('gate');g.innerHTML=h;g.style.display='flex'}
+function ungate(){$('gate').style.display='none'}
+function gateShell(inner){
+  return '<div class="gcard"><img class="gmk" src="../img/pw-mark.png" alt=""><p class="gmark">Precious Woods</p>'+inner+'</div>';
+}
+function loginScreen(){
+  gate(gateShell('<p>'+esc(t('loginLead'))+'</p>'
+    +'<form id="gf"><input id="gmail" type="email" required placeholder="'+esc(t('emailLabel'))+'">'
+    +'<button type="submit">'+esc(t('sendLink'))+'</button></form><p class="gmsg" id="gmsg"></p>'));
+  $('gf').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const em=$('gmail').value.trim(),m=$('gmsg');
+    m.textContent=t('sending');
+    const {error}=await PW.signIn(em);
+    m.textContent=error?t('sendFail',error.message):t('sent',em);
+  });
+}
+function initials(em){
+  const n=em.split('@')[0].replace(/[._-]+/g,' ').trim().split(' ').filter(Boolean);
+  return ((n[0]||'?')[0]+((n[1]||'')[0]||'')).toUpperCase();
+}
+
+function build(){
+  fill('salesrep','contract_salesrep'); fill('supplier','contract_supplier');
+  fill('currency','currency'); fill('incoterm','contract_incoterm');
+  fill('payment','contract_payment'); fill('loading','contract_loading');
+  fill('marking','contract_marking');
+  fill('stickmm','contract_stick_mm','—'); fill('stickevery','contract_stick_every','—');
+  fill('stickint','contract_stick_int','—');
+  ['incoplace_sel','destination_sel'].forEach(id=>{ $(id).innerHTML=options(list('contract_port'))+'<option value="__other">Other…</option>' });
+  $('dl-cust').innerHTML=recent().map(c=>'<option value="'+esc(c)+'">').join('');
+  if(!STANDALONE && PW.email && $('salesrep').options.length<2){
+    $('salesrep').add(new Option(PW.email,PW.email)); $('salesrep').value=PW.email;
+  }
+  /* preview link without sign-in: nobody to pick, so do not ask */
+  if($('salesrep').options.length<2){ $('salesrep').required=false; $('salesrep').closest('.f').hidden=true }
+  chips('ch-notes','notes',list('contract_note'));
+  chips('ch-lengthspec','lengthspec',list('contract_length_note'));
+  chips('ch-production','production',quarters(),true);
+  chips('ch-shipment','shipment',[{value:'Following production',label:'Following production'}],true);
+
+  /* quick defaults: the usual answer is already selected */
+  const d=new Date(); $('date').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  $('currency').value='EUR'; $('payment').value='1st'; $('loading').value="40'"; $('marking').value='Only PW';
+  addLine();
+
+  const draft=loadDraft();
+  if(draft) apply(draft);
+  else { try{const s=JSON.parse(localStorage.getItem(DRAFT+'-me')||'{}'); if(s.salesrep) $('salesrep').value=s.salesrep; if(s.supplier) $('supplier').value=s.supplier}catch(e){} }
+
+  $('f').addEventListener('input',()=>{refresh();saveDraft()});
+  $('f').addEventListener('change',e=>{
+    if(e.target.id==='supplier') regroup();
+    if(e.target.id==='salesrep'||e.target.id==='supplier'){
+      try{localStorage.setItem(DRAFT+'-me',JSON.stringify({salesrep:$('salesrep').value,supplier:$('supplier').value}))}catch(x){}
+    }
+    /* destination follows the named port until it is typed by hand */
+    if(e.target.dataset.other) syncOther(e.target);
+    if(/^incoplace/.test(e.target.id) && freightApplies() && !$('destination_sel').dataset.own) setOther('destination_sel',$('incoplace').value);
+    if(/^destination/.test(e.target.id)) $('destination_sel').dataset.own='1';
+    refresh(); saveDraft();
+  });
+  $('f').addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    if(b.dataset.tog){ setTog(b.dataset.tog,!on(b.dataset.tog)) }
+    else if(b.dataset.step){ const i=b.parentNode.querySelector('input'); i.value=Math.max(1,(parseInt(i.value,10)||0)+ +b.dataset.step) }
+    else if(b.classList.contains('chip')){ chipClick(b); return }
+    else if('dup' in b.dataset){ const src=b.closest('.line'); const n=addLine(lineData(src),src); n.querySelector('[data-k="thickness"]').focus() }
+    else if('del' in b.dataset){ b.closest('.line').remove() }
+    else return;
+    refresh(); saveDraft();
+  });
+  $('addline').onclick=()=>{
+    const last=$('lines').lastElementChild, p=last?lineData(last):{};
+    const n=addLine({article:p.article,drying:p.drying,grade:p.grade,finish:p.finish});
+    n.querySelector('[data-k="'+(p.article?'thickness':'article')+'"]').focus(); refresh(); saveDraft();
+  };
+  document.querySelectorAll('[data-act="print"]').forEach(b=>b.onclick=doPrint);
+  document.querySelectorAll('[data-act="json"]').forEach(b=>b.onclick=saveJSON);
+  $('clear').onclick=clearForm;
+  $('again').onclick=()=>{CLEARING=true;dropDraft();location.reload()};
+  $('f').addEventListener('submit',submit);
+  window.addEventListener('beforeprint',refresh);
+  /* phones close tabs without warning: keep the draft when the page is hidden */
+  window.addEventListener('pagehide',saveNow);
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden) saveNow() });
+
+  regroup();
+  route();
+  $('note').textContent=STANDALONE
+    ?'Offline copy: Submit only works from the portal. Fill it in, then Print / Save as PDF. Save the data file too if you want to upload the contract in the portal later without retyping.'
+    :'Submit stores the contract in the portal and sends it on. Print / Save as PDF gives the copy for the file.';
+  refresh();
+}
+
+(async()=>{
+  if(STANDALONE){ ungate(); build(); $('main').hidden=false; refresh(); return }
+  $('gatemsg').textContent=t('checking');
+  const c=await PW.connect();
+  if(!c.ok){
+    gate(gateShell('<h2>'+esc(t('offlineT'))+'</h2><p>'+esc(t('offlineB'))+'</p>'
+      +'<button onclick="location.reload()">'+esc(t('retry'))+'</button>'));
+    return;
+  }
+  if(!c.session){ loginScreen(); return }
+  await PW.loadPrefs();
+  const [d,o,fc]=await Promise.all([
+    PW.sb.from('docs').select('slug,space,section,title').eq('slug',SLUG).maybeSingle(),
+    PW.sb.from('options').select('list,value,label,sort,extra').order('sort'),
+    PW.sb.from('form_config').select('*').eq('form',SLUG).maybeSingle()
+  ]);
+  if(!d.data){
+    gate(gateShell('<h2>'+esc(t('noAccessT'))+'</h2><p>'+esc(t('noAccessB',PW.email))+'</p>'
+      +'<p>'+esc(t('noAccessH'))+'</p>'));
+    return;
+  }
+  DOC=d.data; CFG=fc.data||null;
+  (o.data||[]).forEach(r=>{(OPTS[r.list]=OPTS[r.list]||[]).push(r)});
+  $('av').textContent=initials(PW.email);
+  ungate(); build(); $('main').hidden=false; refresh();
+  $('userbtn').onclick=()=>{location.href='../index.html'};
+})();
+</script>
+</body></html>
