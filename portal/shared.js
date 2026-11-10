@@ -221,7 +221,7 @@ window.PW = (function () {
     unitPrice:'Price / m³', lineTotal:'Total', total:'Total', addSpeciesPh:'Add a species…', emptyLines:'No species yet. Add them here or from the Catalogue.',
     contractDetails:'Contract details', reference:'Reference', incoterm:'Incoterm', currency:'Currency', payment:'Payment terms', port:'Destination port',
     shipment:'Shipment / delivery period', certification:'Certification', quality:'Quality / grade', remarks:'Remarks',
-    printPdf:'Print / PDF', exportExcel:'Excel', exportWord:'Word', exportCsv:'CSV', saveQuote:'Save quote as sent', submitOrder:'Submit order request',
+    printPdf:'Print / PDF', exportExcel:'Excel', exportWord:'Word', exportCsv:'CSV', saveQuote:'Save quote as sent', saveDraftBtn:'Save', sendQuote:'Send quote', savedDraft:'Saved as draft in My orders.', quoteSent:'Quote marked as sent.', markQuoteSent:'Mark quote as sent', stDraft:'Draft', submitOrder:'Submit order request',
     needLines:'Add at least one species first.', savedQuote:'Quote saved in My orders.', submittedOrder:'Order request submitted.',
     newCustTitle:'New customer', address:'Address', zip:'ZIP code', shipPort:'Shipping port', name:'Name', country:'Country', contactPerson:'Contact person', email:'E-mail', phone:'Phone', notes:'Notes',
     submitReq:'Submit request', saveApprove:'Save and approve for Sales', cancel:'Cancel', nameNeeded:'The name is required.',

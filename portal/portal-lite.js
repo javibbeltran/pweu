@@ -476,7 +476,7 @@ window.PWLite = (function () {
   let DRAFT = { cust: null, lines: [], terms: {}, cur: 'EUR' };
   let BASE_C = [], BASE_O = [], LOCAL_C = [], LOCAL_O = [], OD_LOADED = false;
   const OF = { cust: 'all', from: '', to: '', st: [], sp: 'all' };
-  const ST = { quote: 'stQuote', submitted: 'stSubmitted', approved: 'stApproved', open: 'stOpen', transit: 'stTransit', partial: 'stPartial', completed: 'stCompleted', delivered: 'stDelivered' };
+  const ST = { draft: 'stDraft', quote: 'stQuote', submitted: 'stSubmitted', approved: 'stApproved', open: 'stOpen', transit: 'stTransit', partial: 'stPartial', completed: 'stCompleted', delivered: 'stDelivered' };
   const custs = () => BASE_C.concat(LOCAL_C);
   const orders = () => BASE_O.concat(LOCAL_O).sort((a, b) => String(b.date).localeCompare(String(a.date)));
   const custById = id => custs().find(c => c.id === id);
@@ -593,8 +593,24 @@ window.PWLite = (function () {
       total: draftTotal(), terms: DRAFT.terms });
     LS.set('pw-sales-orders', LOCAL_O);
     DRAFT = { cust: null, lines: [], terms: {}, cur: 'EUR' }; saveDraft();
-    flash(t(status === 'quote' ? 'savedQuote' : 'submittedOrder'));
+    flash(t(status === 'draft' ? 'savedDraft' : status === 'quote' ? 'quoteSent' : 'submittedOrder'));
     go('myorders');
+  }
+
+  function quoteMail(c){
+    const T = DRAFT.terms, rows = DRAFT.lines.map(l => '- ' + nameOf(l.code) + (l.thick || l.width || l.length ? ' ' + [l.thick, l.width, l.length].filter(Boolean).join(' x ') + ' mm' : '')
+      + (l.vol ? ', ' + l.vol + ' m3' : '') + (l.price ? ', ' + l.price + ' ' + DRAFT.cur + '/m3' : ''));
+    return { subject: 'Precious Woods Europe - ' + t('quoteTitle') + (T.ref ? ' ' + T.ref : ''),
+      body: 'Dear ' + (c.contact || c.name) + ',\n\n' + rows.join('\n') + '\n\n' + t('total') + ': ' + money2(draftTotal(), DRAFT.cur)
+        + (T.incoterm ? '\n' + t('incoterm') + ': ' + T.incoterm : '') + (T.payment ? '\n' + t('payment') + ': ' + T.payment : '') + '\n\nBest regards' };
+  }
+  function sendQuote(){
+    if(!DRAFT.lines.length){ flash(t('needLines')); return; }
+    const c = custById(DRAFT.cust); if(!c){ flash(t('needCustomer')); return; }
+    const m = quoteMail(c), a = document.createElement('a');
+    a.href = 'mailto:' + encodeURIComponent(c.email || '') + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body);
+    document.body.appendChild(a); a.click(); a.remove();
+    saveOrder('quote');
   }
 
   /* ---- New Order ---- */
@@ -640,9 +656,8 @@ window.PWLite = (function () {
           'Where a submitted order request goes (Acadon sales order, e-mail to the order desk, Supabase).'
         ]) + '</section>'
       + '<div class="act-bar"><span class="act-g">'
-      + '<button data-ex="pdf">' + esc(t('printPdf')) + '</button><button data-ex="xls">' + esc(t('exportExcel')) + '</button>'
-      + '<button data-ex="doc">' + esc(t('exportWord')) + '</button><button data-ex="csv">' + esc(t('exportCsv')) + '</button></span>'
-      + '<span class="act-g"><button id="osave">' + esc(t('saveQuote')) + '</button><button class="primary" id="osub">' + esc(t('submitOrder')) + '</button></span></div>';
+      + '<button data-ex="pdf">' + esc(t('printPdf')) + '</button></span>'
+      + '<span class="act-g"><button id="osave">' + esc(t('saveDraftBtn')) + '</button><button id="osend">' + esc(t('sendQuote')) + '</button><button class="primary" id="osub">' + esc(t('submitOrder')) + '</button></span></div>';
 
     // customer dropdown
     $('ocsel').onchange = e => {
@@ -667,7 +682,8 @@ window.PWLite = (function () {
     document.querySelectorAll('[data-t]').forEach(inp => inp.oninput = inp.onchange = () => { DRAFT.terms[inp.dataset.t] = inp.value; saveDraft(); });
     $('ocur').onchange = e => { DRAFT.cur = e.target.value; saveDraft(); renderNewOrder(); };
     document.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => exportQuote(b.dataset.ex));
-    $('osave').onclick = () => saveOrder('quote');
+    $('osave').onclick = () => saveOrder('draft');
+    $('osend').onclick = () => sendQuote();
     $('osub').onclick = () => saveOrder('submitted');
   }
 
@@ -722,14 +738,15 @@ window.PWLite = (function () {
         + '<p class="ord-c">' + esc(o.custName || t('noCustName')) + ' · ' + esc(o.date) + '</p>'
         + '<ul>' + o.lines.map(l => '<li>' + esc(nameOf(l.code)) + (l.vol ? ' · ' + esc(l.vol) + ' m³' : '') + '</li>').join('') + '</ul>'
         + (o.total ? '<p class="ord-t">' + esc(money2(o.total, o.cur)) + '</p>' : '')
-        + (LOCAL_O.some(x => x.id === o.id) && (o.status === 'quote' || o.status === 'submitted')
-            ? '<div class="ord-act">' + (o.status === 'quote' ? '<button data-oact="submitted" data-oid="' + esc(o.id) + '">' + esc(t('submitOrder')) + '</button>' : '')
+        + (LOCAL_O.some(x => x.id === o.id) && (o.status === 'draft' || o.status === 'quote' || o.status === 'submitted')
+            ? '<div class="ord-act">' + (o.status === 'draft' ? '<button data-oact="quote" data-oid="' + esc(o.id) + '">' + esc(t('markQuoteSent')) + '</button>' : '')
+              + (o.status !== 'submitted' ? '<button data-oact="submitted" data-oid="' + esc(o.id) + '">' + esc(t('submitOrder')) + '</button>' : '')
               + '<button class="primary" data-oact="approved" data-oid="' + esc(o.id) + '">' + esc(t('markApproved')) + '</button></div>' : '')
         + '</article>').join('') : none('noOrders');
       $('olist').querySelectorAll('[data-oact]').forEach(b => b.onclick = () => {
         const o = LOCAL_O.find(x => x.id === b.dataset.oid); if(!o) return;
         o.status = b.dataset.oact; LS.set('pw-sales-orders', LOCAL_O);
-        flash(t(o.status === 'approved' ? 'orderApproved' : 'submittedOrder')); renderMyOrders();
+        flash(t(o.status === 'approved' ? 'orderApproved' : o.status === 'quote' ? 'quoteSent' : 'submittedOrder')); renderMyOrders();
       });
     };
     $('ofc').onchange = e => { OF.cust = e.target.value; renderMyOrders(); };
