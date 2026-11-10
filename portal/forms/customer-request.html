@@ -281,7 +281,8 @@ fieldset{border:0;padding:0;margin:0 0 26px}
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const t=(...a)=>PW.t(...a);
+const t=(...a)=>window.PW?PW.t(...a):a[0];
+const STANDALONE=!window.PW || location.protocol==='file:' || /[?&]preview\b/.test(location.search);
 
 const SLUG='customer-request';
 let DOC=null, ROLE=null, OPTS={}, prepay=false, showInh=true;
@@ -343,6 +344,7 @@ function validate(){
 async function submit(e){
   e.preventDefault();
   if(!validate())return;
+  if(STANDALONE){ alert('Submit works from the portal. This copy cannot send the request: sign in to the Sales Portal and use New customer form.'); return }
   const b=$('send'); b.disabled=true; b.textContent='Sending…';
   const fd=new FormData($('f')); const data={};
   fd.forEach((v,k)=>{data[k]=v});
@@ -368,7 +370,48 @@ function initials(em){
   return ((n[0]||'?')[0]+((n[1]||'')[0]||'')).toUpperCase();
 }
 
+function start(email){
+  fill('template','template','Select a template…');
+  fill('country','country'); fill('doclang','language');
+  fill('segment','segment'); fill('currency','currency');
+  fill('terms','terms');     fill('shipment','shipment');
+  if((OPTS.template||[]).length===1) $('template').selectedIndex=1;
+  inherited();
+
+  $('av').textContent=initials(email);
+  $('kicker').textContent=(DOC.space||'').toUpperCase()+' · Master data';
+  ungate(); $('main').hidden=false;
+
+  $('template').onchange=inherited;
+  $('togInh').onclick=()=>{showInh=!showInh;inherited()};
+  $('prepay').onclick=()=>{
+    prepay=!prepay;
+    $('prepay').setAttribute('aria-pressed',String(prepay));
+    $('prepay').textContent=prepay?'Yes':'No';
+    $('prepaywrap').hidden=!prepay;
+  };
+  $('f').addEventListener('submit',submit);
+  $('again').onclick=()=>location.reload();
+  if(window.PW && PW.mountSettings && !STANDALONE) PW.mountSettings({ current:'operations' });
+}
+
+const DEMO_OPTS={
+  template:[['TEMPLATE','Template customer (chosen in the portal)']],
+  country:[['NL','Netherlands'],['DE','Germany'],['BE','Belgium'],['FR','France'],['ES','Spain'],['IT','Italy'],['PT','Portugal'],['GB','United Kingdom'],['BR','Brazil'],['GA','Gabon'],['CH','Switzerland']],
+  language:[['en','English'],['fr','French'],['pt-BR','Portuguese (Brazil)'],['nl','Dutch']],
+  segment:[['PWH-GABON','PWH-GABON']], currency:[['EUR','EUR'],['USD','USD']],
+  terms:[['CAD-15','CAD-15 · Payment against copy documents, latest 15 days after shipment'],['NET-14-ARR','NET-14-ARR · Payment 14 days after arrival of the shipment']],
+  shipment:[['FOB LIB','FOB LIB']]
+};
+
 (async()=>{
+  if(STANDALONE){
+    DOC={space:'pweu',section:'pweu-sales'};
+    Object.keys(DEMO_OPTS).forEach(l=>{OPTS[l]=DEMO_OPTS[l].map((x,k)=>({list:l,value:x[0],label:x[1],sort:k,extra:null}))});
+    if($('gatemsg')) $('gatemsg').textContent='';
+    start('guest@preview');
+    return;
+  }
   $('gatemsg').textContent=t('checking');
   const c=await PW.connect();
   if(!c.ok){
@@ -390,29 +433,7 @@ function initials(em){
   }
   DOC=d.data;
   (o.data||[]).forEach(r=>{(OPTS[r.list]=OPTS[r.list]||[]).push(r)});
-
-  fill('template','template','Select a template…');
-  fill('country','country'); fill('doclang','language');
-  fill('segment','segment'); fill('currency','currency');
-  fill('terms','terms');     fill('shipment','shipment');
-  if((OPTS.template||[]).length===1) $('template').selectedIndex=1;
-  inherited();
-
-  $('av').textContent=initials(PW.email);
-  $('kicker').textContent=(DOC.space||'').toUpperCase()+' · Master data';
-  ungate(); $('main').hidden=false;
-
-  $('template').onchange=inherited;
-  $('togInh').onclick=()=>{showInh=!showInh;inherited()};
-  $('prepay').onclick=()=>{
-    prepay=!prepay;
-    $('prepay').setAttribute('aria-pressed',String(prepay));
-    $('prepay').textContent=prepay?'Yes':'No';
-    $('prepaywrap').hidden=!prepay;
-  };
-  $('f').addEventListener('submit',submit);
-  $('again').onclick=()=>location.reload();
-  PW.mountSettings({ current:'operations' });
+  start(PW.email);
 })();
 </script>
 </body></html>
