@@ -124,13 +124,13 @@ fieldset{border:0;padding:0;margin:0 0 26px}
 
   <p class="kicker" id="kicker">PWEU · Master data</p>
   <h1>Request a new customer</h1>
-  <p class="intro">Fill in only what is specific to this customer. Everything else is copied from
-  the template customer, so every card is created the same way. Fields marked
+  <p class="intro">Fill in only what is specific to this customer. Everything else is set up
+  the same way for every card. Fields marked
   <span style="color:var(--accent)">*</span> are required.</p>
 
   <form id="f" novalidate>
 
-    <fieldset>
+    <fieldset hidden>
       <div class="step"><span class="n">0</span><span class="lg">Template customer</span></div>
       <div class="box">
         <div class="fields">
@@ -248,7 +248,7 @@ fieldset{border:0;padding:0;margin:0 0 26px}
       </div></div>
     </fieldset>
 
-    <fieldset>
+    <fieldset id="inhset">
       <div class="step"><span class="n">4</span><span class="lg">Copied from the template</span>
         <span class="by">Nothing to fill in</span></div>
       <div class="box">
@@ -310,6 +310,36 @@ function fill(sel,list,placeholder){
   const el=$(sel);
   el.innerHTML='<option value="">'+(placeholder||'Select…')+'</option>'
     +(OPTS[list]||[]).map(o=>'<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>').join('');
+  if(COMBO.includes(sel)) combo(el);
+}
+
+/* dropdowns you can also type into: start typing to filter, pick a suggestion, or enter your own value */
+const COMBO=['country','doclang','segment','currency','terms','shipment'];
+function combo(el){
+  let inp=el.previousElementSibling&&el.previousElementSibling.classList&&el.previousElementSibling.classList.contains('cb')?el.previousElementSibling:null;
+  let dl=document.getElementById(el.id+'-dl');
+  if(!inp){
+    inp=document.createElement('input'); inp.type='text'; inp.className='cb'; inp.autocomplete='off';
+    inp.placeholder='Type or select…'; inp.setAttribute('list',el.id+'-dl');
+    inp.setAttribute('aria-label',(el.closest('[data-f]')||el.parentNode).querySelector('label')?.textContent||el.id);
+    dl=document.createElement('datalist'); dl.id=el.id+'-dl';
+    el.parentNode.insertBefore(inp,el); el.parentNode.insertBefore(dl,el);
+    const sync=()=>{
+      const v=inp.value.trim();
+      const m=[...el.options].find(o=>o.value&&!o.dataset.free&&o.textContent.toLowerCase()===v.toLowerCase());
+      if(m){ el.value=m.value; inp.value=m.textContent }
+      else if(!v){ el.value='' }
+      else{
+        let o=[...el.options].find(x=>x.dataset.free==='1');
+        if(!o){ o=document.createElement('option'); o.dataset.free='1'; el.appendChild(o) }
+        o.value=v; o.textContent=v; el.value=v;
+      }
+      el.dispatchEvent(new Event('change'));
+    };
+    inp.addEventListener('change',sync); inp.addEventListener('blur',sync);
+  }
+  el.hidden=true; el.removeAttribute('required');
+  dl.innerHTML=[...el.options].filter(o=>o.value&&!o.dataset.free).map(o=>'<option value="'+esc(o.textContent)+'"></option>').join('');
 }
 
 function inherited(){
@@ -321,6 +351,7 @@ function inherited(){
     ['Reminder Terms Code',x.reminder],['Fin. Charge Terms Code',x.fin]];
   $('inh').innerHTML=rows.filter(r=>r[1]).map(r=>
     '<div><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>').join('');
+  $('inhset').hidden=!rows.some(r=>r[1]);
   $('inh').hidden=!showInh;
   $('togInh').textContent=showInh?'Hide inherited fields':'Show inherited fields';
 }
@@ -377,7 +408,7 @@ function start(email){
   fill('country','country'); fill('doclang','language');
   fill('segment','segment'); fill('currency','currency');
   fill('terms','terms');     fill('shipment','shipment');
-  if((OPTS.template||[]).length===1) $('template').selectedIndex=1;
+  if((OPTS.template||[]).length) $('template').selectedIndex=1;
   inherited();
 
   $('av').textContent=initials(email);
