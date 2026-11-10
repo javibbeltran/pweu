@@ -1099,9 +1099,9 @@ window.PWLite = (function () {
     if(TAB === 'myorders') return renderMyOrders();
     if(TAB === 'calendar') return renderCalendar();
     if(TAB === 'showroom') return renderShowroom();
-    if(FORMS[TAB] && window.__PREVIEW){
-      $('content').innerHTML = section(tabLabel(TAB), '<p class="none">' + esc(t('formPreviewNote')) + '</p>'
-        + '<p><a class="view-s" target="_blank" rel="noopener" href="https://javibbeltran.github.io/pweu/portal/forms/' + (TAB === 'contractform' ? 'contract-request' : 'customer-request') + '.html?preview">' + esc(t('formPreviewOpen')) + '</a></p>');
+    if(FORMS[TAB] && window.__PREVIEW && window.__FORMS){
+      $('content').innerHTML = '<iframe class="form-frame" title="' + esc(tabLabel(TAB)) + '"></iframe>';
+      $('content').firstChild.srcdoc = window.__FORMS[TAB];
       return;
     }
     if(FORMS[TAB]){
