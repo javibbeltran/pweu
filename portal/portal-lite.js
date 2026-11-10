@@ -25,6 +25,20 @@ window.PWLite = (function () {
   const STATUS = { home:null, catalogue:'ready', pricing:'todo', pipeline:'todo', customers:'todo', flow:'ready',
                    library:'ready', orders:'todo', documents:'todo', contact:'todo', neworder:'ready', contractform:'ready', customerform:'ready', myorders:'ready', calendar:'ready', invoices:'todo', downloads:'todo', showroom:'ready' };
 
+  /* embedded forms follow the portal's light/dark theme and accent, now and when the user changes them */
+  let FRAME_OBS = null;
+  function watchFrame(fr){
+    const sync = () => { try{
+      const d = fr.contentDocument; if(!d || !d.documentElement) return;
+      const r = document.documentElement;
+      d.documentElement.setAttribute('data-theme', r.getAttribute('data-theme') || 'auto');
+      const ac = r.style.getPropertyValue('--accent'); if(ac) d.documentElement.style.setProperty('--accent', ac);
+    }catch(e){} };
+    fr.addEventListener('load', () => { sync(); setTimeout(sync, 600); setTimeout(sync, 2000); });
+    if(FRAME_OBS) FRAME_OBS.disconnect();
+    FRAME_OBS = new MutationObserver(sync);
+    FRAME_OBS.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'style'] });
+  }
   const FORMS = { contractform: '../forms/contract-request.html', customerform: '../forms/customer-request.html' };
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
@@ -1102,10 +1116,12 @@ window.PWLite = (function () {
     if(FORMS[TAB] && window.__PREVIEW && window.__FORMS){
       $('content').innerHTML = '<iframe class="form-frame" title="' + esc(tabLabel(TAB)) + '"></iframe>';
       $('content').firstChild.srcdoc = window.__FORMS[TAB];
+      watchFrame($('content').firstChild);
       return;
     }
     if(FORMS[TAB]){
       $('content').innerHTML = '<iframe class="form-frame" title="' + esc(tabLabel(TAB)) + '" src="' + esc(FORMS[TAB] + '?embed') + '"></iframe>';
+      watchFrame($('content').firstChild);
       return;
     }
     if(TAB === 'downloads' && ID === 'sales') return renderDownloads();
