@@ -16,15 +16,16 @@ window.PWLite = (function () {
   /* ---------- what each portal contains ---------- */
   const CFG = {
     sales:    { title: 'pSales',    side: true,  price: true,  avail: true,  order: true,  focus: true,
-                tabs: ['home', 'catalogue', 'neworder', 'myorders', 'calendar', 'invoices', 'downloads', 'showroom'] },
+                tabs: ['home', 'catalogue', 'neworder', 'contractform', 'customerform', 'myorders', 'calendar', 'invoices', 'downloads', 'showroom'] },
     customer: { title: 'pCustomer', side: false, price: false, avail: false, order: false, focus: false,
                 tabs: ['home', 'catalogue', 'orders', 'documents', 'contact'] }
   };
   const LABEL  = { home:'home', catalogue:'catalogue', pricing:'priceLists', pipeline:'pipeline', customers:'customersTab',
-                   flow:'flow', library:'documents', orders:'orders', documents:'documents', contact:'contact', neworder:'newOrder', myorders:'myOrders', calendar:'calendar', invoices:'openInvoices', downloads:'downloads', showroom:'showroom' };
+                   flow:'flow', library:'documents', orders:'orders', documents:'documents', contact:'contact', neworder:'newOrder', contractform:'newContractForm', customerform:'newCustomerForm', myorders:'myOrders', calendar:'calendar', invoices:'openInvoices', downloads:'downloads', showroom:'showroom' };
   const STATUS = { home:null, catalogue:'ready', pricing:'todo', pipeline:'todo', customers:'todo', flow:'ready',
-                   library:'ready', orders:'todo', documents:'todo', contact:'todo', neworder:'ready', myorders:'ready', calendar:'ready', invoices:'todo', downloads:'todo', showroom:'ready' };
+                   library:'ready', orders:'todo', documents:'todo', contact:'todo', neworder:'ready', contractform:'ready', customerform:'ready', myorders:'ready', calendar:'ready', invoices:'todo', downloads:'todo', showroom:'ready' };
 
+  const FORMS = { contractform: '../forms/contract-request.html', customerform: '../forms/customer-request.html' };
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
   let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, DETAIL = null, KEYS = null, FEAT = { popular: [], lesser: [] };
@@ -1107,7 +1108,7 @@ window.PWLite = (function () {
   /* ---------- navigation and chrome ---------- */
 
   const ICO = { menu: 'M4 6h16M4 12h16M4 18h16', home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', catalogue: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
-    neworder: 'M12 5v14M5 12h14', myorders: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01', calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
+    neworder: 'M12 5v14M5 12h14', contractform: 'M6 3h9l4 4v14H6zM14 3v5h5M12 11v6M9 14h6', customerform: 'M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M19 8v6M16 11h6', myorders: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01', calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
     invoices: 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7', downloads: 'M12 4v11M7 11l5 5 5-5M5 20h14', showroom: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9' };
   const ico = k => '<svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (ICO[k] || ICO.catalogue) + '"/></svg>';
   const badge = x => (x === 'neworder' && cartCount()) ? '<b class="cart-n" aria-label="' + cartCount() + '">' + cartCount() + '</b>' : '';
@@ -1128,7 +1129,7 @@ window.PWLite = (function () {
       sb.querySelectorAll('[data-av]').forEach(b => b.onclick = () => openCatalogue({ av: b.dataset.av }));
     }
   }
-  function go(tab){ TAB = tab; DETAIL = null; buildNav(); chrome(); render(); window.scrollTo(0, 0); }
+  function go(tab){ if(FORMS[tab]){ location.href = FORMS[tab]; return; } TAB = tab; DETAIL = null; buildNav(); chrome(); render(); window.scrollTo(0, 0); }
 
   function chrome(){
     $('seg').textContent = title();
