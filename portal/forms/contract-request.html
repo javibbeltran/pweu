@@ -989,6 +989,8 @@ function build(){
   if(!STANDALONE && PW.email && $('salesrep').options.length<2){
     $('salesrep').add(new Option(PW.email,PW.email)); $('salesrep').value=PW.email;
   }
+  /* preview link without sign-in: nobody to pick, so do not ask */
+  if($('salesrep').options.length<2){ $('salesrep').required=false; $('salesrep').closest('.f').hidden=true }
   chips('ch-notes','notes',list('contract_note'));
   chips('ch-lengthspec','lengthspec',list('contract_length_note'));
   chips('ch-production','production',quarters(),true);
