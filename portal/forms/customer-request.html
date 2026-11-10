@@ -9,7 +9,17 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Tinos:wght@400;700&display=swap">
 <link rel="stylesheet" href="../pw.css">
 <script>if(/[?&]embed\b/.test(location.search))document.documentElement.classList.add("embed")</script>
-<style>html.embed header.bar,html.embed .back{display:none !important}html.embed .page{padding-top:8px}</style>
+<style>html.embed header.bar,html.embed .back{display:none !important}html.embed .page{padding-top:8px}
+.cbw{position:relative}
+.cbw input.cb{width:100%;padding-right:38px}
+.cbb{position:absolute;right:4px;top:0;bottom:0;width:34px;border:0;background:transparent;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cbl{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;margin:0;padding:4px;list-style:none;max-height:260px;overflow:auto;background:var(--surf);border:1px solid var(--ln2,var(--ln));border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.cbl li{padding:9px 12px;border-radius:7px;cursor:pointer;font-size:15px}
+.cbl li.act,.cbl li:hover{background:var(--accent);color:#fff}
+.cbl li[aria-selected="true"]{font-weight:700}
+.cbl li.cbn{color:var(--mut);cursor:default;font-size:13px}
+.cbl li.cbn:hover{background:transparent;color:var(--mut)}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="../shared.js"></script>
 <style>
@@ -313,33 +323,56 @@ function fill(sel,list,placeholder){
   if(COMBO.includes(sel)) combo(el);
 }
 
-/* dropdowns you can also type into: start typing to filter, pick a suggestion, or enter your own value */
+/* dropdowns you can also type into: click to see all options, type to filter, or enter your own value */
 const COMBO=['country','doclang','segment','currency','terms','shipment'];
 function combo(el){
-  let inp=el.previousElementSibling&&el.previousElementSibling.classList&&el.previousElementSibling.classList.contains('cb')?el.previousElementSibling:null;
-  let dl=document.getElementById(el.id+'-dl');
-  if(!inp){
-    inp=document.createElement('input'); inp.type='text'; inp.className='cb'; inp.autocomplete='off';
-    inp.placeholder='Type or select…'; inp.setAttribute('list',el.id+'-dl');
-    inp.setAttribute('aria-label',(el.closest('[data-f]')||el.parentNode).querySelector('label')?.textContent||el.id);
-    dl=document.createElement('datalist'); dl.id=el.id+'-dl';
-    el.parentNode.insertBefore(inp,el); el.parentNode.insertBefore(dl,el);
-    const sync=()=>{
-      const v=inp.value.trim();
-      const m=[...el.options].find(o=>o.value&&!o.dataset.free&&o.textContent.toLowerCase()===v.toLowerCase());
-      if(m){ el.value=m.value; inp.value=m.textContent }
-      else if(!v){ el.value='' }
-      else{
-        let o=[...el.options].find(x=>x.dataset.free==='1');
-        if(!o){ o=document.createElement('option'); o.dataset.free='1'; el.appendChild(o) }
-        o.value=v; o.textContent=v; el.value=v;
-      }
-      el.dispatchEvent(new Event('change'));
-    };
-    inp.addEventListener('change',sync); inp.addEventListener('blur',sync);
-  }
+  if(el._cb){ el._cb.load(); return }
+  const wrap=document.createElement('div'); wrap.className='cbw';
+  const inp=document.createElement('input'); inp.type='text'; inp.className='cb'; inp.autocomplete='off';
+  inp.placeholder='Select or type…'; inp.setAttribute('role','combobox'); inp.setAttribute('aria-expanded','false'); inp.setAttribute('aria-autocomplete','list');
+  const lab=(el.closest('[data-f]')||el.parentNode).querySelector('label'); if(lab){ inp.id=el.id+'-cb'; lab.setAttribute('for',inp.id) }
+  const btn=document.createElement('button'); btn.type='button'; btn.className='cbb'; btn.tabIndex=-1; btn.setAttribute('aria-label','Show options'); btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  const ul=document.createElement('ul'); ul.className='cbl'; ul.setAttribute('role','listbox'); ul.hidden=true;
+  el.parentNode.insertBefore(wrap,el); wrap.append(inp,btn,ul); wrap.appendChild(el);
   el.hidden=true; el.removeAttribute('required');
-  dl.innerHTML=[...el.options].filter(o=>o.value&&!o.dataset.free).map(o=>'<option value="'+esc(o.textContent)+'"></option>').join('');
+  let items=[], act=-1, typed=false;
+  const opts=()=>[...el.options].filter(o=>o.value&&!o.dataset.free);
+  const paint=()=>{
+    const q=typed?inp.value.trim().toLowerCase():'';
+    items=opts().filter(o=>!q||o.textContent.toLowerCase().includes(q));
+    if(q) items.sort((a,b)=>(b.textContent.toLowerCase().startsWith(q)-a.textContent.toLowerCase().startsWith(q)));
+    ul.innerHTML=items.length?items.map((o,i)=>'<li role="option" data-i="'+i+'"'+(o.value===el.value?' aria-selected="true"':'')+'>'+esc(o.textContent)+'</li>').join(''):'<li class="cbn">No match: the text you type will be used as entered.</li>';
+    act=items.length&&q?0:-1; mark();
+  };
+  const mark=()=>{ ul.querySelectorAll('li[data-i]').forEach((li,i)=>li.classList.toggle('act',i===act)); const a=ul.querySelector('li.act'); if(a) a.scrollIntoView({block:'nearest'}) };
+  const open=()=>{ paint(); ul.hidden=false; inp.setAttribute('aria-expanded','true') };
+  const close=()=>{ ul.hidden=true; inp.setAttribute('aria-expanded','false'); typed=false };
+  const sync=()=>{
+    const v=inp.value.trim();
+    const m=opts().find(o=>o.textContent.toLowerCase()===v.toLowerCase());
+    if(m){ el.value=m.value; inp.value=m.textContent }
+    else if(!v){ el.value='' }
+    else{
+      let o=[...el.options].find(x=>x.dataset.free==='1');
+      if(!o){ o=document.createElement('option'); o.dataset.free='1'; el.appendChild(o) }
+      o.value=v; o.textContent=v; el.value=v;
+    }
+    el.dispatchEvent(new Event('change'));
+  };
+  const pick=o=>{ el.value=o.value; inp.value=o.textContent; close(); el.dispatchEvent(new Event('change')) };
+  inp.addEventListener('focus',()=>{ inp.select(); open() });
+  inp.addEventListener('click',()=>{ if(ul.hidden) open() });
+  inp.addEventListener('input',()=>{ typed=true; open() });
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); if(ul.hidden) open(); else { act=Math.min(items.length-1,act+1); mark() } }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); act=Math.max(0,act-1); mark() }
+    else if(e.key==='Enter'){ if(!ul.hidden && act>=0 && items[act]){ e.preventDefault(); pick(items[act]) } else if(!ul.hidden){ e.preventDefault(); sync(); close() } }
+    else if(e.key==='Escape'){ if(!ul.hidden){ e.stopPropagation(); close() } }
+  });
+  inp.addEventListener('blur',()=>{ setTimeout(()=>{ sync(); close() },120) });
+  ul.addEventListener('mousedown',e=>{ e.preventDefault(); const li=e.target.closest('li[data-i]'); if(li) pick(items[+li.dataset.i]) });
+  btn.addEventListener('mousedown',e=>{ e.preventDefault(); if(ul.hidden){ inp.focus(); open() } else close() });
+  el._cb={load(){ const o=opts().find(x=>x.value===el.value); inp.value=o?o.textContent:'' }};
 }
 
 function inherited(){
