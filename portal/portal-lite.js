@@ -1099,6 +1099,15 @@ window.PWLite = (function () {
     if(TAB === 'myorders') return renderMyOrders();
     if(TAB === 'calendar') return renderCalendar();
     if(TAB === 'showroom') return renderShowroom();
+    if(FORMS[TAB] && window.__PREVIEW){
+      $('content').innerHTML = section(tabLabel(TAB), '<p class="none">' + esc(t('formPreviewNote')) + '</p>'
+        + '<p><a class="view-s" target="_blank" rel="noopener" href="https://javibbeltran.github.io/pweu/portal/forms/' + (TAB === 'contractform' ? 'contract-request' : 'customer-request') + '.html?preview">' + esc(t('formPreviewOpen')) + '</a></p>');
+      return;
+    }
+    if(FORMS[TAB]){
+      $('content').innerHTML = '<iframe class="form-frame" title="' + esc(tabLabel(TAB)) + '" src="' + esc(FORMS[TAB] + '?embed') + '"></iframe>';
+      return;
+    }
     if(TAB === 'downloads' && ID === 'sales') return renderDownloads();
     if(TAB === 'flow') return renderFlow();
     if(TAB === 'library') return renderLibrary();
@@ -1129,7 +1138,7 @@ window.PWLite = (function () {
       sb.querySelectorAll('[data-av]').forEach(b => b.onclick = () => openCatalogue({ av: b.dataset.av }));
     }
   }
-  function go(tab){ if(FORMS[tab]){ location.href = FORMS[tab]; return; } TAB = tab; DETAIL = null; buildNav(); chrome(); render(); window.scrollTo(0, 0); }
+  function go(tab){ TAB = tab; DETAIL = null; buildNav(); chrome(); render(); window.scrollTo(0, 0); }
 
   function chrome(){
     $('seg').textContent = title();
