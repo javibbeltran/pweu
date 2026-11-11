@@ -39,7 +39,10 @@ window.PWLite = (function () {
     FRAME_OBS = new MutationObserver(sync);
     FRAME_OBS.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'style'] });
   }
-  const FORMS = { contractform: '../forms/contract-request.html', customerform: '../forms/customer-request.html' };
+  /* forms are resolved from where this script itself was loaded (…/portal/portal-lite.js), so the path is right
+     whatever the page address looks like (with or without trailing slash, index.html, query or hash) */
+  const FORM_BASE = (() => { try{ const cs = document.currentScript; return cs && cs.src ? new URL('forms/', cs.src).href : '../forms/'; }catch(e){ return '../forms/'; } })();
+  const FORMS = { contractform: FORM_BASE + 'contract-request.html', customerform: FORM_BASE + 'customer-request.html' };
   let ID = 'sales', TAB = 'home';
   let SPACES = [], SECTIONS = [], DOCS = [];
   let SP = null, SPERR = false, SAMPLE = false, Q = '', REG = 'all', APPS = [], AV = [], SORT = 'az', SORTSET = false, PHIO = null, DETAIL = null, KEYS = null, FEAT = { popular: [], lesser: [] };
