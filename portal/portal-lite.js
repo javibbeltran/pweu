@@ -363,11 +363,14 @@ window.PWLite = (function () {
     document.body.classList.add('print-sheet');
     const done = () => { document.body.classList.remove('print-sheet'); window.removeEventListener('afterprint', done); };
     window.addEventListener('afterprint', done);
-    try{ window.print(); }catch(e){ done(); }
+    /* short pause so the page and images are laid out before the print preview opens (needed on phones) */
+    setTimeout(() => { try{ window.print(); }catch(e){ done(); } }, 250);
   }
   function emailSheet(s){
     const sub = 'Precious Woods – ' + s.name + ' (' + s.code + ')';
     const body = t('mailBody', s.name, sheetUrl(s.code));
+    /* phones: the share sheet (Mail, WhatsApp, Outlook...) works even if no mail app is set up */
+    if(navigator.share){ navigator.share({ title: sub, text: body, url: sheetUrl(s.code) }).catch(() => {}); return; }
     location.href = 'mailto:?subject=' + encodeURIComponent(sub) + '&body=' + encodeURIComponent(body);
   }
   async function copyLink(s, btn){
@@ -409,7 +412,14 @@ window.PWLite = (function () {
     ph.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
     ph.addEventListener('touchend', e => { if(x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if(Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); });
     KEYS = e => { if(e.key === 'ArrowRight') step(1); else if(e.key === 'ArrowLeft') step(-1); else if(e.key === 'Escape' && !document.fullscreenElement) closeSpecies(); };
-    $('shfs').onclick = () => { const el = document.documentElement; try{ document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen(); }catch(e){} };
+    /* full screen: native where the browser has it (desktop, Android, iPad); on iPhone there is no fullscreen API, so use a presentation mode instead */
+    const fsEl = document.documentElement, fsReq = fsEl.requestFullscreen || fsEl.webkitRequestFullscreen;
+    const setPresent = on => { document.body.classList.toggle('present', on); $('shfs').textContent = on ? '✕ ' + t('exitPresent') : t('present'); window.scrollTo(0, 0); };
+    $('shfs').onclick = () => {
+      const on = !document.body.classList.contains('present'); setPresent(on);
+      try{ if(on && fsReq) fsReq.call(fsEl); else if(!on && (document.fullscreenElement || document.webkitFullscreenElement)) (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){}
+    };
+    document.addEventListener('fullscreenchange', () => { if(!document.fullscreenElement && document.body.classList.contains('present') && $('shfs')) setPresent(false); }, { once: true });
     $('shback').onclick = closeSpecies;
     $('shprint').onclick = () => printSheet(s);
     $('shcopy').onclick = e => copyLink(s, e.currentTarget);
@@ -1123,7 +1133,7 @@ window.PWLite = (function () {
   }
 
   function render(){
-    document.body.classList.toggle('sheet-open', !!(DETAIL && TAB === 'catalogue'));
+    document.body.classList.toggle('sheet-open', !!(DETAIL && TAB === 'catalogue')); if(!(DETAIL && TAB === 'catalogue')) document.body.classList.remove('present');
     if(TAB === 'home') return renderHome();
     if(TAB === 'catalogue') return DETAIL ? renderSpecies() : renderCatalogue();
     if(TAB === 'neworder') return renderNewOrder();

@@ -920,6 +920,12 @@ body.sheet-open header.bar,body.sheet-open #nav,body.sheet-open .sidemenu,body.s
 
 .form-frame{display:block;width:100%;height:calc(100vh - 130px);min-height:520px;border:0;background:transparent}
 
+/* presentation mode (full screen on iPhone and everywhere): only the exit button, bigger picture */
+body.present .sheet .sh-acts>button:not(#shfs),body.present .sheet .sh-back{display:none}
+body.present .sheet .sh-bar{justify-content:flex-end;background:transparent}
+body.present .sh-gal .sh-ph canvas,body.present .sh-gal .sh-ph img{width:100%}
+body.present .sh-desc{font-size:1.1em}
+
 #pvbadge{position:fixed;left:max(12px,env(safe-area-inset-left,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:200;
  background:var(--surf);color:var(--mut);border:1px solid var(--ln2);border-radius:999px;padding:6px 13px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 #pvtoast{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:201;background:var(--fg);color:var(--bg);border-radius:8px;padding:9px 15px;font-size:13px;max-width:90vw}
@@ -1187,7 +1193,7 @@ window.PW = (function () {
     srPlank:'Board width', srAngle:'Angle', srOpacity:'Intensity', srDownload:'Download image', srPanel:'Panel / furniture', srNeedImg:'Add a picture first.', srClose:'Close'
   });
   Object.assign(T.en, { illus:'Sample illustration', slideBoard:'Wood sample', slideFloor:'Flooring', slideDeck:'Decking', slideClad:'Cladding', slideBench:'Street furniture' });
-  Object.assign(T.en, { formPreviewNote:'In the real portal this form opens right here, with the menu and header still visible. This preview cannot load it.', formPreviewOpen:'Open the form (preview, no sign-in)', newContractForm:'New contract form', newCustomerForm:'New customer form', selectCustomer:'Select a customer…', needCustomer:'Choose the customer first.', calSearchPh:'Search order, customer or species…', scTCat:'Home shortcut: Catalogue', scTStock:'Home shortcut: Species in stock', scTNew:'Home shortcut: New Order', tabTCal:'Show tab: Calendar', tabTInv:'Show tab: Open invoices', tabTDl:'Show tab: Downloads & Uploads', tabTShow:'Show tab: 3D Showroom', markApproved:'Approve order', orderApproved:'Order approved.', useCases:'Suggested use cases', present:'Full screen', viewSheet:'Full sheet', backCat:'Back to catalogue', printPdf:'Print / save as PDF', copyLink:'Copy link', linkCopied:'Link copied', sendEmail:'Send by email', techSpecs:'Technical specifications', relatedSp:'Also used for the same applications', sheetFoot:'Precious Woods Europe · Species sheet · {0} · Indicative technical data; confirm availability and price with your sales contact.', mailBody:'Hello,\n\nHere is the full species sheet for {0}:\n{1}\n\nKind regards', sortLesser:'Lesser known first', sortPopular:'Most popular', focAll:'All species', focPopular:'Most popular', focLesser:'Lesser known' });
+  Object.assign(T.en, { formPreviewNote:'In the real portal this form opens right here, with the menu and header still visible. This preview cannot load it.', formPreviewOpen:'Open the form (preview, no sign-in)', newContractForm:'New contract form', newCustomerForm:'New customer form', selectCustomer:'Select a customer…', needCustomer:'Choose the customer first.', calSearchPh:'Search order, customer or species…', scTCat:'Home shortcut: Catalogue', scTStock:'Home shortcut: Species in stock', scTNew:'Home shortcut: New Order', tabTCal:'Show tab: Calendar', tabTInv:'Show tab: Open invoices', tabTDl:'Show tab: Downloads & Uploads', tabTShow:'Show tab: 3D Showroom', markApproved:'Approve order', orderApproved:'Order approved.', useCases:'Suggested use cases', present:'Full screen', exitPresent:'Exit', viewSheet:'Full sheet', backCat:'Back to catalogue', printPdf:'Print / save as PDF', copyLink:'Copy link', linkCopied:'Link copied', sendEmail:'Send by email', techSpecs:'Technical specifications', relatedSp:'Also used for the same applications', sheetFoot:'Precious Woods Europe · Species sheet · {0} · Indicative technical data; confirm availability and price with your sales contact.', mailBody:'Hello,\n\nHere is the full species sheet for {0}:\n{1}\n\nKind regards', sortLesser:'Lesser known first', sortPopular:'Most popular', focAll:'All species', focPopular:'Most popular', focLesser:'Lesser known' });
   Object.assign(T.en, { displayH:'Display', showPrices:'Show prices' });
   Object.assign(T.nl, { displayH:'Weergave', showPrices:'Prijzen tonen' });
   Object.assign(T.es, { displayH:'Visualización', showPrices:'Mostrar precios' });
@@ -1779,11 +1785,14 @@ window.PWLite = (function () {
     document.body.classList.add('print-sheet');
     const done = () => { document.body.classList.remove('print-sheet'); window.removeEventListener('afterprint', done); };
     window.addEventListener('afterprint', done);
-    try{ window.print(); }catch(e){ done(); }
+    /* short pause so the page and images are laid out before the print preview opens (needed on phones) */
+    setTimeout(() => { try{ window.print(); }catch(e){ done(); } }, 250);
   }
   function emailSheet(s){
     const sub = 'Precious Woods – ' + s.name + ' (' + s.code + ')';
     const body = t('mailBody', s.name, sheetUrl(s.code));
+    /* phones: the share sheet (Mail, WhatsApp, Outlook...) works even if no mail app is set up */
+    if(navigator.share){ navigator.share({ title: sub, text: body, url: sheetUrl(s.code) }).catch(() => {}); return; }
     location.href = 'mailto:?subject=' + encodeURIComponent(sub) + '&body=' + encodeURIComponent(body);
   }
   async function copyLink(s, btn){
@@ -1825,7 +1834,14 @@ window.PWLite = (function () {
     ph.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
     ph.addEventListener('touchend', e => { if(x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if(Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); });
     KEYS = e => { if(e.key === 'ArrowRight') step(1); else if(e.key === 'ArrowLeft') step(-1); else if(e.key === 'Escape' && !document.fullscreenElement) closeSpecies(); };
-    $('shfs').onclick = () => { const el = document.documentElement; try{ document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen(); }catch(e){} };
+    /* full screen: native where the browser has it (desktop, Android, iPad); on iPhone there is no fullscreen API, so use a presentation mode instead */
+    const fsEl = document.documentElement, fsReq = fsEl.requestFullscreen || fsEl.webkitRequestFullscreen;
+    const setPresent = on => { document.body.classList.toggle('present', on); $('shfs').textContent = on ? '✕ ' + t('exitPresent') : t('present'); window.scrollTo(0, 0); };
+    $('shfs').onclick = () => {
+      const on = !document.body.classList.contains('present'); setPresent(on);
+      try{ if(on && fsReq) fsReq.call(fsEl); else if(!on && (document.fullscreenElement || document.webkitFullscreenElement)) (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){}
+    };
+    document.addEventListener('fullscreenchange', () => { if(!document.fullscreenElement && document.body.classList.contains('present') && $('shfs')) setPresent(false); }, { once: true });
     $('shback').onclick = closeSpecies;
     $('shprint').onclick = () => printSheet(s);
     $('shcopy').onclick = e => copyLink(s, e.currentTarget);
@@ -2539,7 +2555,7 @@ window.PWLite = (function () {
   }
 
   function render(){
-    document.body.classList.toggle('sheet-open', !!(DETAIL && TAB === 'catalogue'));
+    document.body.classList.toggle('sheet-open', !!(DETAIL && TAB === 'catalogue')); if(!(DETAIL && TAB === 'catalogue')) document.body.classList.remove('present');
     if(TAB === 'home') return renderHome();
     if(TAB === 'catalogue') return DETAIL ? renderSpecies() : renderCatalogue();
     if(TAB === 'neworder') return renderNewOrder();

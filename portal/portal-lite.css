@@ -416,3 +416,9 @@ body.sheet-open header.bar,body.sheet-open #nav,body.sheet-open .sidemenu,body.s
 .oc-box select{width:100%;box-sizing:border-box}
 
 .form-frame{display:block;width:100%;height:calc(100vh - 130px);min-height:520px;border:0;background:transparent}
+
+/* presentation mode (full screen on iPhone and everywhere): only the exit button, bigger picture */
+body.present .sheet .sh-acts>button:not(#shfs),body.present .sheet .sh-back{display:none}
+body.present .sheet .sh-bar{justify-content:flex-end;background:transparent}
+body.present .sh-gal .sh-ph canvas,body.present .sh-gal .sh-ph img{width:100%}
+body.present .sh-desc{font-size:1.1em}
